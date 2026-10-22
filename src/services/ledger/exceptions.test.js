@@ -10,8 +10,11 @@ import assert from 'node:assert/strict';
 import {
   EXCEPTION_STATUS,
   EXCEPTION_TYPES,
+  OPEN_STATUSES,
   VANISHED_NOTE,
+  boardRegistry,
   boardRows,
+  newestFirst,
   filterRows,
   detectionsToDrafts,
   reconcileDetections,
@@ -314,4 +317,51 @@ test('الترشيح بالخطورة والنوع وغير المسجَّل و�
   assert.equal(filterRows(rows, { type: 'expired' }).length, 1);
   assert.equal(filterRows(rows, { onlyUnregistered: true }).length, 2);
   assert.equal(filterRows(rows, {}).length, 2, 'وبلا مرشّحٍ يظهر الكلّ');
+});
+
+/* ───── ‹ODOO-ORD› ما قبل الافتتاح والقراءة المحدودة ───── */
+
+// الطابعُ بشكل Firestore (`{seconds}`) — يومُ ليبيا يُحسب منه في `actualWork.js`.
+const at = (iso) => ({ seconds: Math.floor(Date.parse(iso) / 1000) });
+const saved = (over = {}) => ({ ...detectionsToDrafts([detection()])[0], id: 'x1', status: EXCEPTION_STATUS.OPEN, number: 'EXC-2026-0001', ...over });
+
+test('★★ ‹ODOO-ORD› المسجَّل قبل الافتتاح وزال سببه يُخفى من الصندوق', () => {
+  const old = saved({ createdAt: at('2026-09-01T10:00:00Z') });
+  assert.deepEqual(boardRegistry([old], []), [], 'تجربةٌ قديمةٌ «زال سببه» لا تملأ «تدخّل الآن»');
+  assert.equal(boardRows([], boardRegistry([old], []), NOW).length, 0);
+});
+
+test('★★ ‹ODOO-ORD› والمسجَّل قبل الافتتاح وسببُه قائمٌ الآن يبقى — فلا يظهر كشفُه «غيرَ مسجَّل» بلا تسجيلٍ ممكن', () => {
+  const old = saved({ createdAt: at('2026-09-01T10:00:00Z') });
+  const shown = boardRegistry([old], [detection()]);
+  assert.equal(shown.length, 1);
+  const rows = boardRows([detection()], shown, NOW);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].registered, true, 'يظهر برقمه — ومصالحةُ التسجيل تراه قائمًا فلا تفتح نسخةً ثانية');
+  assert.equal(reconcileDetections(detectionsToDrafts([detection()]), [old]).toOpen.length, 0);
+});
+
+test('‹ODOO-ORD› ما سُجّل منذ الافتتاح يبقى · وما لم يصله ختمُ الخادم بعد يبقى', () => {
+  const fresh = saved({ id: 'n1', createdAt: at('2026-10-21T08:00:00Z') });
+  const pending = saved({ id: 'n2', createdAt: null });
+  // الحدّ منتصفُ ليل 20 أكتوبر بتوقيت ليبيا = 22:00 بتوقيت غرينتش من 19 أكتوبر — دقيقةٌ قبله ودقيقةٌ بعده.
+  const edgeBefore = saved({ id: 'e1', createdAt: at('2026-10-19T21:59:00Z') });
+  const edgeAfter = saved({ id: 'e2', createdAt: at('2026-10-19T22:01:00Z') });
+  assert.deepEqual(boardRegistry([fresh, pending, edgeBefore, edgeAfter], []).map((e) => e.id), ['n1', 'n2', 'e2']);
+});
+
+test('‹ODOO-ORD› الحالاتُ المفتوحة للاستعلام مشتقّةٌ من isOpenStatus — بلا المغلق وفي حدّ `in`', () => {
+  assert.deepEqual([...OPEN_STATUSES].sort(), ['awaiting_approval', 'escalated', 'in_progress', 'open']);
+  assert.ok(!OPEN_STATUSES.includes(EXCEPTION_STATUS.CLOSED));
+  for (const s of OPEN_STATUSES) assert.equal(isOpenStatus(s), true);
+});
+
+test('‹ODOO-ORD› الترتيبُ المحلّيّ: الأحدثُ أوّلًا وما كُتب للتوّ في الرأس', () => {
+  const list = [
+    { id: 'a', createdAt: at('2026-10-20T08:00:00Z') },
+    { id: 'b', createdAt: null },
+    { id: 'c', createdAt: at('2026-10-22T08:00:00Z') },
+  ];
+  assert.deepEqual(newestFirst(list).map((e) => e.id), ['b', 'c', 'a']);
+  assert.deepEqual(list.map((e) => e.id), ['a', 'b', 'c'], 'ولا يمسّ المصفوفةَ الأصل');
 });

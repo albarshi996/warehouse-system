@@ -20,12 +20,36 @@ import { availableQty } from './reservations.js';
 import { toMillis, ageInState, isStale } from '../documents/inbox.js';
 import { expiryStatus } from '../balances/balanceKey.js';
 import { AUTO_PULL_MS, PULL_SCOPE_IDS, lastPullLabel, scopeOf } from '../odoo/pullRegistry.js';
+import { TERMINAL_STATES } from '../documents/states.js';
+import { ODOO_TYPES, libyaDayOf, ordersReport, selectDocs } from '../reports/odooReports.js';
 
 const DAY = 86400000;
 
-/** المستند مفتوحٌ ما لم يُنجَز أو يُرفض. */
-function isOpen(d) {
-  return Boolean(d) && !['done', 'rejected'].includes(d.state);
+/**
+ * الحالاتُ التي لا عملَ بعدها: المنجَزُ والمرفوضُ والمنتهيتان (المغلقُ والملغى).
+ * ★★ ‹ODOO-ORD› كانت `['done','rejected']` وحدهما (قيس 2026-10-22): فـ106 مسوّداتِ سحبٍ وتخزينٍ من أودو أُلغيت
+ *    تُعدّ «قوائم سحب مفتوحة» و«أوامر تخزين». والمنتهيتان من `TERMINAL_STATES` لا قائمةً ثانيةً تتباعد عنها.
+ */
+const NOT_OPEN_STATES = Object.freeze(['done', 'rejected', ...TERMINAL_STATES]);
+
+/** المستند مفتوحٌ ما لم يُنجَز أو يُرفض أو يُغلق أو يُلغَ. */
+export function isOpen(d) {
+  return Boolean(d) && !NOT_OPEN_STATES.includes(d.state);
+}
+
+/**
+ * ★★ ‹ODOO-ORD› العالقُ الذي يُلاحَق — مواقعُ التصفير **عدا مخزن النقل**.
+ *
+ * `TRANSIT` في `locations.js` موقعُ تصفير: رصيدٌ فيه يعني شحنةً لم تُستلم. وكان صادقًا ما دامت شحناتُنا وحدها
+ * تمرّ به. ومنذ الافتتاح يحمل **بضاعةَ أودو التي في الطريق فعلًا** (564 صفًّا · 29,166 وحدة رُفعت افتتاحيًّا)
+ * — فصار كلُّ صفٍّ فيه «استثناءً» يملأ صندوقَ «تدخّل الآن» بما ليس خللًا. وشحناتُنا المعلّقة يكشفها
+ * `pendingShipments` من مستنداتها لا من الرصيد، فلا يضيع شيء.
+ * ولا يُمسّ `locations.js`: دفترُ الحركات وغيرُه يريان `TRANSIT` موقعَ تصفيرٍ كما كان — والاستثناءُ هنا وحدَه.
+ */
+const STUCK_EXEMPT = new Set(['TRANSIT']);
+
+export function boardStuckBalances(balances) {
+  return stuckBalances(balances).filter((s) => !STUCK_EXEMPT.has(String(s?.warehouse || '').toUpperCase()));
 }
 
 function ofType(docs, t) {
@@ -141,16 +165,42 @@ function availableBySku(balances) {
 }
 
 /**
+ * ‹ODOO-ORD› عملُ أودو في اللقطة — كان غائبًا كلُّه: الرئيسيّةُ تعدّ مستنداتِ البوّابة وحدها، وكلُّ العمل الفعليّ
+ * منذ الافتتاح مستورَدٌ من أودو. فلا حسابَ جديد هنا: `ordersReport` و`selectDocs` نفسُهما اللذان تعرضهما
+ * شاشةُ تقارير أودو — فلا يقول رقمُ الرئيسيّة غيرَ ما يقوله تقريرُه.
+ *   • الأوامرُ المفتوحة: المعتمَدةُ وحدها (المسوّدةُ استيرادٌ لم يكتمل، والملغاةُ يُسقطها `selectDocs`)،
+ *     والمفتوحُ ما بقي منه شيءٌ لم يُنجَز (`openOnly`).
+ *   • المُرحَّل: مستنداتُ المخزون المنجَزة (SRI · SRO · SXO · SXI · SRA) بيوم إنجازها في أودو داخل النافذة.
+ */
+function odooCounters(docs, { nowMs, windowDays } = {}) {
+  const approved = (docs || []).filter((d) => d?.state === 'approved');
+  const sales = ordersReport(approved, 'OSO', { openOnly: true });
+  const purchases = ordersReport(approved, 'OPO', { openOnly: true });
+  const from = Number.isFinite(nowMs) && windowDays > 0 ? libyaDayOf(nowMs - windowDays * DAY) : '';
+  const posted = selectDocs(docs, (d) => ODOO_TYPES.includes(d?.type), { from });
+  const openQty = (rows) => Math.round(rows.reduce((s, r) => s + (Number(r.open) || 0), 0) * 100) / 100;
+  return {
+    salesOpen: sales.length,
+    salesOpenQty: openQty(sales),
+    purchasesOpen: purchases.length,
+    purchasesOpenQty: openQty(purchases),
+    posted: posted.length,
+  };
+}
+
+/**
  * لقطة العدّادات اللحظية موزَّعةً على أقسام العمل. `items` (ماستر الأصناف)
  * اختياريّ — بدونه يتعذّر حساب «تحت الحدّ الأدنى» و«المطلوب شراؤه».
+ *
+ * `opts` (اختياريّ): `{ nowMs, windowDays }` يقصران «مستندات أودو المُرحَّلة» على نافذة المؤشّرات — وبلاه تُعدّ كلُّها.
  */
-export function operationsSnapshot(docs, balances, items) {
+export function operationsSnapshot(docs, balances, items, opts = {}) {
   const openOf = (t) => ofType(docs, t).filter(isOpen).length;
   const pend = pendingOrders(docs);
   const short = outOfStockItems(docs);
   const ship = pendingShipments(docs);
   const varr = transferVariances(docs);
-  const stuck = stuckBalances(balances);
+  const stuck = boardStuckBalances(balances);
 
   const avail = availableBySku(balances);
   let belowMin = 0;
@@ -177,6 +227,7 @@ export function operationsSnapshot(docs, balances, items) {
     transit: { inTransit: ship.inTransit, variances: varr.unresolved, value: ship.transitValue },
     inventory: { shortItems: short.itemCount, belowMin, toBuy, stuck: stuck.length, lostValue: short.totalLostValue },
     finance: { invoices: ofType(docs, 'INV').length, creditNotes: ofType(docs, 'CN').length, awaitingClose: ofType(docs, 'INV').filter(isOpen).length },
+    odoo: odooCounters(docs, opts),
   };
 }
 
@@ -220,7 +271,8 @@ export const ORIGIN = Object.freeze({
  *
  * والمركَّبان هما الوحيدان: `belowMin` و`toBuy` يقارنان المتاح (من أرصدتنا)
  * بـ`minStock` (من ماستر الأصناف المستورَد). وما عداهما مبنيٌّ على مستنداتنا
- * وأرصدتنا وحدها.
+ * وأرصدتنا وحدها — **إلّا قسمَ `odoo`**: مستنداتٌ مستورَدةٌ من أودو لا يغيّرها إلّا
+ * استيرادٌ جديد، فهي مرجعيّةٌ لا لحظيّة (‹ODOO-ORD›).
  */
 export const SNAPSHOT_ORIGIN = Object.freeze({
   'sales.orders': ORIGIN.live.id,
@@ -243,6 +295,11 @@ export const SNAPSHOT_ORIGIN = Object.freeze({
   'finance.invoices': ORIGIN.live.id,
   'finance.creditNotes': ORIGIN.live.id,
   'finance.awaitingClose': ORIGIN.live.id,
+  'odoo.salesOpen': ORIGIN.reference.id,
+  'odoo.salesOpenQty': ORIGIN.reference.id,
+  'odoo.purchasesOpen': ORIGIN.reference.id,
+  'odoo.purchasesOpenQty': ORIGIN.reference.id,
+  'odoo.posted': ORIGIN.reference.id,
 });
 
 /** أصل عدّادٍ بمساره، أو `null` — والفراغ يعني «غير معلَن» لا «لحظيّ». */
@@ -408,8 +465,8 @@ export function operationExceptions(docs, balances, nowMs, items) {
       { type: 'no_stock', docRef: { type: 'SO', number: r.number }, qty: r.shortfallCount, reason: `${r.shortfallCount} صنفًا غير متوفّر` });
   }
 
-  // 4) رصيدٌ عالقٌ في مواقع النظام التي يجب أن تفرغ.
-  for (const s of stuckBalances(balances)) {
+  // 4) رصيدٌ عالقٌ في مواقع النظام التي يجب أن تفرغ — عدا مخزن النقل (`boardStuckBalances` يقول لماذا).
+  for (const s of boardStuckBalances(balances)) {
     add('med', 'inventory', `${s.sku || s.barcode} عالقٌ في ${locationLabel(s.warehouse)}`, s.hint, `/dashboard/stock-ledger`,
       { type: 'stuck_balance', sku: s.sku, barcode: s.barcode, qty: s.qty, location: s.warehouse, reason: s.hint });
   }

@@ -29,6 +29,7 @@
 
 import { formatNumber, nextSeq } from '../documents/numberFormat.js';
 import { remainingFrom, toMillis as dueMillis } from '../tasks/dueTime.js';
+import { isPreOpeningRecord, stampMs } from '../documents/actualWork.js';
 
 /** بادئة ترقيم الاستثناءات — تمرّ بمولّد الترقيم القائم لا بمولّدٍ ثانٍ. */
 export const EXCEPTION_PREFIX = 'EXC';
@@ -74,6 +75,29 @@ export function canTransition(from, to) {
 /** الحالات التي يبقى فيها الاستثناء مفتوحًا (تُعدّ في اللوحة). */
 export function isOpenStatus(status) {
   return status !== EXCEPTION_STATUS.CLOSED && Boolean(STATUS_LABELS[status]);
+}
+
+/**
+ * ‹ODOO-ORD› الحالاتُ المفتوحة قائمةً — شرطُ `in` في `listenExceptions`. مشتقّةٌ من `isOpenStatus` نفسِها فلا
+ * يفترق ما يُقرأ من الخادم عمّا يعدّه الصندوقُ مفتوحًا.
+ */
+export const OPEN_STATUSES = Object.freeze(Object.keys(STATUS_LABELS).filter(isOpenStatus));
+
+/**
+ * الأحدثُ كشفًا أوّلًا — ترتيبٌ محلّيّ لأنّ الاستعلام بلا `orderBy` (شرطُ حقلٍ واحدٍ لا يطلب فهرسًا مركّبًا).
+ * وما لم يصله ختمُ الخادم بعد (كُتب للتوّ) في الرأس.
+ */
+export function newestFirst(list) {
+  const at = (e) => {
+    const ms = stampMs(e?.createdAt);
+    return Number.isFinite(ms) ? ms : Infinity;
+  };
+  return (list || []).slice().sort((a, b) => {
+    const ma = at(a);
+    const mb = at(b);
+    if (ma === mb) return 0;
+    return ma < mb ? 1 : -1;
+  });
 }
 
 /** درجات الخطورة — والأحمر لـ`high` وحدها في الشاشة. */
@@ -334,6 +358,22 @@ export function boardRows(detections, registry, nowMs) {
   ];
 
   return sortForBoard(rows, nowMs);
+}
+
+/**
+ * ‹ODOO-ORD› سجلُّ الصندوق بلا ما سُجّل قبل الافتتاح — والسجلُّ نفسُه لا يُمسّ.
+ *
+ * كلُّ مستندٍ أُنشئ في البوّابة قبل الافتتاح تجربة (قيس 2026-10-22)، واستثناءاتُه المسجَّلة بقيت «مفتوحةً · زال
+ * سببُه» في صندوق «تدخّل الآن» أبدًا. فتُخفى من العرض بحدّ الافتتاح الواحد (`isPreOpeningRecord` على `createdAt`،
+ * الحقلِ الذي يختمه `openException`).
+ *
+ * ★★ إلّا ما يكشفه المحرّكُ الآن: سجلٌّ قديمٌ سببُه قائمٌ اليوم حادثةٌ حيّة. ولو أُخفي لظهر كشفُه «غيرَ مسجَّل»
+ *    وزرُّ التسجيل لا يُسجّله أبدًا — فـ`syncDetections` تأخذ السجلَّ كاملًا (منعُ التكرار يحتاج كلَّ مفتوح)
+ *    فتراه قائمًا ولا تفتح نسخةً ثانية. فالعرضُ والمصالحةُ يتّفقان هكذا وحدها.
+ */
+export function boardRegistry(registry, detections) {
+  const live = new Set(detectionsToDrafts(detections).map((d) => d.fingerprint));
+  return (registry || []).filter((e) => !isPreOpeningRecord(e, 'createdAt') || live.has(String(e?.fingerprint || '')));
 }
 
 /** ترشيحٌ للصندوق — بالخطورة والنوع والحالة، وكلٌّ اختياريّ. */

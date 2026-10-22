@@ -25,11 +25,19 @@ export function subscribeMatrix(cb) {
   );
 }
 
-/** جلبة واحدة — للحارس وقائمة الأدوار. null عند التعذّر (يُكمل بالكتالوج). */
+/**
+ * جلبة واحدة — للحارس وقائمة الأدوار. null عند التعذّر (يُكمل بالكتالوج).
+ * ‹ODOO-ORD› وعدٌ واحدٌ للصفحة (AuthGate وRoleNav يطلبانها معًا)، والفشلُ لا يُحفظ، والحفظُ يُسقط الذاكرة.
+ */
+let matrixRead = null;
+
 export async function fetchMatrixOnce() {
+  if (!matrixRead) {
+    matrixRead = getDoc(matrixRef()).then((snap) => (snap.exists() ? normalizeMatrix(snap.data()) : { overrides: {} }));
+    matrixRead.catch(() => { matrixRead = null; });
+  }
   try {
-    const snap = await getDoc(matrixRef());
-    return snap.exists() ? normalizeMatrix(snap.data()) : { overrides: {} };
+    return await matrixRead;
   } catch {
     return null;
   }
@@ -43,6 +51,7 @@ export async function fetchMatrixOnce() {
  */
 export async function saveMatrix(matrix, meta = {}) {
   const clean = normalizeMatrix(matrix);
+  matrixRead = null;
   const sent = countOverrides(clean);
   console.info('[accessMatrix] إرسال الحفظ:', sent, 'تجاوزًا', clean.overrides);
 

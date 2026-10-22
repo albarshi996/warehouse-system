@@ -1,25 +1,30 @@
 /**
- * ‹ODOO-ORD› قراءةُ مسوّدات أودو القديمة وإلغاؤها — راجع `staleDrafts.js`.
+ * ‹ODOO-ORD› قراءةُ ما قبل الافتتاح وإلغاؤه — راجع `staleDrafts.js`.
  *
  * ★★★ الإلغاءُ حلقةٌ على مُنفِّذ الجماعيّ (`planBulk` ثمّ `runBulk`) لا طريقٌ ثانٍ إلى الحالة: كلُّ مستندٍ يمرّ بـ
  *     `transitionDocument` وحرّاسه وصلاحيّاته، ويُكتب سببُه في سجلّ تدقيقه. والسقفُ خمسون في الدفعة كما في الشاشة.
+ *
+ * ★★ والقراءةُ تُعلن مصدرَها: حين يضعف الاتّصال يُجيب Firestore من ذاكرة المتصفّح (2026-10-22: «لا مسوّدةَ قديمة» وواحدةٌ
+ *    باقيةٌ على الخادم) — فـ`fromCache` يُعرض تحذيرًا ولا يُعتدّ بالنتيجة بيّنةً.
  */
 import { collection, getDocs, limit, query, where, db } from '../_db/index.js';
 import { planBulk } from '../documents/bulkActions.js';
 import { runBulk } from '../documents/bulkActionsService.js';
-import { STALE_DRAFT_TYPES, STALE_SCAN_LIMIT, isStaleOdooDraft, sourceDayOf } from './staleDrafts.js';
+import { CANCELABLE_STATES, STALE_SCAN_LIMIT, sourceDayOf, createdDayOf, staleGroupOf } from './staleDrafts.js';
 
 /**
- * قراءةٌ واحدةٌ بالنوع بسقف (لا اشتراك)، ثمّ القاعدةُ الضيّقة — مرتّبةً بالتاريخ فالمرجع.
- * @returns {Promise<{drafts:object[], scanned:number, capped:boolean}>}
+ * قراءةٌ واحدةٌ بالحالة المفتوحة بسقف (لا اشتراك)، ثمّ القاعدةُ الضيّقة — مرتّبةً بالمجموعة فالتاريخ.
+ * @returns {Promise<{drafts:object[], scanned:number, capped:boolean, fromCache:boolean}>}
  */
 export async function fetchStaleOdooDrafts() {
-  const snap = await getDocs(query(collection(db, 'documents'), where('type', 'in', [...STALE_DRAFT_TYPES]), limit(STALE_SCAN_LIMIT)));
+  const snap = await getDocs(query(collection(db, 'documents'), where('state', 'in', [...CANCELABLE_STATES]), limit(STALE_SCAN_LIMIT)));
+  const dayOf = (d) => sourceDayOf(d) || createdDayOf(d);
   const drafts = snap.docs
     .map((d) => ({ id: d.id, ...d.data() }))
-    .filter((d) => isStaleOdooDraft(d))
-    .sort((a, b) => sourceDayOf(a).localeCompare(sourceDayOf(b)) || String(a.header?.sourceRef).localeCompare(String(b.header?.sourceRef)));
-  return { drafts, scanned: snap.size, capped: snap.size >= STALE_SCAN_LIMIT };
+    .map((d) => ({ ...d, staleGroup: staleGroupOf(d) }))
+    .filter((d) => d.staleGroup)
+    .sort((a, b) => a.staleGroup.localeCompare(b.staleGroup) || dayOf(a).localeCompare(dayOf(b)) || String(a.number || a.header?.sourceRef).localeCompare(String(b.number || b.header?.sourceRef)));
+  return { drafts, scanned: snap.size, capped: snap.size >= STALE_SCAN_LIMIT, fromCache: Boolean(snap.metadata?.fromCache) };
 }
 
 /**

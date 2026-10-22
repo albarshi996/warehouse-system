@@ -30,6 +30,7 @@ export const ORDER_STATUS = {
   'on-hold': { id: 'on-hold', label: 'موقوف (سببٌ مسجَّل)', emoji: '✋', color: '#8b5cf6', hasStock: true },
   delivered: { id: 'delivered', label: 'سُلّم', emoji: '✅', color: '#10b981', hasStock: null },
   closed: { id: 'closed', label: 'مقفل', emoji: '🏁', color: '#059669', hasStock: null },
+  canceled: { id: 'canceled', label: 'ملغى', emoji: '', color: '#6b7280', hasStock: null },
 };
 
 /** أبناء أمر البيع من نوعٍ ما (يحملون رابطًا إليه في `links.SO`). */
@@ -44,13 +45,18 @@ function orderValue(so) {
 
 /**
  * يصنّف أمر بيعٍ واحدًا: أهو معلّقٌ؟ ولماذا؟
- * الأولوية: التسليم يُنهي كل شيء ← الإقفال ← عدم الاعتماد ← الإيقاف اليدوي ←
- * انعدام الرصيد ← التعثّر في التعبئة أو التجهيز.
+ * الأولوية: التسليم يُنهي كل شيء ← الإقفال (منجَز أو مغلق) ← الإلغاء ← عدم
+ * الاعتماد ← الإيقاف اليدوي ← انعدام الرصيد ← التعثّر في التعبئة أو التجهيز.
+ *
+ * ★★ ‹ODOO-ORD› والملغى والمغلق ليسا معلّقَين (قيس 2026-10-22): كان التصنيف لا يسأل عنهما، فأمرٌ ملغًى
+ *    بعجزٍ مثبَّتٍ عليه يسقط إلى «لا يوجد رصيد» — فملأت الرئيسيّةَ بطاقاتُ «أمر بيعٍ بلا رصيد» عالية الخطورة
+ *    لأوامر SO-2026-0009…0016 وهي ملغاةٌ كلُّها. والحالتان منتهيتان (`TERMINAL_STATES`): لا تنفيذَ بعدهما.
  */
 export function classifyOrder(so, docs) {
   const dnDone = childrenOf(so, docs, 'DN').some((d) => d.state === 'done');
   if (dnDone) return { status: 'delivered', pending: false };
-  if (so.state === 'done') return { status: 'closed', pending: false };
+  if (so.state === 'done' || so.state === 'closed') return { status: 'closed', pending: false };
+  if (so.state === 'canceled') return { status: 'canceled', pending: false };
 
   const shortfall = so.soShortfall || [];
   const reservedNothing = so.soReserved && (so.soAllocation || []).length === 0;

@@ -17,7 +17,8 @@
  *
  * والاستيراد من إكسل يبقى كما هو: **رصيدٌ افتتاحي**، لا مصدرًا للحقيقة الجارية.
  */
-import { collection, doc, getDoc, getDocs, onSnapshot, query, where, orderBy, limit, increment, serverTimestamp, runTransaction, writeBatch, db } from '../_db/index.js';
+import { collection, doc, getDoc, getDocs, onSnapshot, query, where, orderBy, limit, increment, serverTimestamp, runTransaction, writeBatch, Timestamp, db } from '../_db/index.js';
+import { OPENING_MS } from '../documents/actualWork.js';
 import { auth } from '../../config/firebase.js';
 import { buildMoves, balanceDeltas, canPost, findNegativeBalance } from './movements.js';
 import { reservationDeltas } from './reservations.js';
@@ -330,6 +331,15 @@ export async function movesIntoLocation(location, max = 200) {
 /** آخر الحركات لحظيًّا — تغذّي لوحة التحكم التشغيلية. */
 export function listenRecentMoves(callback, max = 100) {
   const q = query(collection(db, MOVES), orderBy('postedAt', 'desc'), limit(max));
+  return onSnapshot(q, (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))));
+}
+
+/**
+ * ‹ODOO-ORD› الحركاتُ المقيَّدةُ منذ لحظةٍ (افتراضًا: الافتتاح) — الأحدثُ أوّلًا. نطاقٌ وترتيبٌ على `postedAt` وحده.
+ * ★★ لوحةُ اللوجستيات كانت تقرأ 2,500 حركةٍ في كلّ فتحةٍ لتعرض عشرًا، وأغلبُها تجاربُ ما قبل اللقطة.
+ */
+export function listenMovesSince(callback, { sinceMs = OPENING_MS, max = 2500 } = {}) {
+  const q = query(collection(db, MOVES), where('postedAt', '>=', Timestamp.fromMillis(sinceMs)), orderBy('postedAt', 'desc'), limit(max));
   return onSnapshot(q, (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))));
 }
 

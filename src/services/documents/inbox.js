@@ -10,6 +10,7 @@
  */
 import { getSchema } from './schemas/index.js';
 import { getState } from './states.js';
+import { OPENING_DAY } from './actualWork.js';
 
 /**
  * حدود التأخّر بالأيام لكل حالة.
@@ -51,9 +52,22 @@ export function ageInState(doc, nowMs) {
   return Math.max(0, Math.floor((nowMs - at) / DAY_MS));
 }
 
-/** هل تجاوز المستند مهلة حالته؟ (المنجَز لا يتأخّر — انتهى) */
+/**
+ * ‹ODOO-ORD› سجلٌّ من أودو لا عملٌ ينتظر أحدًا هنا: أمرٌ يُحدَّث من أودو (`sourceOrder`) أو مستندٌ أُنجز هناك (`sourcePosted`).
+ *
+ * ★★ ولمَ يُستثنى من «متأخّر»؟ لأنّ أمرَ أودو يُستورد «معتمَدًا» ويبقى كذلك ما دام قائمًا هناك — فمهلةُ المعتمَد
+ *    (5 أيام) كانت ستصبغ أوامرَ اليوم كلَّها بالأحمر بعد خمسة أيّام، وهي سجلّاتٌ راقدةٌ لا ورقةٌ نُسيت على مكتب.
+ *    والحكمُ من المخطّط لا من قائمة أنواع: نوعُ أودو جديدٌ غدًا يُستثنى بلا حرفٍ هنا.
+ */
+export function isSourceRecord(doc) {
+  const schema = getSchema(doc?.type);
+  return Boolean(schema?.sourceOrder || schema?.sourcePosted);
+}
+
+/** هل تجاوز المستند مهلة حالته؟ (المنجَز لا يتأخّر — انتهى · وسجلُّ أودو لا يتأخّر — لا ينتظر أحدًا هنا) */
 export function isStale(doc, nowMs, limits = STALE_DAYS) {
   if (!doc || doc.state === 'done') return false;
+  if (isSourceRecord(doc)) return false;
   const limit = limits[doc.state];
   if (limit == null) return false;
   const age = ageInState(doc, nowMs);
@@ -113,6 +127,42 @@ export function filterDocs(docs, { q = '', type = '', state = '' } = {}) {
     return hay.includes(needle);
   });
 }
+
+/**
+ * طرفُ الصفّ في القائمة: `partner` أودو أوّلًا («الاسم (الرمز)»)، وإلّا ما أعلنته `partyFields` (يُمرَّر `declared`).
+ *
+ * ★ ولمَ؟ مستندُ أودو وأمرُه يكتبان العميلَ أو المورّدَ في `partner` — وليس في `PARTY_FIELDS` — فكان عمودُ
+ *   «المورّد/العميل» يعرض كودَ المستودع (WH001) لكلّ أمرِ بيعٍ من أودو.
+ */
+export function partyText(doc, declared = '') {
+  const partner = String(doc?.header?.partner ?? '').trim();
+  const code = String(doc?.header?.partnerCode ?? '').trim();
+  if (partner) return code && code !== partner ? `${partner} (${code})` : partner;
+  return declared || code;
+}
+
+/**
+ * ‹ODOO-ORD› سطرُ ما أُخفي من تجارب ما قبل الافتتاح — أو '' فلا سطر.
+ *
+ * ★★ والإخفاءُ يُقال ولا يُسكت عنه: من عهد «معلّقًا منذ 88 يومًا» ثمّ لم يجده ظنّه ضاع. والعددُ ممّا قُرئ أصلًا
+ *    (لا قراءةَ لأجله). والعربيّةُ بعددها: واحدٌ ومثنّى وجمعُ قلّةٍ وتمييزٌ منصوب.
+ */
+export function preOpeningNote(count, { open = false } = {}) {
+  const n = Math.max(0, Math.floor(Number(count) || 0));
+  if (!n) return '';
+  const what =
+    n === 1
+      ? `مستندٌ ${open ? 'مفتوحٌ ' : ''}واحد`
+      : n === 2
+        ? `مستندان${open ? ' مفتوحان' : ''}`
+        : n <= 10
+          ? `${n} مستندات${open ? ' مفتوحة' : ''}`
+          : `${n} مستندًا${open ? ' مفتوحًا' : ''}`;
+  return `أُخفي ${what} من تجارب ما قبل الافتتاح (${OPENING_DAY}) — لم يُحذف شيء، والأرشيفُ والتقاريرُ ترى كلَّ شيء.`;
+}
+
+/** سطرُ تبويب «الكل»: يُقرأ من الخادم ما بعد الافتتاح وحده، فلا عددَ يُخفى — بل حدٌّ يُعلَن. */
+export const SINCE_OPENING_NOTE = `يعرض ما أُنشئ منذ الافتتاح (${OPENING_DAY}) — وتجاربُ ما قبله لا تُقرأ هنا، والأرشيفُ والتقاريرُ ترى كلَّ شيء.`;
 
 /** لقطة الصندوق: كم في كل حالة، وكم متأخّر. */
 export function inboxStats(docs, nowMs) {

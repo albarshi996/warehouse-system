@@ -60,6 +60,30 @@ test('طلبٌ موقوفٌ بسببٍ يدويّ ⇒ موقوف', () => {
   assert.equal(c.holdReason, 'إيقاف من العميل');
 });
 
+test('★★ ‹ODOO-ORD› أمرٌ ملغًى بعجزٍ مثبَّت ⇒ ملغى لا «بلا رصيد» — وليس معلّقًا', () => {
+  // شكلُ SO-2026-0009…0016 كما قيس: عجزٌ ثبت لحظةَ الاعتماد ثمّ أُلغي الأمر.
+  const s = so('7', { state: 'canceled', soAllocation: [], soShortfall: [{ sku: 'A', shortfall: 10 }] });
+  const c = classifyOrder(s, [s]);
+  assert.equal(c.status, 'canceled');
+  assert.equal(c.pending, false);
+  assert.ok(ORDER_STATUS[c.status], 'ولحالته وصفٌ في الجدول');
+});
+
+test('★★ ‹ODOO-ORD› أمرٌ مغلقٌ بعجز ⇒ مقفل لا معلّق', () => {
+  const s = so('8', { state: 'closed', soAllocation: [], soShortfall: [{ sku: 'A', shortfall: 10 }] });
+  const c = classifyOrder(s, [s]);
+  assert.equal(c.status, 'closed');
+  assert.equal(c.pending, false);
+});
+
+test('★★ ‹ODOO-ORD› الملغى والمغلق لا يدخلان تقرير المعلّق ولا عدّاد «بلا رصيد»', () => {
+  const short = { soAllocation: [], soShortfall: [{ sku: 'A', shortfall: 10 }] };
+  const r = pendingOrders([so('1', { ...short }), so('2', { ...short, state: 'canceled' }), so('3', { ...short, state: 'closed' })]);
+  assert.equal(r.pending, 1);
+  assert.equal(r.noStock, 1, 'المعتمَد وحده بلا رصيد');
+  assert.deepEqual(r.rows.map((x) => x.id), ['1']);
+});
+
 /* ───────────────── تقرير الطلبات المعلّقة ───────────────── */
 
 test('تقرير الطلبات المعلّقة يصنّف ويعدّ بالرصيد', () => {

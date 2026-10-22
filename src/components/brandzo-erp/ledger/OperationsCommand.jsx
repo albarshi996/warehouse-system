@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import Icon from '../../ui/Icon.jsx';
 import { subscribeAuth, fetchUserProfile, getBasePath } from '../../../services/auth/authService.js';
-import { listenAllDocuments } from '../../../services/documents/documentsService.js';
-import { listenBalances } from '../../../services/balances/balancesService.js';
+import { listenDocumentsSince } from '../../../services/documents/documentsService.js';
+import { OPENING_DAY, actualDocs } from '../../../services/documents/actualWork.js';
+import { listenBalances, listenBalancesDelta } from '../../../services/balances/balancesService.js';
+import { productsFullReads } from '../../../services/items/catalogDelta.js';
 import { subscribeItems } from '../../../services/items/itemService.js';
 import {
   ORIGIN,
@@ -14,6 +16,7 @@ import {
 } from '../../../services/ledger/operationsDashboard.js';
 import ExceptionsBox from './ExceptionsBox.jsx';
 import { listenExceptions, syncDetections } from '../../../services/ledger/exceptionsService.js';
+import { boardRegistry } from '../../../services/ledger/exceptions.js';
 import { canOpenPath } from '../../../services/auth/pageAccess.js';
 import { listenLaborTasks } from '../../../services/labor/laborTasksService.js';
 import { listenSyncEvents } from '../../../services/odoo/odooSyncService.js';
@@ -31,6 +34,9 @@ const KPI_WINDOW_DAYS = 90;
 const DAY_MS = 86400000;
 /** سجلّ أحداث المزامنة: أحدث ما يكفي لمعرفة آخر سحبٍ — لا المجموعة كلّها. */
 const SYNC_EVENTS_CAP = 40;
+/** مهامّ المناولة: اللوحة تبحث فيها عن حلقة «المسار إلى الإجراء» وحدها — فيكفيها الأحدث. */
+const LABOR_TASKS_CAP = 200;
+const ODOO_REPORTS_PATH = '/dashboard/odoo-reports';
 
 /**
  * المناظير المتخصّصة — قرار المالك 2026-08-24: **هذه اللوحة هي الرئيسة**.
@@ -68,6 +74,13 @@ const LENSES = [
  * حكمٍ في الشاشة.
  *
  * ولا حسابَ هنا: كلّه في `operationsDashboard.js` الخالص المُختبَر.
+ *
+ * ═══ ‹ODOO-ORD› العملُ الفعليّ وحده — وأخفّ (قيس 2026-10-22) ═══
+ * كانت الرئيسيّةُ تقرأ أحدثَ 800 مستندٍ بلا حدٍّ زمنيّ والأرصدةَ كلَّها والسجلَّ كلَّه في كلّ فتحة (≈ 3,100 قراءة)،
+ * فتعرض تجاربَ ما قبل الافتتاح (كلُّ مستندٍ أُنشئ في البوّابة أُنشئ بين يوليو و14 أكتوبر) ولا شيءَ من أودو.
+ * فصارت: المستنداتُ منذ الافتتاح من الخادم (`listenDocumentsSince`) ثمّ `actualDocs` أمانًا · والأرصدةُ
+ * بالدلتا كشاشة الأصناف (ومفتاحُ إطفائها نفسُه `bz.products.fullReads`) · والسجلُّ مفتوحُه وحده · والمهامُّ
+ * أحدثُها. وقسمُ «أودو» في الفهرس يعدّ أوامرَه المفتوحة ومستنداتِه المُرحَّلة.
  */
 
 const pct = (v) => (v == null ? '—' : `${Math.round(v * 100)}%`);
@@ -89,10 +102,25 @@ function tone(v, good, ok, invert = false) {
 export default function OperationsCommand() {
   const [me, setMe] = useState(null);
   const [ready, setReady] = useState(false);
-  const [docs, setDocs] = useState([]);
+  const [rawDocs, setDocs] = useState([]);
   const [balances, setBalances] = useState([]);
   const [items, setItems] = useState([]);
+  // ‹ODOO-ORD› الخادمُ يعيد ما بعد الافتتاح، و`actualDocs` أمانٌ ثانٍ: مستندُ تجربةٍ قديمٌ لا يدخل رقمًا ولو وصل.
+  const docs = useMemo(() => actualDocs(rawDocs), [rawDocs]);
   const nowMs = useMemo(() => Date.now(), [docs, balances]);
+
+  /**
+   * ‹ODOO-ORD› الأرصدةُ بالدلتا كشاشة الأصناف حرفًا: الأساسُ من ذاكرة المتصفّح أو قراءةٌ واحدةٌ تُحفظ، والمستمعُ
+   * على ما خُتم بعده، وعدٌّ من الخادم يُثبت التمام (`catalogDelta.js`). ومفتاحُ الإطفاء نفسُه
+   * `localStorage['bz.products.fullReads']='1'` يُعيد المستمعَ الكامل — لا آليّةَ ثانية.
+   */
+  const fullReads = useMemo(() => {
+    try {
+      return productsFullReads(typeof localStorage === 'undefined' ? null : localStorage);
+    } catch {
+      return false;
+    }
+  }, []);
 
   useEffect(() => {
     const unsub = subscribeAuth(async (user) => {
@@ -104,18 +132,23 @@ export default function OperationsCommand() {
 
   useEffect(() => {
     if (!me) return undefined;
-    const u1 = listenAllDocuments(setDocs, DOC_CAP);
-    const u2 = listenBalances(setBalances, () => setBalances([]));
+    const u1 = listenDocumentsSince(setDocs, { max: DOC_CAP });
+    const u2 = fullReads
+      ? listenBalances(setBalances, () => setBalances([]))
+      : listenBalancesDelta(setBalances, () => setBalances([]));
     const u3 = subscribeItems(setItems, () => setItems([]));
     return () => {
       u1?.();
       u2?.();
       u3?.();
     };
-  }, [me]);
+  }, [me, fullReads]);
 
   const kpis = useMemo(() => computeKpis(docs, { nowMs, windowDays: KPI_WINDOW_DAYS }), [docs, nowMs]);
-  const snap = useMemo(() => operationsSnapshot(docs, balances, items), [docs, balances, items]);
+  const snap = useMemo(
+    () => operationsSnapshot(docs, balances, items, { nowMs, windowDays: KPI_WINDOW_DAYS }),
+    [docs, balances, items, nowMs]
+  );
   const exceptions = useMemo(() => operationExceptions(docs, balances, nowMs, items), [docs, balances, items, nowMs]);
 
   // ‹EXE-204› السجلّ يُقرأ حيًّا، والتسجيل بيد المشرف (ت-O01) لا صامتًا.
@@ -123,7 +156,9 @@ export default function OperationsCommand() {
   const [registering, setRegistering] = useState('');
   const [laborTasks, setLaborTasks] = useState([]);
   useEffect(() => listenExceptions(setRegistry, () => setRegistry([])), []);
-  useEffect(() => listenLaborTasks(setLaborTasks, () => setLaborTasks([])), []);
+  useEffect(() => listenLaborTasks(setLaborTasks, () => setLaborTasks([]), { max: LABOR_TASKS_CAP }), []);
+  // ‹ODOO-ORD› الصندوقُ بلا ما سُجّل قبل الافتتاح (إلّا ما يُكشف الآن) — والمصالحةُ تأخذ السجلَّ كاملًا.
+  const shownRegistry = useMemo(() => boardRegistry(registry, exceptions), [registry, exceptions]);
 
   // ‹EXE-503› قِدَم المرجعيّ: سجلّ أحداث المزامنة (للأصناف) وحالة السحب (للمرايا).
   // كلاهما محدودُ القراءة — لا مجموعةَ مزامنةٍ كاملة تُقرأ لأجل ختمِ زمن.
@@ -150,15 +185,16 @@ export default function OperationsCommand() {
   // صدقُ البتر: إن بلغ عدد المستندات حدّ العرض فثمّة أقدمُ منها لم يُقرأ.
   // وإن كان أقدم مستندٍ مقروء أحدثَ من بداية نافذة المؤشرات، فالنافذة نفسها
   // ناقصة ⇒ المؤشرات قد لا تعكس كل الـ90 يومًا. نقولها صراحةً لا نُخفيها.
-  const truncated = docs.length >= DOC_CAP;
+  // والحدّ على ما أعاده الخادم (`rawDocs`) لا على ما بقي بعد الترشيح — السقفُ سقفُ الاستعلام.
+  const truncated = rawDocs.length >= DOC_CAP;
   const oldestMs = useMemo(() => {
     let m = null;
-    for (const d of docs) {
+    for (const d of rawDocs) {
       const t = toMillis(d?.createdAt);
       if (t != null && (m == null || t < m)) m = t;
     }
     return m;
-  }, [docs]);
+  }, [rawDocs]);
   const kpiWindowIncomplete = truncated && oldestMs != null && oldestMs > nowMs - KPI_WINDOW_DAYS * DAY_MS;
 
   if (!ready) return <p className="text-ink-2 text-sm py-10 text-center">جارٍ التحميل…</p>;
@@ -167,6 +203,8 @@ export default function OperationsCommand() {
   const base = getBasePath();
   const refNote = reference.master?.ageLabel || '';
   const lenses = LENSES.filter((l) => canOpenPath(me.role, l.path));
+  // لا اسمَ بلا باب: رابطُ تقارير أودو لمن تُفتح له وحده.
+  const odooHref = canOpenPath(me.role, ODOO_REPORTS_PATH) ? `${base}${ODOO_REPORTS_PATH}` : '';
 
   return (
     <div dir="rtl" className="space-y-6">
@@ -180,8 +218,8 @@ export default function OperationsCommand() {
           <Icon name="alertTriangle" size={14} className="mt-0.5 shrink-0" />
           <span>
             {kpiWindowIncomplete
-              ? `المؤشرات محسوبة على جزءٍ من آخر ${KPI_WINDOW_DAYS} يومًا فقط — بلغت اللوحة حدّ عرض ${num(DOC_CAP)} مستند، فقد تكون الأرقام ناقصة. للدقّة الكاملة عند هذا الحجم يلزم تجميع خادميّ (Cloud Function).`
-              : `اللقطة والعدّادات تعرض أحدث ${num(DOC_CAP)} مستند وقد لا تعكس الإجمالي التاريخي. المؤشرات محسوبة على آخر ${KPI_WINDOW_DAYS} يومًا (نافذتها مكتملة).`}
+              ? `المؤشرات محسوبة على جزءٍ من المستندات منذ الافتتاح فقط — بلغت اللوحة حدّ عرض ${num(DOC_CAP)} مستند، فقد تكون الأرقام ناقصة. للدقّة الكاملة عند هذا الحجم يلزم تجميع خادميّ (Cloud Function).`
+              : `اللقطة والعدّادات تعرض أحدث ${num(DOC_CAP)} مستند منذ الافتتاح وقد لا تعكس الإجمالي. المؤشرات محسوبة على آخر ${KPI_WINDOW_DAYS} يومًا (نافذتها مكتملة).`}
           </span>
         </div>
       )}
@@ -194,7 +232,7 @@ export default function OperationsCommand() {
       >
         <ExceptionsBox
           detections={exceptions}
-          registry={registry}
+          registry={shownRegistry}
           nowMs={nowMs}
           onRegister={registerDetected}
           laborTasks={laborTasks}
@@ -206,7 +244,7 @@ export default function OperationsCommand() {
       <Layer
         icon="gauge"
         title="إجراءات سريعة"
-        hint={`الطبيعيّ مختصرًا · وأبوابُ العمل · المؤشّرات لآخر ${KPI_WINDOW_DAYS} يومًا`}
+        hint={`الطبيعيّ مختصرًا · وأبوابُ العمل · المؤشّرات منذ الافتتاح (${OPENING_DAY}) بحدّ ${KPI_WINDOW_DAYS} يومًا`}
       >
         <div className="rounded-2xl border border-line bg-surface divide-y divide-line">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 divide-line sm:divide-x sm:divide-x-reverse">
@@ -225,6 +263,7 @@ export default function OperationsCommand() {
             <Quick href={`${base}/dashboard/order-control`} icon="shoppingCart" label="مراقبة الطلبات" />
             <Quick href={`${base}/dashboard/stock-ledger`} icon="history" label="دفتر الحركات" />
             <Quick href={`${base}/dashboard/odoo-sync`} icon="arrowLeftRight" label="جسر أودو" />
+            {odooHref && <Quick href={odooHref} icon="barChart3" label="تقارير أودو" />}
           </div>
         </div>
       </Layer>
@@ -236,6 +275,15 @@ export default function OperationsCommand() {
         hint="كلّ العدّادات بأصولها — واللحظيّ والمرجعيّ لا يُخلطان في رقم"
       >
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {/* ‹ODOO-ORD› العملُ الفعليُّ منذ الافتتاح مستورَدٌ من أودو — فقسمُه أوّلًا، والأرقامُ أرقامُ تقاريره نفسُها. */}
+          <Panel icon="arrowLeftRight" title="أودو" href={odooHref}>
+            <Row path="odoo.salesOpen" label="أوامر بيع مفتوحة" value={num(snap.odoo.salesOpen)} />
+            <Row path="odoo.salesOpenQty" label="كمّيّة بانتظار التسليم" value={num(snap.odoo.salesOpenQty)} />
+            <Row path="odoo.purchasesOpen" label="أوامر شراء مفتوحة" value={num(snap.odoo.purchasesOpen)} />
+            <Row path="odoo.purchasesOpenQty" label="كمّيّة بانتظار الاستلام" value={num(snap.odoo.purchasesOpenQty)} />
+            <Row path="odoo.posted" label={`مستندات مخزون مُرحَّلة · آخر ${KPI_WINDOW_DAYS} يومًا`} value={num(snap.odoo.posted)} />
+          </Panel>
+
           <Panel icon="shoppingCart" title="المبيعات" href={`${base}/dashboard/order-control`}>
             <Row path="sales.orders" label="أوامر البيع" value={num(snap.sales.orders)} />
             <Row path="sales.pending" label="معلّقة" value={num(snap.sales.pending)} tone="#f59e0b" />
@@ -373,7 +421,7 @@ function Panel({ icon, title, href, children }) {
           <Icon name={icon} size={14} className="text-ink-2" />
           {title}
         </h3>
-        <a href={href} className="text-[11px] text-accent hover:underline">فتح ↗</a>
+        {href && <a href={href} className="text-[11px] text-accent hover:underline">فتح ↗</a>}
       </div>
       <div className="space-y-1">{children}</div>
     </div>

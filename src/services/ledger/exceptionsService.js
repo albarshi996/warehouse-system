@@ -11,13 +11,15 @@
  * ولا حذف (`delete:false` في القواعد): سجلٌّ يُمحى لا قيمة له، والتصحيح
  * استثناءٌ جديد يشير إلى الأوّل.
  */
-import { collection, doc, addDoc, getDocs, onSnapshot, orderBy, query, runTransaction, serverTimestamp, updateDoc, where, db } from '../_db/index.js';
+import { collection, doc, addDoc, getDocs, limit, onSnapshot, query, runTransaction, serverTimestamp, updateDoc, where, db } from '../_db/index.js';
 import { auth } from '../../config/firebase.js';
 import { counterId, formatNumber, nextSeq } from '../documents/numberFormat.js';
 import {
   EXCEPTION_PREFIX,
   EXCEPTION_STATUS,
+  OPEN_STATUSES,
   VANISHED_NOTE,
+  newestFirst,
   detectionsToDrafts,
   reconcileDetections,
   canTransition,
@@ -42,11 +44,19 @@ function logEvent(id, actor, type, extra = {}) {
   return addDoc(collection(db, COL, id, 'events'), { type, ...extra, ...actor, at: serverTimestamp() });
 }
 
-/** يستمع للاستثناءات (الأحدث كشفًا أوّلًا). يُعيد دالّة إلغاء الاشتراك. */
-export function listenExceptions(cb, onError) {
+/**
+ * يستمع للاستثناءات **المفتوحة** (الأحدث كشفًا أوّلًا). يُعيد دالّة إلغاء الاشتراك.
+ *
+ * ★★ ‹ODOO-ORD› كانت تقرأ السجلَّ كلَّه — مغلقَه ومفتوحَه — في كلّ فتحةٍ للرئيسيّة بلا سقف، والمغلقُ لا يقرؤه أحد:
+ *    الصندوقُ (`boardRows`) ومصالحةُ الكشف (`reconcileDetections`) وبرجُ القطاع يرشّحون `isOpenStatus` كلُّهم.
+ *    فالشرطُ على `status` بالحالات المفتوحة والسقفُ `max`، والترتيبُ محلّيّ (`newestFirst`) — شرطُ حقلٍ واحدٍ بلا
+ *    `orderBy` لا يطلب فهرسًا مركّبًا. والشرطُ لا السقفُ وحدَه: «أحدثُ 300» قد يُسقط مفتوحًا قديمًا، فتراه المصالحةُ
+ *    غائبًا وتفتح نسخةً ثانيةً منه.
+ */
+export function listenExceptions(cb, onError, { max = 300 } = {}) {
   return onSnapshot(
-    query(collection(db, COL), orderBy('createdAt', 'desc')),
-    (s) => cb(s.docs.map((d) => ({ id: d.id, ...d.data() }))),
+    query(collection(db, COL), where('status', 'in', [...OPEN_STATUSES]), limit(max)),
+    (s) => cb(newestFirst(s.docs.map((d) => ({ id: d.id, ...d.data() })))),
     (e) => onError?.(e)
   );
 }

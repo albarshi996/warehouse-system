@@ -33,6 +33,23 @@ export default function AuthGate() {
     const base = getBasePath();
     const overlay = document.getElementById('bz-auth-overlay');
 
+    // ‹ODOO-ORD› حين يضعف الاتّصال كانت الطبقةُ تدور صامتةً دقائق (2026-10-22). لا نتجاوز التحقّق — الشاشةُ لا تُفتح لمن
+    // لم يُعرف — بل نقول ما يجري ونعطي زرَّ إعادة المحاولة.
+    const slow = setTimeout(() => {
+      if (!overlay || overlay.style.display === 'none') return;
+      const note = document.createElement('div');
+      note.style.cssText = 'text-align:center;font-size:13px;opacity:.85;line-height:1.8;max-width:320px';
+      note.textContent = 'الاتّصالُ بقاعدة البيانات بطيءٌ الآن — ما زلنا نحاول.';
+      const retry = document.createElement('button');
+      retry.type = 'button';
+      retry.textContent = 'أعد التحميل';
+      retry.style.cssText = 'margin-top:8px;padding:6px 16px;border-radius:8px;border:1px solid currentColor;background:transparent;color:inherit;cursor:pointer';
+      retry.onclick = () => window.location.reload();
+      note.appendChild(document.createElement('br'));
+      note.appendChild(retry);
+      overlay.appendChild(note);
+    }, 8000);
+
     const unsub = subscribeAuth(async (user) => {
       if (!user) {
         // يحمل الوجهة معه: عضو اللجنة يفتح رابط دعوةٍ وهو خارج الحساب، فكان
@@ -59,7 +76,11 @@ export default function AuthGate() {
         return;
       }
 
+      clearTimeout(slow);
       if (overlay) overlay.style.display = 'none';
+      // ‹ODOO-ORD› علامةُ «جاري الاتصال بقاعدة البيانات...» في التخطيط لا يُحدّثها إلّا هذا الحدث — وكان لا يُطلقه إلّا
+      // شاشةُ المستودعات، فبقيت العلامةُ «تتّصل» أبدًا في كلّ صفحةٍ أخرى. قراءةُ الملفّ نجحت ⟵ القاعدةُ متّصلة.
+      window.dispatchEvent(new CustomEvent('brandzo:db-status', { detail: { online: true } }));
 
       // ‹VIS-202› سجلُّ الزيارة — **بعد** أن يُعرف المستخدمُ ويُسمح له بالصفحة،
       // فلا يُسجَّل موقوفٌ ولا محوَّلٌ عن صفحةٍ لا يملكها.
@@ -70,7 +91,10 @@ export default function AuthGate() {
       recordVisit({ kind: 'VIEW', path: toCatalogPath(path, base), profile });
     });
 
-    return () => unsub();
+    return () => {
+      clearTimeout(slow);
+      unsub();
+    };
   }, []);
 
   return null;

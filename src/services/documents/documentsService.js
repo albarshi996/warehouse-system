@@ -12,8 +12,9 @@
  * قاعدة التاريخ: سجلّ التدقيق **لا يُعدَّل ولا يُحذف** — نفس نمط `scans`.
  * والمستند نفسه لا يُحذف أبدًا؛ المستند الخاطئ يُرفض أو يُلغى، ولا يُمحى.
  */
-import { collection, doc, addDoc, getDoc, updateDoc, onSnapshot, query, orderBy, where, serverTimestamp, limit, getDocs, runTransaction, db } from '../_db/index.js';
+import { collection, doc, addDoc, getDoc, updateDoc, onSnapshot, query, orderBy, where, serverTimestamp, limit, getDocs, runTransaction, Timestamp, db } from '../_db/index.js';
 import { isOwnRetriedCreate } from './auditWrite.js';
+import { OPENING_MS } from './actualWork.js';
 import { auth } from '../../config/firebase.js';
 import { reserveNumber } from './numberingService.js';
 import { INITIAL_STATE, isEditable, isLegalTransition, canDo, TRANSITIONS } from './states.js';
@@ -491,6 +492,16 @@ export function listenPendingApproval(callback, max = 50) {
 }
 
 /** كل المستندات (للمدير) — الأحدث أولًا. */
+/**
+ * ‹ODOO-ORD› المستنداتُ المُنشأةُ منذ لحظةٍ (افتراضًا: الافتتاح) — الأحدثُ أوّلًا. نطاقٌ وترتيبٌ على حقلٍ واحد فلا فهرس مركّب.
+ * ★★ يقرأ العملَ الفعليَّ وحده: مستنداتُ التجربة قبل الافتتاح (240) لا تُقرأ أصلًا — والتصفيةُ بعد القراءة تُكلّفها كلَّ فتحة.
+ *    ومستنداتُ أودو المستورَدة مُنشأةٌ كلُّها بعد الحدّ عدا مسوّدات 19 أكتوبر الملغاة.
+ */
+export function listenDocumentsSince(callback, { sinceMs = OPENING_MS, max = 800 } = {}) {
+  const q = query(collection(db, DOCS), where('createdAt', '>=', Timestamp.fromMillis(sinceMs)), orderBy('createdAt', 'desc'), limit(max));
+  return onSnapshot(q, (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))));
+}
+
 export function listenAllDocuments(callback, max = 100) {
   const q = query(collection(db, DOCS), orderBy('createdAt', 'desc'), limit(max));
   return onSnapshot(q, (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))));
@@ -499,10 +510,11 @@ export function listenAllDocuments(callback, max = 100) {
 /**
  * مستندات أنواعٍ بعينها — لِلوحاتٍ متخصّصة (النقل مثلًا).
  * `in` بحقلٍ واحد فلا يلزم فهرس مركّب؛ نرتّب محليًّا (درس متابعة العمليات).
- * حدّ Firestore عشرة أنواع في `in` — يكفي لأيّ سلسلة.
+ * ★★ حدّ Firestore في `in` ثلاثون (كان عشرة) — و`slice(0, 10)` كان يُسقط صامتًا ما بعد العاشر: صندوقُ العمل المفتوح
+ *    يطلب 15 نوعًا فغابت VLD وRET وCC وIPO وPV (قيس 2026-10-22). ومثلُه `IN_LIMIT` في `scopedQuery.js`.
  */
 export function listenDocumentsByTypes(types, callback, max = 200) {
-  const list = (types || []).slice(0, 10);
+  const list = (types || []).slice(0, 30);
   if (!list.length) {
     callback([]);
     return () => {};

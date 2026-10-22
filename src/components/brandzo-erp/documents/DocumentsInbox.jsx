@@ -16,8 +16,9 @@ import { subscribeAuth, fetchUserProfile, getBasePath } from '../../../services/
 import {
   listenMyDocuments,
   listenPendingApproval,
-  listenAllDocuments,
+  listenDocumentsSince,
 } from '../../../services/documents/documentsService.js';
+import { actualDocs } from '../../../services/documents/actualWork.js';
 import { getSchema, GOVERNED_FORMS } from '../../../services/documents/schemas/index.js';
 import { getState } from '../../../services/documents/states.js';
 import { START_GROUPS } from '../../../services/documents/startGroups.js';
@@ -31,6 +32,9 @@ import {
   isStale,
   toCsv,
   csvFileName,
+  partyText,
+  preOpeningNote,
+  SINCE_OPENING_NOTE,
 } from '../../../services/documents/inbox.js';
 import Icon from '../../ui/Icon.jsx';
 import ListView from '../../odoo/ListView.jsx';
@@ -115,8 +119,9 @@ export default function DocumentsInbox() {
   const [me, setMe] = useState(null);
   const [ready, setReady] = useState(false);
   const [tab, setTab] = useState('pending');
-  const [mine, setMine] = useState([]);
-  const [pending, setPending] = useState([]);
+  /** ما قرأه الخادم كما هو — والمعروضُ مشتقٌّ منه بلا تجارب ما قبل الافتتاح (انظر أدناه). */
+  const [rawMine, setMine] = useState([]);
+  const [rawPending, setPending] = useState([]);
   const [all, setAll] = useState([]);
   /** معاييرُ التقرير كلُّها في كائنٍ واحد — مرجعُه `EMPTY_CRITERIA`. */
   const [criteria, setCriteria] = useState(EMPTY_CRITERIA);
@@ -140,9 +145,18 @@ export default function DocumentsInbox() {
   useEffect(() => {
     if (!me) return undefined;
     const subs = [listenMyDocuments(me.uid, setMine), listenPendingApproval(setPending)];
-    if (MANAGER_ROLES.includes(me.role)) subs.push(listenAllDocuments(setAll));
+    /* ‹ODOO-ORD› «الكل» يقرأ من الخادم ما بعد الافتتاح وحده — تجاربُ يوليو إلى 14 أكتوبر (240) لا تُقرأ أصلًا،
+       فتنظف القائمةُ وتخفّ معًا. والحدُّ مئةٌ كما كان. */
+    if (MANAGER_ROLES.includes(me.role)) subs.push(listenDocumentsSince(setAll, { max: 100 }));
     return () => subs.forEach((u) => u());
   }, [me]);
+
+  /**
+   * ‹ODOO-ORD› العملُ الفعليُّ وحده في «مستنداتي» و«بانتظار اعتمادي» — والاستعلامان بلا حدٍّ زمنيٍّ فتُصفّى
+   * التجاربُ بعد القراءة (`actualDocs`: مستندُ أودو عملٌ فعليٌّ أيًّا كان تاريخُه). وما أُخفي يُعدّ ويُقال أدناه.
+   */
+  const mine = useMemo(() => actualDocs(rawMine), [rawMine]);
+  const pending = useMemo(() => actualDocs(rawPending), [rawPending]);
 
   /** ما ينتظر اعتماد **هذا** المستخدم تحديدًا — لا كل ما أُرسل. */
   const forMe = useMemo(() => awaitingMyApproval(pending, me), [pending, me]);
@@ -158,6 +172,21 @@ export default function DocumentsInbox() {
   );
 
   const source = tab === 'mine' ? mine : tab === 'pending' ? forMe : tab === 'qc' ? qcDocs : all;
+
+  /**
+   * كم أُخفي من التبويب المعروض — الفرقُ بين ما قُرئ وما عُرض، بالمرشِّح نفسِه. ولا قراءةَ لأجله.
+   * و«الكل» لا يُخفي شيئًا بعد القراءة: حدُّه على الخادم، فيُعلَن حدُّه بدل عددٍ لا نعرفه.
+   */
+  const hiddenNote = useMemo(() => {
+    if (tab === 'all') return SINCE_OPENING_NOTE;
+    const raw =
+      tab === 'mine'
+        ? rawMine.length
+        : tab === 'pending'
+          ? awaitingMyApproval(rawPending, me).length
+          : qcQueue(rawPending, { role: me?.role, uid: me?.uid }, SCHEMAS).length;
+    return preOpeningNote(raw - source.length);
+  }, [tab, rawMine, rawPending, me, source]);
   const rows = useMemo(
     () => sortByUrgency(filterReport(source, { ...criteria, nowMs: now }), now),
     [source, criteria, now]
@@ -302,6 +331,8 @@ export default function DocumentsInbox() {
      * عمّا نجهل. فمن أراد تبديلَ الصياغة بدّلها هناك لا في خمس شاشات.
      */
     const ownerLine = nextOwnerOf(d).line;
+    /* ‹ODOO-ORD› `partner` أودو أوّلًا — وإلّا كان أمرُ البيع من أودو يُعرض بكود مستودعه طرفًا (`partyText`). */
+    const party = partyText(d, partyLabel(d));
     return {
       id: d.id,
       decoration: stale ? 'danger' : undefined,
@@ -311,9 +342,9 @@ export default function DocumentsInbox() {
         /* الطرفُ من `partyFields.js` عبر `docReport` — لا من تخمينِ حقلٍ هنا.
            والفراغُ فراغٌ: مستندُ تسويةٍ داخليٍّ لا طرفَ له، و«—» في عمودٍ
            نصفُه فارغٌ ضجيج. */
-        party: partyLabel(d) ? (
-          <span style={{ maxWidth: '220px', display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'bottom' }} title={partyLabel(d)}>
-            {partyLabel(d)}
+        party: party ? (
+          <span style={{ maxWidth: '220px', display: 'inline-block', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'bottom' }} title={party}>
+            {party}
           </span>
         ) : (
           <span style={{ color: 'var(--o-gray-400)' }}>—</span>
@@ -457,6 +488,13 @@ export default function DocumentsInbox() {
           ))}
         </div>
 
+        {/* ‹ODOO-ORD› ما أُخفي من تجارب ما قبل الافتتاح يُقال ولا يُسكت عنه — سطرٌ خافتٌ لا تنبيه. */}
+        {hiddenNote && (
+          <p style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)', margin: '-6px 0 14px', lineHeight: 1.6 }}>
+            {hiddenNote}
+          </p>
+        )}
+
         {/* ── لقطة الحالة ── */}
         {stats.total > 0 && (
           <div className="o_dashboard_kpis" style={{ marginBottom: '18px' }}>
@@ -559,7 +597,7 @@ export default function DocumentsInbox() {
         {stats.stale > 0 && (
           <p style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)', marginTop: '14px', lineHeight: 1.6 }}>
             «متأخّر» = تجاوز مهلة حالته (بانتظار الاعتماد: يومان · معتمَد: 5 أيام · مسودّة: أسبوعان) —
-            وهو ما كان الورق يُخفيه على المكاتب.
+            وهو ما كان الورق يُخفيه على المكاتب. وسجلّاتُ أودو (أوامرُه ومستنداتُه المنجَزة) لا تتأخّر: لا تنتظر أحدًا هنا.
           </p>
         )}
       </div>

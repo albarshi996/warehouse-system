@@ -7,7 +7,10 @@ import {
   ORIGIN,
   REFERENCE_FRESH_MS,
   REFERENCE_STALE_MS,
+  SNAPSHOT_ORIGIN,
+  boardStuckBalances,
   computeKpis,
+  isOpen,
   freshnessLevel,
   operationExceptions,
   operationsSnapshot,
@@ -204,4 +207,95 @@ test('كلّ نطاقات السحب معروضةٌ بأسمائها من سجل
   const f = referenceFreshness({}, NOW);
   assert.equal(f.scopes.length, PULL_SCOPE_IDS.length);
   for (const s of f.scopes) assert.ok(s.label && s.label !== s.id, `${s.id} بلا تسميةٍ عربيّة`);
+});
+
+/* ───── ‹ODOO-ORD› الملغى ليس مفتوحًا · مخزن النقل ليس عالقًا · وعملُ أودو في اللقطة ───── */
+
+test('★★ ‹ODOO-ORD› الملغى والمغلق ليسا مفتوحَين — 106 مسوّداتٍ ملغاةٍ لا تُعدّ قوائمَ سحب', () => {
+  assert.equal(isOpen({ state: 'canceled' }), false);
+  assert.equal(isOpen({ state: 'closed' }), false);
+  assert.equal(isOpen({ state: 'done' }), false);
+  assert.equal(isOpen({ state: 'rejected' }), false);
+  assert.equal(isOpen({ state: 'draft' }), true);
+  assert.equal(isOpen({ state: 'approved' }), true);
+  const odoo = { sourceSystem: 'Odoo' };
+  const docs = [
+    { id: 'p1', type: 'PICK', state: 'canceled', header: odoo },
+    { id: 'p2', type: 'PICK', state: 'closed' },
+    { id: 'p3', type: 'PICK', state: 'approved' },
+    { id: 'u1', type: 'PUTAWAY', state: 'canceled', header: odoo },
+    { id: 'i1', type: 'INV', state: 'canceled' },
+  ];
+  const snap = operationsSnapshot(docs, [], []);
+  assert.equal(snap.warehouse.picking, 1, 'المعتمَد وحده');
+  assert.equal(snap.warehouse.putaway, 0);
+  assert.equal(snap.finance.awaitingClose, 0, 'والفاتورةُ الملغاة لا تنتظر إقفالًا');
+});
+
+test('★★ ‹ODOO-ORD› رصيدُ أودو في مخزن النقل ليس استثناءً — وبقيّةُ مواقع التصفير كما هي', () => {
+  const balances = [
+    { sku: 'A', warehouse: 'TRANSIT', qty: 29166 },
+    { sku: 'B', warehouse: 'transit', qty: 4 },
+    { sku: 'C', warehouse: 'RECEIVING', qty: 12 },
+  ];
+  assert.deepEqual(boardStuckBalances(balances).map((b) => b.sku), ['C']);
+  const ex = operationExceptions([], balances, NOW, []);
+  const stuck = ex.filter((e) => e.identity?.type === 'stuck_balance');
+  assert.deepEqual(stuck.map((e) => e.identity.location), ['RECEIVING'], 'ساحةُ الاستلام ما زالت تُلاحَق');
+  assert.equal(operationsSnapshot([], balances, []).inventory.stuck, 1, 'والعدّادُ يقول ما يقوله الصندوق');
+});
+
+const oso = (id, over = {}) => ({
+  id, type: 'OSO', state: 'approved',
+  header: { sourceSystem: 'Odoo', sourceRef: `S0${id}`, sourceDoneDate: '2026-10-20', warehouse: 'WH001', partner: 'عميل', amountTotal: 100, doneStatus: 'pending' },
+  lines: [{ sku: 'A', qty: 10, qtyDone: 0 }],
+  ...over,
+});
+const posted = (id, type, day, over = {}) => ({
+  id, type, state: 'done', posted: true,
+  header: { sourceSystem: 'Odoo', sourceRef: `WH/${type}/${id}`, sourceDoneDate: day, warehouse: 'WH001' },
+  lines: [{ sku: 'A', qty: 1 }],
+  ...over,
+});
+
+test('★★ ‹ODOO-ORD› أوامرُ أودو المفتوحة في اللقطة — المعتمَدُ الذي بقي منه شيءٌ وحده', () => {
+  const docs = [
+    oso('1'), // مفتوحٌ كلُّه: 10
+    oso('2', { lines: [{ sku: 'A', qty: 10, qtyDone: 4 }] }), // جزئيّ: بقي 6
+    oso('3', { lines: [{ sku: 'A', qty: 10, qtyDone: 10 }] }), // مكتمل ⇒ ليس مفتوحًا
+    oso('4', { state: 'canceled' }), // ملغى
+    oso('5', { state: 'draft' }), // استيرادٌ لم يكتمل
+    oso('6', { type: 'OPO', lines: [{ sku: 'B', qty: 30, qtyDone: 5 }] }), // شراء: بقي 25
+  ];
+  const { odoo } = operationsSnapshot(docs, [], []);
+  assert.equal(odoo.salesOpen, 2);
+  assert.equal(odoo.salesOpenQty, 16);
+  assert.equal(odoo.purchasesOpen, 1);
+  assert.equal(odoo.purchasesOpenQty, 25);
+  assert.equal(operationsSnapshot(docs, [], []).sales.noStock, 0, 'وأمرُ أودو لا يدخل تصنيفَ أوامر البوّابة');
+});
+
+test('★★ ‹ODOO-ORD› مستنداتُ مخزون أودو المُرحَّلة تُعدّ بيوم إنجازها داخل النافذة', () => {
+  const now = Date.parse('2026-10-22T10:00:00Z');
+  const docs = [
+    posted('1', 'SRI', '2026-10-20'),
+    posted('2', 'SRO', '2026-10-21'),
+    posted('3', 'SXO', '2026-10-22'),
+    posted('4', 'SXI', '2026-10-21'),
+    posted('5', 'SRA', '2026-10-20'),
+    posted('6', 'SRO', '2026-10-21', { state: 'canceled' }), // ملغى لا يُعدّ
+    posted('7', 'SRI', '2026-06-01'), // قبل النافذة (90 يومًا)
+    posted('8', 'GRN', '2026-10-21'), // ليس من أنواع أودو
+  ];
+  assert.equal(operationsSnapshot(docs, [], [], { nowMs: now, windowDays: 90 }).odoo.posted, 5);
+  assert.equal(operationsSnapshot(docs, [], []).odoo.posted, 6, 'وبلا نافذةٍ تُعدّ كلُّها');
+});
+
+test('★★ ‹ODOO-ORD› عدّاداتُ أودو مرجعيّةٌ معلَنة — مستورَدةٌ لا يغيّرها إلّا استيرادٌ جديد', () => {
+  const snap = operationsSnapshot([oso('1')], [], [], { nowMs: NOW, windowDays: 90 });
+  assert.deepEqual(unmarkedCounters(snap), []);
+  for (const k of Object.keys(snap.odoo)) {
+    assert.equal(SNAPSHOT_ORIGIN[`odoo.${k}`], ORIGIN.reference.id, `odoo.${k}`);
+    assert.equal(originOf(`odoo.${k}`).id, ORIGIN.reference.id);
+  }
 });

@@ -1,16 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import { subscribeItems } from '../../../services/items/itemService.js';
-import { listenRecentMoves } from '../../../services/ledger/ledgerService.js';
+import { listenMovesSince } from '../../../services/ledger/ledgerService.js';
 import { listenOperations } from '../../../services/stock/operationsService.js';
 import { subscribePartners } from '../../../services/partners/partnerService.js';
-import { listenTrips } from '../../../services/fleet/fleetOpsService.js';
-import { listenWorkOrders } from '../../../services/maintenance/maintenanceService.js';
-import { listenCustodies } from '../../../services/custody/custodyService.js';
-import { logisticsSummary } from '../../../services/dashboard/logisticsModel.js';
+import { listenDocumentsSince } from '../../../services/documents/documentsService.js';
+import { countCollection } from '../../../services/dashboard/countsService.js';
+import { OPENING_DAY, OPENING_MS } from '../../../services/documents/actualWork.js';
+import {
+  logisticsSummary,
+  movesReadPlan,
+  MOVES_CAP,
+  ODOO_FEED_CAP,
+} from '../../../services/dashboard/logisticsModel.js';
 import ListView from '../../odoo/ListView.jsx';
 import Badge from '../../odoo/Badge.jsx';
-import { int, delta } from '../../odoo/format.js';
+import { int, num, delta } from '../../odoo/format.js';
 import Icon from '../../ui/Icon.jsx';
 
 /**
@@ -21,10 +26,25 @@ import Icon from '../../ui/Icon.jsx';
  * والعمليّات والشركاء والسلاسل، ثمّ تعرض بمكوّنات أودو (ListView/Badge) داخل
  * حاوية `.o_theme` الفاتحة. حوكمة الواجهة: بلا إيموجي · الأحمر للتحذير فقط.
  * الأيقونات من مجموعة البوابة SVG (Icon) لأنّ FontAwesome غير مُحمَّل هنا.
+ *
+ * ═══ ‹ODOO-ORD› العملُ الفعليّ لا التجارب — وقراءةٌ بقدر ما يُعرض ═══
+ * كانت تقرأ ≈2,700 مستندٍ لكلّ فتحة: 2,500 حركةٍ لتعرض عشرًا، والرحلاتِ والصيانةَ والعُهدَ كاملةً لتعرض `.length`.
+ * - الحركاتُ **منذ الافتتاح** وحدها (`listenMovesSince`)، وكلُّ صفٍّ بمستنده ويوم واقعته — **وعشرٌ لا 2,500**
+ *   ما دام الراكدُ لا يُحكم به (`movesReadPlan`): حجمُ أودو اليوميّ يبلغ السقفَ في أيّام، فـ«منذ الافتتاح» وحدَه لا يُخفّف.
+ * - مستنداتُ أودو (المُرحَّلةُ وأمرا البيع والشراء) بسقف 500 — مؤشّرُ الأوامر المفتوحة وجدولُ آخرها.
+ * - الرحلاتُ والصيانةُ والعُهد **عدٌّ** (`countCollection` — قراءةٌ لكلّ ألف) منذ الافتتاح، لا اشتراك.
+ * - الموردون والعملاء باقون اشتراكًا: صغيران حقيقيّان، و«غيرُ المؤرشف» لا يُعَدّ من الخادم
+ *   (`archived` غائبٌ عن أكثر السجلّات، و`!=` يُسقط الغائب) — فالعدُّ كان سيكذب.
  */
 
 import { MANAGER_ROLES } from '../../../services/auth/roles.js';
-const MOVES_CAP = 2500;
+
+/** المجموعاتُ التي تُعَدّ ولا تُقرأ — وحقلُ طابعها `createdAt` (serverTimestamp) في خدماتها الثلاث. */
+const COUNTED = [
+  ['trips', 'trips'],
+  ['workOrders', 'work_orders'],
+  ['custodies', 'custodies'],
+];
 
 const BASE = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
 
@@ -42,6 +62,14 @@ function fmtDate(ts) {
   const ms = tsToMs(ts);
   return ms ? DATE_FMT.format(new Date(ms)) : '—';
 }
+/* يومٌ (`YYYY-MM-DD`) بالصيغة نفسها — بتوقيت UTC، فاليومُ لا ينزلق في منطقةٍ زمنيّةٍ أخرى.
+   وفي النصّ العربيّ أيضًا: «2026-10-20» تُقلب شَرطاتُه المحايدةُ فتُقرأ «20-10-2026». */
+const DAY_FMT = new Intl.DateTimeFormat('ar-LY-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'UTC' });
+function fmtDay(day) {
+  const ms = Date.parse(`${String(day || '').slice(0, 10)}T00:00:00Z`);
+  return Number.isFinite(ms) ? DAY_FMT.format(new Date(ms)) : '—';
+}
+const footnote = { padding: '8px 14px', borderTop: '1px solid var(--o-border-color)', fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' };
 
 function Kpi({ icon, value, label, sub, alert }) {
   return (
@@ -67,6 +95,7 @@ function DataCard({ title, count, isEmpty, emptyText, children }) {
 }
 
 const QUICK_LINKS = [
+  { href: '/dashboard/odoo-reports', icon: 'fileText', label: 'تقارير أودو' },
   { href: '/dashboard/inventory-analytics', icon: 'barChart3', label: 'تحليل المخزون' },
   { href: '/dashboard/operations', icon: 'clipboardList', label: 'مراقبة العمليّات' },
   { href: '/dashboard/stock-ledger', icon: 'bookOpen', label: 'دفتر الحركات' },
@@ -81,12 +110,14 @@ export default function LogisticsDashboard() {
   const [items, setItems] = useState([]);
   const [moves, setMoves] = useState([]);
   const [operations, setOperations] = useState([]);
+  const [odooDocs, setOdooDocs] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [customers, setCustomers] = useState([]);
-  const [trips, setTrips] = useState([]);
-  const [workOrders, setWorkOrders] = useState([]);
-  const [custodies, setCustodies] = useState([]);
-  const nowMs = useMemo(() => Date.now(), [items, moves, operations]);
+  // أعدادٌ من الخادم — null ما لم تصل (أو تعذّرت)، فيُعرض «—» لا صفرٌ لم يُعَدّ.
+  const [counts, setCounts] = useState({ trips: null, workOrders: null, custodies: null });
+  const nowMs = useMemo(() => Date.now(), [items, moves, operations, odooDocs]);
+  // كم حركةً تُقرأ — يُحسم مرّةً عند الفتح.
+  const movesPlan = useMemo(() => movesReadPlan(Date.now()), []);
 
   useEffect(() => {
     const unsub = subscribeAuth(async (user) => {
@@ -100,20 +131,34 @@ export default function LogisticsDashboard() {
     if (!me || !MANAGER_ROLES.includes(me.role)) return undefined;
     const subs = [
       subscribeItems(setItems, () => {}, { includeArchived: false }),
-      listenRecentMoves((rows) => setMoves(rows || []), MOVES_CAP),
+      listenMovesSince((rows) => setMoves(rows || []), { max: movesPlan.max }),
       listenOperations((rows) => setOperations(rows || [])),
+      // ★★ منذ الافتتاح والأحدثُ أوّلًا: بلغ السقفَ ⟵ سقط الأقدم لا عيّنةٌ عشوائيّة (استعلامُ `in` بالنوع بلا ترتيب).
+      //    والنموذجُ يُبقي مستندات أودو وحدها، ويحسب بلوغَ السقف من العدد الخام.
+      listenDocumentsSince((rows) => setOdooDocs(rows || []), { max: ODOO_FEED_CAP }),
       subscribePartners('supplier', (rows) => setSuppliers(rows || []), () => {}, {}),
       subscribePartners('customer', (rows) => setCustomers(rows || []), () => {}, {}),
-      listenTrips((rows) => setTrips(rows || [])),
-      listenWorkOrders((rows) => setWorkOrders(rows || [])),
-      listenCustodies((rows) => setCustodies(rows || [])),
     ];
-    return () => subs.forEach((u) => { if (typeof u === 'function') u(); });
-  }, [me]);
+    // العدُّ لقطةٌ عند الفتح لا قناةٌ حيّة؛ وفشلُه يُبقي «—».
+    let alive = true;
+    for (const [key, name] of COUNTED) {
+      countCollection(name, { sinceField: 'createdAt', sinceMs: OPENING_MS })
+        .then((n) => { if (alive) setCounts((c) => ({ ...c, [key]: n })); })
+        .catch(() => {});
+    }
+    return () => {
+      alive = false;
+      subs.forEach((u) => { if (typeof u === 'function') u(); });
+    };
+  }, [me, movesPlan]);
 
   const summary = useMemo(
-    () => logisticsSummary({ items, moves, operations, suppliers, customers, trips, workOrders, custodies }, nowMs),
-    [items, moves, operations, suppliers, customers, trips, workOrders, custodies, nowMs],
+    () => logisticsSummary(
+      { items, moves, operations, odooDocs, suppliers, customers, counts },
+      nowMs,
+      { movesCap: movesPlan.movesCap, odooCap: ODOO_FEED_CAP },
+    ),
+    [items, moves, operations, odooDocs, suppliers, customers, counts, nowMs, movesPlan],
   );
 
   if (!ready) {
@@ -128,6 +173,15 @@ export default function LogisticsDashboard() {
   }
 
   const k = summary.kpis;
+  /* عدٌّ لم يصل يُعرض «—» لا صفرًا. */
+  const dash = (v) => (v == null ? '—' : int(v));
+  const sinceOpening = `منذ ${fmtDay(OPENING_DAY)}`;
+  // الراكد: لا حكمَ قبل أن يغطّي تاريخُ الحركات نافذتَه — والسببُ يُقال بدل صفرٍ يُوهم.
+  const stagnantNote = k.stagnantReady
+    ? ''
+    : k.stagnantReason === 'truncated'
+      ? `الحركاتُ المقروءة (آخر ${int(MOVES_CAP)}) تغطّي ${int(k.stagnantHistoryDays)} يومًا من ${int(k.stagnantDays)} — لا يُحكم بالركود على تاريخٍ ناقص.`
+      : `تحليلُ الراكد يحتاج ${int(k.stagnantDays)} يومًا من العمل الفعليّ (مضى ${int(k.stagnantHistoryDays)}) — يكتمل في ${fmtDay(k.stagnantReadyDay)}.`;
 
   const reorderCols = [
     { key: 'name', label: 'الصنف' },
@@ -168,6 +222,27 @@ export default function LogisticsDashboard() {
     { key: 'items', label: 'أصناف', numeric: true },
     { key: 'scanned', label: 'مَمسوح', numeric: true },
   ];
+  const odooCols = [
+    { key: 'type', label: 'النوع' },
+    { key: 'ref', label: 'المرجع في أودو' },
+    { key: 'party', label: 'الطرف' },
+    { key: 'wh', label: 'المستودع' },
+    { key: 'day', label: 'اليوم' },
+    { key: 'qty', label: 'الكمّيّة', numeric: true },
+  ];
+  const odooRows = summary.recentOdooDocs.map((d) => ({
+    id: d.id,
+    cells: {
+      // الأمرُ جارٍ والمُرحَّلُ منجَز — والشارةُ تفرّق بينهما بلا قراءة.
+      type: <Badge variant={d.isOrder ? 'progress' : 'done'}>{d.label}</Badge>,
+      ref: <span className="decoration-bf" dir="ltr">{d.sourceRef || d.number || '—'}</span>,
+      party: d.party || '—',
+      wh: d.warehouse || '—',
+      day: fmtDay(d.day),
+      qty: num(d.qty),
+    },
+  }));
+
   const opsRows = summary.recentOperations.map((o) => ({
     id: o.id,
     cells: {
@@ -180,19 +255,22 @@ export default function LogisticsDashboard() {
 
   const moveCols = [
     { key: 'name', label: 'الصنف' },
+    { key: 'doc', label: 'المستند' },
     { key: 'from', label: 'من' },
     { key: 'to', label: 'إلى' },
     { key: 'qty', label: 'الكمية', numeric: true },
-    { key: 'date', label: 'التاريخ' },
+    { key: 'date', label: 'اليوم' },
   ];
+  // اليومُ يومُ الواقعة (الإنجازُ في أودو) لا لحظةُ الترحيل — فتسليمُ الأمس يُقرأ أمسًا ولو رُحّل اليوم.
   const moveRows = summary.recentMoves.map((m, i) => ({
     id: m.id || `m${i}`,
     cells: {
       name: <span className="decoration-bf">{m.nameAr || m.sku || m.barcode || '—'}</span>,
+      doc: m.docLabel || '—',
       from: m.from || '—',
       to: m.to || '—',
       qty: int(m.qty || 0),
-      date: fmtDate(m.postedAt),
+      date: fmtDay(m.day),
     },
   }));
 
@@ -206,10 +284,19 @@ export default function LogisticsDashboard() {
           <Kpi icon="dollarSign" value={int(k.totalValue)} label="قيمة المخزون (د.ل)" sub={k.itemsUnpriced ? `${int(k.itemsUnpriced)} صنف بلا سعر` : null} />
           <Kpi icon="package" value={int(k.itemsTotal)} label="عدد الأصناف" />
           <Kpi icon="alertTriangle" value={int(k.reorderCount)} label="تحت حدّ الطلب" alert={k.reorderCount > 0} sub={k.reorderWithoutMin ? `${int(k.reorderWithoutMin)} بلا حدّ` : null} />
-          <Kpi icon="archive" value={int(k.stagnantValue)} label="قيمة الراكد (د.ل)" alert={k.stagnantValue > 0} sub={k.stagnantShare != null ? `${int(k.stagnantShare * 100)}٪ من المخزون` : null} />
-          <Kpi icon="clipboardList" value={int(k.openOperations)} label="عمليّات مفتوحة" sub={`${int(k.operationsTotal)} إجماليّ`} />
-          <Kpi icon="truck" value={int(k.tripsTotal)} label="الرحلات" />
-          <Kpi icon="wrench" value={int(k.workOrdersTotal)} label="أوامر الصيانة" sub={k.custodiesTotal ? `${int(k.custodiesTotal)} عهدة` : null} />
+          <Kpi
+            icon="archive"
+            value={dash(k.stagnantValue)}
+            label="قيمة الراكد (د.ل)"
+            alert={k.stagnantValue > 0}
+            sub={k.stagnantReady
+              ? (k.stagnantShare != null ? `${int(k.stagnantShare * 100)}٪ من المخزون` : null)
+              : (k.stagnantReadyDay ? `يكتمل في ${fmtDay(k.stagnantReadyDay)}` : 'تاريخُ الحركات المقروء ناقص')}
+          />
+          <Kpi icon="shoppingCart" value={int(k.odooOpenOrders)} label="أوامر أودو مفتوحة" sub={`${int(k.odooOpenSales)} بيع · ${int(k.odooOpenPurchases)} شراء`} />
+          <Kpi icon="clipboardList" value={int(k.openOperations)} label="جلسات جرد مفتوحة" sub={`${int(k.operationsTotal)} ${sinceOpening}`} />
+          <Kpi icon="truck" value={dash(k.tripsTotal)} label="الرحلات" sub={sinceOpening} />
+          <Kpi icon="wrench" value={dash(k.workOrdersTotal)} label="أوامر الصيانة" sub={`${dash(k.custodiesTotal)} عهدة · ${sinceOpening}`} />
           <Kpi icon="handshake" value={int(k.suppliersCount)} label="الموردون" sub={`${int(k.customersCount)} عميل`} />
         </div>
 
@@ -220,7 +307,12 @@ export default function LogisticsDashboard() {
             <DataCard title="أصناف تحت حدّ الطلب" count={k.reorderCount} isEmpty={reorderRows.length === 0} emptyText="لا صنف تحت حدّه — جيّد.">
               <ListView selectable={false} columns={reorderCols} rows={reorderRows} />
             </DataCard>
-            <DataCard title="مخزون راكد (٩٠ يومًا)" count={k.stagnantCount} isEmpty={stagnantRows.length === 0} emptyText="لا مخزون راكد.">
+            <DataCard
+              title={`مخزون راكد (${int(k.stagnantDays)} يومًا)`}
+              count={k.stagnantReady ? k.stagnantCount : null}
+              isEmpty={!k.stagnantReady || stagnantRows.length === 0}
+              emptyText={stagnantNote || 'لا مخزون راكد.'}
+            >
               <ListView selectable={false} columns={stagnantCols} rows={stagnantRows} />
             </DataCard>
           </div>
@@ -229,12 +321,27 @@ export default function LogisticsDashboard() {
         {/* النشاط الأخير */}
         <div className="o_dashboard_section">
           <div className="o_dashboard_section_title"><Icon name="activity" size={16} /> النشاط الأخير</div>
-          <div className="o_dashboard_grid2">
-            <DataCard title="آخر العمليّات" isEmpty={opsRows.length === 0} emptyText="لا عمليّات بعد.">
-              <ListView selectable={false} columns={opsCols} rows={opsRows} />
+          {/* العملُ الفعليُّ أوّلًا: ما أُنجز في أودو ووصل البوّابة */}
+          <div style={{ marginBottom: '16px' }}>
+            <DataCard title="آخر مستندات أودو" isEmpty={odooRows.length === 0} emptyText="لا مستندات من أودو بعد.">
+              <ListView selectable={false} columns={odooCols} rows={odooRows} />
+              {k.odooDocsCapped ? (
+                <div style={footnote}>
+                  بلغت القراءةُ سقفَها ({int(ODOO_FEED_CAP)} مستند) — قد يغيب عن الجدول والمؤشّر جديد؛ القائمةُ الكاملة في «تقارير أودو».
+                </div>
+              ) : null}
             </DataCard>
-            <DataCard title="آخر حركات المخزون" isEmpty={moveRows.length === 0} emptyText="لا حركات بعد.">
+          </div>
+          <div className="o_dashboard_grid2">
+            <DataCard title="آخر حركات المخزون" isEmpty={moveRows.length === 0} emptyText={`لا حركات ${sinceOpening}.`}>
               <ListView selectable={false} columns={moveCols} rows={moveRows} />
+            </DataCard>
+            <DataCard
+              title="آخر جلسات الجرد"
+              isEmpty={opsRows.length === 0}
+              emptyText={`لا جلسات جرد ${sinceOpening}.${k.preOpeningOperations ? ' وجلساتُ ما قبل الافتتاح تجاربُ لا تُعرض.' : ''}`}
+            >
+              <ListView selectable={false} columns={opsCols} rows={opsRows} />
             </DataCard>
           </div>
         </div>

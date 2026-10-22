@@ -21,7 +21,12 @@ import {
   inboxStats,
   toCsv,
   csvFileName,
+  isSourceRecord,
+  partyText,
+  preOpeningNote,
+  SINCE_OPENING_NOTE,
 } from './inbox.js';
+import { OPENING_DAY } from './actualWork.js';
 
 const NOW = Date.parse('2026-08-01T12:00:00Z');
 const DAY = 24 * 60 * 60 * 1000;
@@ -200,4 +205,53 @@ test('قائمة فارغة لا تنهار', () => {
   assert.deepEqual(sortByUrgency(null, NOW), []);
   assert.equal(inboxStats(null, NOW).total, 0);
   assert.ok(toCsv([], NOW).includes('الرقم'));
+});
+
+// ═══════════ ‹ODOO-ORD› سجلّاتُ أودو لا تتأخّر ═══════════
+
+test('★★ أمرُ أودو المعتمَدُ لا يصير «متأخّرًا» — سجلٌّ راقدٌ لا ورقةٌ نُسيت', () => {
+  for (const type of ['OSO', 'OPO']) {
+    const order = doc({ type, state: 'approved', updatedAt: daysAgo(30), header: { sourceSystem: 'Odoo' } });
+    assert.equal(isSourceRecord(order), true);
+    assert.equal(isStale(order, NOW), false, `${type}: معتمَدٌ منذ ثلاثين يومًا ولا ينتظر أحدًا هنا`);
+  }
+  // ومستندُ المصدر المنجَز كذلك — والحكمُ من المخطّط (`sourcePosted`) لا من حالته.
+  for (const type of ['SRI', 'SRO', 'SXO', 'SXI', 'SRA']) {
+    assert.equal(isStale(doc({ type, state: 'approved', updatedAt: daysAgo(30) }), NOW), false, type);
+  }
+  // والضابط: أمرُ الشراء المحلّيُّ المعتمَدُ ما زال يتأخّر كما كان.
+  assert.equal(isSourceRecord(doc({ type: 'PO' })), false);
+  assert.equal(isStale(doc({ type: 'PO', state: 'approved', updatedAt: daysAgo(9) }), NOW), true);
+  assert.equal(isSourceRecord(null), false);
+});
+
+test('★ الفرزُ بالإلحاح لا يقدّم أمرَ أودو على مستندٍ متأخّرٍ حقًّا', () => {
+  const order = doc({ id: 'oso', type: 'OSO', state: 'approved', updatedAt: daysAgo(30) });
+  const late = doc({ id: 'late', type: 'GRN', state: 'submitted', updatedAt: daysAgo(5) });
+  assert.deepEqual(sortByUrgency([order, late], NOW).map((d) => d.id), ['late', 'oso']);
+  assert.equal(inboxStats([order, late], NOW).stale, 1);
+});
+
+test('★ الطرفُ partner أودو أوّلًا — لا كودُ المستودع', () => {
+  assert.equal(partyText({ header: { partner: 'صيدلية الوسط', partnerCode: 'C042' } }, 'WH001'), 'صيدلية الوسط (C042)');
+  assert.equal(partyText({ header: { partner: 'صيدلية الوسط' } }, 'WH001'), 'صيدلية الوسط');
+  assert.equal(partyText({ header: { partner: 'C042', partnerCode: 'C042' } }), 'C042', 'لا تكرارَ للرمز');
+  assert.equal(partyText({ header: { supplier: 'الريشة' } }, 'الريشة (S1)'), 'الريشة (S1)', 'المحلّيُّ كما أعلنته partyFields');
+  assert.equal(partyText({ header: { partnerCode: 'C042' } }), 'C042');
+  assert.equal(partyText(null), '');
+});
+
+test('★★ ما أُخفي من التجارب يُقال بعدده وبعربيّةٍ صحيحة — والصفرُ لا سطرَ له', () => {
+  assert.equal(preOpeningNote(0), '');
+  assert.equal(preOpeningNote(-3), '');
+  assert.equal(preOpeningNote(undefined), '');
+  assert.match(preOpeningNote(1), /^أُخفي مستندٌ واحد من تجارب ما قبل الافتتاح/);
+  assert.match(preOpeningNote(2), /^أُخفي مستندان من/);
+  assert.match(preOpeningNote(5), /^أُخفي 5 مستندات من/);
+  assert.match(preOpeningNote(52), /^أُخفي 52 مستندًا من/);
+  assert.match(preOpeningNote(52, { open: true }), /^أُخفي 52 مستندًا مفتوحًا من/);
+  assert.match(preOpeningNote(1, { open: true }), /^أُخفي مستندٌ مفتوحٌ واحد من/);
+  assert.ok(preOpeningNote(7).includes(OPENING_DAY), 'الحدُّ يُعلَن بتاريخه');
+  assert.ok(preOpeningNote(7).includes('لم يُحذف'), 'الإخفاءُ ليس حذفًا');
+  assert.ok(SINCE_OPENING_NOTE.includes(OPENING_DAY));
 });

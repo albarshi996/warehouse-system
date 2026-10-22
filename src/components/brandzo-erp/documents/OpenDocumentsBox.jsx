@@ -11,7 +11,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { getBasePath } from '../../../services/auth/authService.js';
 import { listenDocumentsByTypes } from '../../../services/documents/documentsService.js';
 import { getSchema, readyTypes } from '../../../services/documents/schemas/index.js';
-import { buildOpenBox, ageInDays, tracksExecution } from '../../../services/documents/openBox.js';
+import {
+  buildActualOpenBox,
+  ageInDays,
+  tracksExecution,
+  isSourceOrder,
+  partyOf,
+} from '../../../services/documents/openBox.js';
+import { preOpeningNote } from '../../../services/documents/inbox.js';
 import { fieldRouteFor } from '../../../services/tasks/fieldRoutes.js';
 import { nextOwnerOf } from '../../../services/tasks/stageOwners.js';
 
@@ -23,7 +30,8 @@ function typeLabel(type) {
 }
 
 export default function OpenDocumentsBox() {
-  const [docs, setDocs] = useState([]);
+  const [portalDocs, setPortalDocs] = useState([]);
+  const [orderDocs, setOrderDocs] = useState([]);
   const [typeFilter, setTypeFilter] = useState('all');
   const [nowMs] = useState(() => Date.now());
   /** جذرُ النشر عارٍ — لأنّ الشاشةَ الميدانيّة ليست تحت `/dashboard/document`. */
@@ -32,18 +40,33 @@ export default function OpenDocumentsBox() {
 
   /** الأنواع التي لها مسار تنفيذٍ كمّيّ وحدها — ما لا يُفتح لا يُعرض. */
   const trackedTypes = useMemo(() => readyTypes().filter(tracksExecution), []);
+  /**
+   * ‹ODOO-ORD› وأوامرُ أودو (OSO · OPO) — مستقلّةٌ في السلسلة فلا يراها `tracksExecution`، ويُقاس عملُها من بنودها.
+   * ★★ ولها استعلامٌ وحدَها لا مكانٌ في استعلام أنواع البوّابة: ذاك بلا ترتيبٍ وحدُّه 300، وتجاربُ ما قبل الافتتاح
+   *    تملؤه — فلو تشاركا الحدَّ لسقطت أوامرُ أودو منه صامتةً بترتيب المعرّفات (درسُ `slice(0, 10)`).
+   */
+  const orderTypes = useMemo(() => readyTypes().filter(isSourceOrder), []);
 
   useEffect(() => {
     if (!trackedTypes.length) return undefined;
-    return listenDocumentsByTypes(trackedTypes, setDocs, 300);
+    return listenDocumentsByTypes(trackedTypes, setPortalDocs, 300);
   }, [trackedTypes]);
+
+  useEffect(() => {
+    if (!orderTypes.length) return undefined;
+    return listenDocumentsByTypes(orderTypes, setOrderDocs, 300);
+  }, [orderTypes]);
 
   /**
    * الصندوق يُحسب من بيانات المستند ولقطة روابطه القديمة، بلا جلبٍ لكلّ
    * مستندٍ على حدة. ولذلك الرقم هنا **تقريبٌ صادق**: يُفتح المستند فيُقرأ
    * الدقيق. وقولُ ذلك خيرٌ من عرض رقمٍ يُظنّ نهائيًّا.
+   *
+   * ‹ODOO-ORD› و`buildActualOpenBox`: العملُ الفعليُّ وحده (`actualDocs`)، والأبناءُ القدامى يُعدّون ممّا قُرئ
+   * (`loadedContext`) — وكان الصندوقُ بلا سياقٍ فكان كلُّ معتمَدٍ «مفتوحًا» أبدًا — وكم أُخفي من التجارب.
    */
-  const box = useMemo(() => buildOpenBox(docs), [docs]);
+  const box = useMemo(() => buildActualOpenBox([...portalDocs, ...orderDocs]), [portalDocs, orderDocs]);
+  const hiddenNote = preOpeningNote(box.hidden, { open: true });
 
   const rows = useMemo(
     () => (typeFilter === 'all' ? box.rows : box.rows.filter((r) => r.document.type === typeFilter)),
@@ -55,6 +78,7 @@ export default function OpenDocumentsBox() {
       <div className="rounded-xl border border-line p-6 text-center" style={{ background: 'var(--surface, #fff)' }}>
         <p className="text-sm font-bold text-ink">لا عملَ مفتوحًا</p>
         <p className="text-xs text-ink-2 mt-1">كلّ المستندات المعتمَدة نُفِّذت أو أُغلقت.</p>
+        {hiddenNote && <p className="text-[11px] text-ink-2 mt-2">{hiddenNote}</p>}
       </div>
     );
   }
@@ -115,7 +139,8 @@ export default function OpenDocumentsBox() {
               const d = row.document;
               const age = ageInDays(d, nowMs);
               const stale = (age ?? 0) >= STALE_DAYS;
-              const party = d.header?.supplier || d.header?.customer || d.header?.beneficiary || '—';
+              /* ‹ODOO-ORD› `partner` أوّلًا — أمرُ أودو يكتب العميلَ أو المورّدَ فيه (`partyOf`). */
+              const party = partyOf(d) || '—';
               /**
                * الشاشةُ الميدانيّة لهذا الصفّ — أو `null` فلا رابطَ أصلًا.
                *
@@ -203,7 +228,9 @@ export default function OpenDocumentsBox() {
 
       <p className="text-[11px] text-ink-2">
         المتبقّي محسوبٌ من روابط الأسطر المعروفة للمستند. افتح المستند لترى الرقم الدقيق بعد قراءة علاقاته كلّها.
+        وأوامرُ أودو تُقاس من بنودها كما يحسبها أودو (المطلوب − المسلَّم أو المستلَم)، وعمرُها من تاريخ الأمر.
       </p>
+      {hiddenNote && <p className="text-[11px] text-ink-2">{hiddenNote}</p>}
     </div>
   );
 }

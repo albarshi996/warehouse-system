@@ -1,22 +1,37 @@
 /**
- * ‹ODOO-ORD› مسوّداتُ استيراد أودو القديمة — منطقٌ خالص.
+ * ‹ODOO-ORD› تنظيفُ ما قبل الافتتاح — منطقٌ خالص.
  *
- * قبل المسار المُرحِّل (‹SRC-POST›) استوردت البوّابةُ مستندات أودو **مسوّداتِ تخزينٍ وسحب** (PUTAWAY/PICK):
- * 15 استلامًا و84 تسليمًا و7 نقل حتّى 19 أكتوبر. ثمّ اختار المالكُ (الخيار أ) لقطةَ 19 أكتوبر رصيدًا افتتاحيًّا،
- * **فأثرُ هذه المسوّدات داخلٌ فيه** — وإنجازُ أيٍّ منها يضاعفه. فتُلغى بسببٍ مكتوبٍ بمسار الإلغاء الجماعيّ
- * (`runBulk` ⟵ `transitionDocument`، وقيدُ تدقيقٍ على كلّ مستند)، ولا تُحذف.
+ * الرصيدُ الافتتاحيُّ لقطةُ 19 أكتوبر (الخيار أ)، وكلُّ ما قبلها في البوّابة إمّا مسجَّلٌ فيها أو تجربة:
  *
- * ★★ القاعدةُ ضيّقةٌ عمدًا — النوعُ والحالةُ والمصدرُ ومرجعُه والتاريخُ قبل الافتتاح: فأمرُ تخزينٍ أو سحبٍ أنشأه
- *    عاملٌ في البوّابة، أو استُورد من أودو بعد الافتتاح، لا يُمسّ.
+ * ١. **مسوّداتُ أودو القديمة** — قبل المسار المُرحِّل (‹SRC-POST›) استُوردت مستنداتُ أودو مسوّداتِ تخزينٍ وسحب
+ *    (PUTAWAY/PICK): 15 استلامًا و84 تسليمًا و7 نقل. **أثرُها داخلٌ في الافتتاحيّ** — وإنجازُ أيٍّ منها يضاعفه.
+ * ٢. **مستنداتُ البوّابة التجريبيّة المفتوحة** — قيس 2026-10-22: كلُّ مستندٍ أنشئ في البوّابة (240) أُنشئ بين يوليو
+ *    و14 أكتوبر، ولا واحدَ بعد الافتتاح — فما بقي منها مفتوحًا (52) تجربةٌ لا عمل، يملأ الشاشات «معلّقًا منذ 88 يومًا».
+ *
+ * كلاهما يُلغى بسببٍ مكتوبٍ بمسار الإلغاء الجماعيّ (`runBulk` ⟵ `transitionDocument`، وقيدُ تدقيقٍ على كلّ مستند)،
+ * **ولا يُحذف**. والمنجَزُ والمغلَقُ لا يُلغيان — يُخفيهما من الشاشات التشغيليّة حدُّ الافتتاح لا الإلغاء.
+ *
+ * ★★ القاعدةُ ضيّقةٌ عمدًا: أمرُ أودو المستورَد (OSO/OPO) سجلٌّ يبقى، وما أُنشئ في البوّابة بعد الافتتاح عملٌ حقيقيّ لا يُمسّ.
  */
 import { OPENING_CUTOFF } from './postedImport.js';
+import { libyaDayOfStamp } from '../documents/actualWork.js';
 
 export const STALE_DRAFT_TYPES = Object.freeze(['PUTAWAY', 'PICK']);
+
+/** الحالاتُ التي يقع عليها الإلغاء (جدولُ `bulkActions` لإجراء cancel) — والمنجَزُ لا يُلغى. */
+export const CANCELABLE_STATES = Object.freeze(['draft', 'rejected', 'approved']);
 
 /** سقفُ القراءة الواحدة — والبلوغُ يُعلَن فيُعاد البحثُ بعد الإلغاء لما بقي. */
 export const STALE_SCAN_LIMIT = 1000;
 
-export const STALE_CANCEL_NOTE = 'أثرُه داخلٌ في الرصيد الافتتاحيّ (لقطة 19 أكتوبر) — إنجازُه يضاعفه. أُلغي بقرار المالك.';
+export const STALE_CANCEL_NOTE = 'من بيانات ما قبل الافتتاح (لقطة 19 أكتوبر) — ليس عملًا فعليًّا، وإنجازُه يُفسد الرصيد. أُلغي بقرار المالك.';
+
+export const STALE_GROUP_LABELS = Object.freeze({
+  odooDraft: 'مسوّداتُ أودو القديمة',
+  portalTrial: 'مستنداتُ البوّابة التجريبيّة',
+});
+
+const isOdoo = (doc) => String(doc?.header?.sourceSystem || '').trim().toLowerCase() === 'odoo';
 
 /** تاريخُ المستند في أودو: التخزينُ بتاريخ الاستلام، والسحبُ بتاريخ التسليم. */
 export function sourceDayOf(doc) {
@@ -24,21 +39,46 @@ export function sourceDayOf(doc) {
   return String(h.putawayDate || h.orderDate || '').trim().slice(0, 10);
 }
 
+/** يومُ الإنشاء بتوقيت ليبيا (UTC+2) — من طابع Firestore أو نصّ ISO أو رقم. والقاعدةُ في `actualWork.js`. */
+export function createdDayOf(doc) {
+  return libyaDayOfStamp(doc?.createdAt);
+}
+
 /** مسودّةُ تخزينٍ أو سحبٍ من أودو، تاريخُها قبل الافتتاح — أثرُها في اللقطة. */
 export function isStaleOdooDraft(doc, { cutoff = OPENING_CUTOFF } = {}) {
-  const h = doc?.header || {};
   const day = sourceDayOf(doc);
   return STALE_DRAFT_TYPES.includes(doc?.type)
     && doc?.state === 'draft'
-    && String(h.sourceSystem || '').trim().toLowerCase() === 'odoo'
-    && Boolean(String(h.sourceRef || '').trim())
+    && isOdoo(doc)
+    && Boolean(String(doc?.header?.sourceRef || '').trim())
     && /^\d{4}-\d{2}-\d{2}$/.test(day)
     && day < cutoff;
 }
 
-/** العددُ كلُّه وبالنوع — لما يُعرض قبل الإلغاء. */
+/** مستندٌ أُنشئ في البوّابة قبل الافتتاح وما زال مفتوحًا — تجربةٌ لا عمل. */
+export function isPreOpeningPortalDoc(doc, { cutoff = OPENING_CUTOFF } = {}) {
+  const day = createdDayOf(doc);
+  return !isOdoo(doc)
+    && CANCELABLE_STATES.includes(doc?.state)
+    && /^\d{4}-\d{2}-\d{2}$/.test(day)
+    && day < cutoff;
+}
+
+/** إلى أيّ مجموعةٍ ينتمي — أو `null` إن لم يكن ممّا يُنظَّف. */
+export function staleGroupOf(doc, opts) {
+  if (isStaleOdooDraft(doc, opts)) return 'odooDraft';
+  if (isPreOpeningPortalDoc(doc, opts)) return 'portalTrial';
+  return null;
+}
+
+/** العددُ كلُّه، وبالمجموعة، وبالنوع — لما يُعرض قبل الإلغاء. */
 export function summarizeStale(docs) {
-  const byType = Object.fromEntries(STALE_DRAFT_TYPES.map((t) => [t, 0]));
-  for (const d of docs || []) byType[d.type] = (byType[d.type] || 0) + 1;
-  return { total: (docs || []).length, byType };
+  const byGroup = { odooDraft: 0, portalTrial: 0 };
+  const byType = {};
+  for (const d of docs || []) {
+    const g = staleGroupOf(d);
+    if (g) byGroup[g] += 1;
+    byType[d.type] = (byType[d.type] || 0) + 1;
+  }
+  return { total: (docs || []).length, byGroup, byType };
 }

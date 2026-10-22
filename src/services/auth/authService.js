@@ -46,6 +46,25 @@ export function sendPasswordReset(email) {
 }
 
 /**
+ * ‹ODOO-ORD› قراءةُ `users/{uid}` مرّةً واحدةً للصفحة.
+ *
+ * كلُّ صفحةٍ كانت تقرأ الملفَّ ثلاثَ مرّاتٍ أو أربعًا (AuthGate · RoleNav · UserMenu · جزيرةُ الشاشة) — وطبقةُ «جارٍ التحقّق»
+ * تنتظر أبطأها، فحين يضعف الاتّصال يتضاعف الانتظار (قيس 2026-10-22). والجزرُ تتشارك وحدةَ الخدمة في الصفحة الواحدة،
+ * فوعدٌ واحدٌ يكفيها كلَّها. ★★ والفشلُ لا يُحفظ: قراءةٌ أسقطتها الشبكة تُحذف فتُعاد عند النداء التالي، وإلّا علق الدورُ
+ * الافتراضيُّ على الصفحة كلّها. والصفحةُ التالية (MPA) تبدأ ذاكرةً جديدة.
+ */
+const profileReads = new Map();
+
+function readUserDoc(uid) {
+  if (!profileReads.has(uid)) {
+    const read = getDoc(doc(db, 'users', uid)).then((snap) => (snap.exists() ? snap.data() : null));
+    read.catch(() => profileReads.delete(uid));
+    profileReads.set(uid, read);
+  }
+  return profileReads.get(uid);
+}
+
+/**
  * يقرأ ملف المستخدم من Firestore `users/{uid}` ويحدّد الدور والاسم والحالة.
  * يتحمّل غياب الملف أو تعذّر القراءة بالرجوع للدور الافتراضي الآمن.
  */
@@ -66,9 +85,8 @@ export async function fetchUserProfile(userOrUid) {
   let active = true;
 
   try {
-    const snap = await getDoc(doc(db, 'users', user.uid));
-    if (snap.exists()) {
-      const data = snap.data();
+    const data = await readUserDoc(user.uid);
+    if (data) {
       if (data.role) role = data.role;
       if (data.name) name = data.name;
       if (typeof data.active === 'boolean') active = data.active;

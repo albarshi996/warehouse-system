@@ -10,7 +10,7 @@
  * الزمن الفعليّ بدقّة. زمن التوقّف عدّادٌ تراكميّ بالملّي (`pausedMs`) لأن
  * serverTimestamp لا يُخزَّن داخل المصفوفات. الحساب في `laborModel.js`.
  */
-import { collection, doc, addDoc, updateDoc, onSnapshot, query, orderBy, serverTimestamp, increment, db } from '../_db/index.js';
+import { collection, doc, addDoc, updateDoc, onSnapshot, query, orderBy, limit, serverTimestamp, increment, db } from '../_db/index.js';
 import { auth } from '../../config/firebase.js';
 import { delayReasonProblem } from './laborStandard.js';
 import { canTransitionTask } from './laborModel.js';
@@ -36,10 +36,17 @@ function logEvent(taskId, actor, type, extra = {}) {
   });
 }
 
-/** يستمع لكلّ مهام المناولة (الأحدث أوّلًا). يُعيد دالّة إلغاء الاشتراك. */
-export function listenLaborTasks(cb, onError) {
+/**
+ * يستمع لمهام المناولة (الأحدث أوّلًا). يُعيد دالّة إلغاء الاشتراك.
+ *
+ * ★★ ‹ODOO-ORD› `max` اختياريٌّ عمدًا لا سقفٌ للجميع: الرئيسيّةُ تقرأ المهامَّ لتجد حلقةَ «المسار إلى الإجراء» وحدها،
+ *    فيكفيها الأحدث (`max: 200`). أمّا `FieldReleasePanel` فيمنع تكرارَ الإطلاق بمهامّ المستند القائمة
+ *    (`existingKeys`) — وسقفٌ عامٌّ يُسقط مهامَّ مستندٍ قديمٍ فيُطلقها ثانيةً. فبلا `max` السلوكُ كما كان.
+ */
+export function listenLaborTasks(cb, onError, { max = 0 } = {}) {
+  const newest = query(collection(db, COL), orderBy('createdAt', 'desc'));
   return onSnapshot(
-    query(collection(db, COL), orderBy('createdAt', 'desc')),
+    max > 0 ? query(newest, limit(max)) : newest,
     (s) => cb(s.docs.map((d) => ({ id: d.id, ...d.data() }))),
     (e) => onError?.(e)
   );
