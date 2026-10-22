@@ -13,6 +13,7 @@
  * والمستند نفسه لا يُحذف أبدًا؛ المستند الخاطئ يُرفض أو يُلغى، ولا يُمحى.
  */
 import { collection, doc, addDoc, getDoc, updateDoc, onSnapshot, query, orderBy, where, serverTimestamp, limit, getDocs, runTransaction, db } from '../_db/index.js';
+import { isOwnRetriedCreate } from './auditWrite.js';
 import { auth } from '../../config/firebase.js';
 import { reserveNumber } from './numberingService.js';
 import { INITIAL_STATE, isEditable, isLegalTransition, canDo, TRANSITIONS } from './states.js';
@@ -75,18 +76,27 @@ function clientToday() {
   return new Date().toISOString().slice(0, 10);
 }
 
-/** يُضيف قيد تدقيق دائم. لا يُحدَّث ولا يُحذف أبدًا. */
-export function appendAudit(docId, { action, note = '', from = '', to = '', profile }) {
-  return addDoc(collection(db, DOCS, docId, AUDIT), {
-    action,
-    note: String(note || ''),
-    from,
-    to,
-    byUid: currentUid(),
-    byName: currentName(profile),
-    byRole: profile?.role || '',
-    at: serverTimestamp(),
-  });
+/**
+ * يُضيف قيد تدقيق دائم. لا يُحدَّث ولا يُحذف أبدًا.
+ *
+ * ★★ `already-exists` نجاحٌ لا فشل: إعادةُ الـSDK لكتابةٍ بلغت الخادمَ وضاع إقرارُها (انظر `auditWrite.js`).
+ */
+export async function appendAudit(docId, { action, note = '', from = '', to = '', profile }) {
+  try {
+    return await addDoc(collection(db, DOCS, docId, AUDIT), {
+      action,
+      note: String(note || ''),
+      from,
+      to,
+      byUid: currentUid(),
+      byName: currentName(profile),
+      byRole: profile?.role || '',
+      at: serverTimestamp(),
+    });
+  } catch (err) {
+    if (isOwnRetriedCreate(err)) return null;
+    throw err;
+  }
 }
 
 /**

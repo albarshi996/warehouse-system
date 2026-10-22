@@ -11,7 +11,7 @@
   "counts": {
     "modules": 122,
     "serviceDomains": 52,
-    "serviceFiles": 708,
+    "serviceFiles": 710,
     "collections": 104,
     "roles": 20,
     "odooModels": 12,
@@ -1746,6 +1746,8 @@
         "attachmentFile.js",
         "attachmentFile.test.js",
         "attachmentsService.js",
+        "auditWrite.js",
+        "auditWrite.test.js",
         "backdateReport.js",
         "backdateReport.test.js",
         "branchCycle.js",
@@ -1868,8 +1870,8 @@
         "vsi.js",
         "vsr.js"
       ],
-      "fileCount": 128,
-      "testCount": 45,
+      "fileCount": 130,
+      "testCount": 46,
       "exports": [
         "ACCEPTED_ATTACHMENT_TYPES",
         "AMEND_CLASSES",
@@ -2125,6 +2127,7 @@
         "isFinancialOnly",
         "isImageType",
         "isLegalTransition",
+        "isOwnRetriedCreate",
         "isSourceOrderType",
         "isSourcePostedType",
         "isStale",
@@ -6130,7 +6133,7 @@
             "actions": [
               "write"
             ],
-            "condition": "(isStockActor() || isVanSalesWriter()) && (!('qty' in request.resource.data) || (request.resource.data.qty is number && request.resource.data.qty >= 0)) && (!('",
+            "condition": "(isStockActor() || isVanSalesWriter()) && (!('qty' in request.resource.data) || (request.resource.data.qty is number && (request.resource.data.qty >= 0 || reque",
             "roles": [
               "isStockActor",
               "isVanSalesWriter"
