@@ -325,8 +325,13 @@ function pickSheet() {
   return 'Balances';
 }
 
-/** يكتب المعاينة المعتمدة إلى مخزن الأرصدة (دفعات). */
-export async function commitBalancesImport(analysis) {
+/**
+ * يكتب المعاينة المعتمدة إلى مخزن الأرصدة (دفعات).
+ *
+ * ★★ `onProgress({ written, total })` بعد إقرار كلّ دفعة: الدفعةُ التالية لا تُبنى قبل إقرار السابقة،
+ *    فمن غادر الصفحة بينهما أسقطها بلا خطأ — والشاشةُ تعرض التقدّمَ وتحرس المغادرة (`leaveGuard.js`).
+ */
+export async function commitBalancesImport(analysis, { onProgress } = {}) {
   if (!analysis?.ok) throw new Error('لا تُستورد ورقة فيها أخطاء — صحّح الصفوف المعلَّمة أولًا.');
   const toWrite = [...analysis.plan.created, ...analysis.plan.updated];
   if (toWrite.length === 0) return { created: 0, updated: 0 };
@@ -360,6 +365,7 @@ export async function commitBalancesImport(analysis) {
       );
     }
     await batch.commit();
+    onProgress?.({ written: Math.min(i + BATCH_LIMIT, toWrite.length), total: toWrite.length });
   }
   return { created, updated };
 }

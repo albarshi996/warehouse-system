@@ -5,6 +5,8 @@ import {
 } from '../../../services/balances/balancesService.js';
 import Icon from '../../ui/Icon.jsx';
 import { int, num } from '../../odoo/format.js';
+import { writeProgressLabel } from '../../../services/ui/leaveGuard.js';
+import { useLeaveGuard } from '../../../services/ui/useLeaveGuard.js';
 
 /**
  * استيراد ورقة الأرصدة — الكميات لكل (صنف × مخزن × تشغيلة).
@@ -24,7 +26,9 @@ export default function BalancesImport({ onDone, onCancel }) {
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState(null);
   const [committing, setCommitting] = useState(false);
+  const [progress, setProgress] = useState(null);
   const [error, setError] = useState('');
+  useLeaveGuard(committing);
 
   const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
 
@@ -48,9 +52,10 @@ export default function BalancesImport({ onDone, onCancel }) {
   async function handleCommit() {
     if (!analysis?.ok) return;
     setCommitting(true);
+    setProgress({ written: 0, total: analysis.plan.created.length + analysis.plan.updated.length });
     setError('');
     try {
-      const { created, updated } = await commitBalancesImport(analysis);
+      const { created, updated } = await commitBalancesImport(analysis, { onProgress: setProgress });
       onDone?.({ created, updated });
     } catch (err) {
       setError(err?.message ?? 'تعذّر الاستيراد — لم يُكتب شيء.');
@@ -134,7 +139,7 @@ export default function BalancesImport({ onDone, onCancel }) {
               onClick={handleCommit}
               disabled={!analysis.ok || toWrite === 0 || committing}
             >
-              {committing ? 'جارٍ الاستيراد…' : toWrite === 0 ? 'لا شيء ليُستورد' : `تأكيد استيراد ${toWrite} رصيدًا`}
+              {committing ? writeProgressLabel(progress ?? undefined) : toWrite === 0 ? 'لا شيء ليُستورد' : `تأكيد استيراد ${toWrite} رصيدًا`}
             </button>
           </div>
         </div>

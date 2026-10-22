@@ -8,6 +8,8 @@ import {
   commitBalancesImport,
 } from '../../../services/balances/balancesService.js';
 import { exportTemplate } from '../../../services/excel/excelExport.js';
+import { writeProgressLabel } from '../../../services/ui/leaveGuard.js';
+import { useLeaveGuard } from '../../../services/ui/useLeaveGuard.js';
 import {
   assignmentNotes,
   assignmentReport,
@@ -50,8 +52,10 @@ export default function BinAssignment() {
   const [analysis, setAnalysis] = useState(null);
   const [fileName, setFileName] = useState('');
   const [busy, setBusy] = useState('');
+  const [writing, setWriting] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(null);
+  useLeaveGuard(writing);
 
   useEffect(() => {
     const unsub = subscribeAuth(async (user) => {
@@ -114,15 +118,16 @@ export default function BinAssignment() {
 
   async function commit() {
     if (!analysis || !report?.ok) return;
-    setBusy('يعتمد…'); setError('');
+    setBusy('يعتمد…'); setError(''); setWriting(true);
     try {
-      const out = await commitBalancesImport(analysis);
+      const out = await commitBalancesImport(analysis, { onProgress: (p) => setBusy(writeProgressLabel(p)) });
       setDone({ created: out?.created ?? 0, updated: out?.updated ?? 0 });
       setAnalysis(null);
     } catch (err) {
       setError(err?.message || 'تعذّر الاعتماد.');
     } finally {
       setBusy('');
+      setWriting(false);
     }
   }
 

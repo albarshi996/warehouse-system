@@ -12,6 +12,7 @@ import { useCallback, useRef, useState } from 'react';
 import Icon from '../../ui/Icon.jsx';
 import Badge from '../../odoo/Badge.jsx';
 import { getBasePath } from '../../../services/auth/authService.js';
+import { useLeaveGuard } from '../../../services/ui/useLeaveGuard.js';
 import { analyzePostedFile, canPostImport, commitPostedImport } from '../../../services/locations/postedImportService.js';
 import { POSTED_TYPES, routeLabel } from '../../../services/locations/postedImport.js';
 
@@ -38,9 +39,11 @@ function Stat({ label, value, tone }) {
 export default function PostedImport({ profile }) {
   const [preview, setPreview] = useState(null);
   const [busy, setBusy] = useState('');
+  const [writing, setWriting] = useState(false);
   const [msg, setMsg] = useState({ type: '', text: '' });
   const [result, setResult] = useState(null);
   const fileRef = useRef(null);
+  useLeaveGuard(writing);
   const canPost = canPostImport(profile?.role);
 
   const readFile = useCallback(async (file) => {
@@ -61,6 +64,7 @@ export default function PostedImport({ profile }) {
 
   async function commit() {
     setMsg({ type: '', text: '' });
+    setWriting(true);
     try {
       const out = await commitPostedImport(preview, profile, {
         onProgress: ({ index, total, docRef, step }) => setBusy(`${step} ${index + 1}/${total} — ${docRef}`),
@@ -76,6 +80,7 @@ export default function PostedImport({ profile }) {
       setMsg({ type: 'error', text: err.message || 'تعذّر الترحيل.' });
     } finally {
       setBusy('');
+      setWriting(false);
     }
   }
 

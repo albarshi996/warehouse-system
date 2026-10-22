@@ -11,7 +11,7 @@
   "counts": {
     "modules": 122,
     "serviceDomains": 52,
-    "serviceFiles": 710,
+    "serviceFiles": 713,
     "collections": 104,
     "roles": 20,
     "odooModels": 12,
@@ -5698,17 +5698,21 @@
       "files": [
         "escape.js",
         "escape.test.js",
+        "leaveGuard.js",
+        "leaveGuard.test.js",
         "overlayHistory.js",
         "overlayHistory.test.js",
         "pagination.js",
         "pagination.test.js",
         "tableSelection.js",
         "tableSelection.test.js",
+        "useLeaveGuard.js",
         "useOverlayBack.js"
       ],
-      "fileCount": 9,
-      "testCount": 4,
+      "fileCount": 12,
+      "testCount": 5,
       "exports": [
+        "LEAVE_MESSAGE",
         "OVERLAY_KEY",
         "clampPage",
         "clipCell",
@@ -5720,6 +5724,7 @@
         "escAttr",
         "escJsAttr",
         "escMultiline",
+        "guardLeave",
         "isAllSelected",
         "isSomeSelected",
         "openOverlay",
@@ -5735,8 +5740,10 @@
         "toggleId",
         "trackOverlay",
         "trackOverlays",
+        "useLeaveGuard",
         "useOverlayBack",
-        "writeClipboard"
+        "writeClipboard",
+        "writeProgressLabel"
       ],
       "collections": []
     },

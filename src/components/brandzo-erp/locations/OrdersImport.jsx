@@ -8,6 +8,7 @@ import { useCallback, useRef, useState } from 'react';
 import Icon from '../../ui/Icon.jsx';
 import Badge from '../../odoo/Badge.jsx';
 import { getBasePath } from '../../../services/auth/authService.js';
+import { useLeaveGuard } from '../../../services/ui/useLeaveGuard.js';
 import { canPostImport } from '../../../services/locations/postedImportService.js';
 import { analyzeOrdersFile, commitOrdersImport } from '../../../services/locations/ordersImportService.js';
 import { DONE_STATUS_LABELS, ODOO_STATE_LABELS, ORDER_TYPES } from '../../../services/locations/orderImport.js';
@@ -39,9 +40,11 @@ function Stat({ label, value, tone }) {
 export default function OrdersImport({ profile }) {
   const [preview, setPreview] = useState(null);
   const [busy, setBusy] = useState('');
+  const [writing, setWriting] = useState(false);
   const [msg, setMsg] = useState({ type: '', text: '' });
   const [result, setResult] = useState(null);
   const fileRef = useRef(null);
+  useLeaveGuard(writing);
   const canImport = canPostImport(profile?.role);
 
   const readFile = useCallback(async (file) => {
@@ -62,6 +65,7 @@ export default function OrdersImport({ profile }) {
 
   async function commit() {
     setMsg({ type: '', text: '' });
+    setWriting(true);
     try {
       const out = await commitOrdersImport(preview, profile, {
         onProgress: ({ index, total, docRef }) => setBusy(`${index + 1}/${total} — ${docRef}`),
@@ -76,6 +80,7 @@ export default function OrdersImport({ profile }) {
       setMsg({ type: 'error', text: err.message || 'تعذّر الاستيراد.' });
     } finally {
       setBusy('');
+      setWriting(false);
     }
   }
 
