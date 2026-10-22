@@ -319,3 +319,27 @@ test('القراءةُ القصيرة لا تقلب سببَ الراكد إلى
   assert.equal(s.kpis.stagnantReadyDay, '2027-01-18');
   assert.equal(s.recentMoves.length, 10);
 });
+
+test('★★★ ‹ODOO-ORD› القيمةُ من الأرصدة بتكلفة أودو حين تصل — لا من الماستر الفارغ', () => {
+  const items = [{ sku: 'A', costPrice: 0, balance: 0, category: 'مكياج' }, { sku: 'B', costPrice: 0, balance: 99 }];
+  const balances = [
+    { sku: 'A', warehouse: 'WH001', qty: 10, unitCost: 5 },
+    { sku: 'B', warehouse: 'WH002', qty: 4, unitCost: 0 },
+    { sku: 'A', warehouse: 'TRANSIT', qty: 20, unitCost: 5 },
+    { sku: 'A', warehouse: 'ADJUSTMENT', qty: 307, unitCost: 5 },
+  ];
+  const { kpis, categories } = logisticsSummary({ items, balances }, Date.parse('2026-10-22T10:00:00Z'));
+  assert.equal(kpis.valueSource, 'balances');
+  assert.equal(kpis.totalValue, 50, 'المستودعان وحدهما — لا الطريق ولا حساب التسوية');
+  assert.equal(kpis.transitValue, 100);
+  assert.equal(kpis.unpricedLines, 1);
+  assert.equal(kpis.valueByWarehouse.WH001.value, 50);
+  assert.equal(categories[0].category, 'مكياج');
+});
+
+test('بلا أرصدةٍ (لم تصل) يبقى السلوكُ القديم — ولا يُعلَن مصدرٌ لم يُقرأ', () => {
+  const { kpis } = logisticsSummary({ items: [{ sku: 'A', costPrice: 2, balance: 3 }] }, Date.parse('2026-10-22T10:00:00Z'));
+  assert.equal(kpis.valueSource, 'items');
+  assert.equal(kpis.totalValue, 6);
+  assert.equal(kpis.transitValue, null);
+});

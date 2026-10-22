@@ -5,6 +5,8 @@ import { listenMovesSince } from '../../../services/ledger/ledgerService.js';
 import { listenOperations } from '../../../services/stock/operationsService.js';
 import { subscribePartners } from '../../../services/partners/partnerService.js';
 import { listenDocumentsSince } from '../../../services/documents/documentsService.js';
+import { listenBalances, listenBalancesDelta } from '../../../services/balances/balancesService.js';
+import { productsFullReads } from '../../../services/items/catalogDelta.js';
 import { countCollection } from '../../../services/dashboard/countsService.js';
 import { OPENING_DAY, OPENING_MS } from '../../../services/documents/actualWork.js';
 import {
@@ -111,6 +113,8 @@ export default function LogisticsDashboard() {
   const [moves, setMoves] = useState([]);
   const [operations, setOperations] = useState([]);
   const [odooDocs, setOdooDocs] = useState([]);
+  // ‹ODOO-ORD› الأرصدةُ مصدرُ القيمة (تكلفةُ أودو في سطورها). null حتّى تصل — فلا تُعرض قيمةُ الماستر الفارغة صفرًا.
+  const [balances, setBalances] = useState(null);
   const [suppliers, setSuppliers] = useState([]);
   const [customers, setCustomers] = useState([]);
   // أعدادٌ من الخادم — null ما لم تصل (أو تعذّرت)، فيُعرض «—» لا صفرٌ لم يُعَدّ.
@@ -129,8 +133,18 @@ export default function LogisticsDashboard() {
 
   useEffect(() => {
     if (!me || !MANAGER_ROLES.includes(me.role)) return undefined;
+    // نفسُ مفتاح الإطفاء الذي تقرؤه الرئيسيّةُ والأصناف: الفروقُ افتراضًا والكاملُ عند الطلب — لا آليّةَ ثانية.
+    let fullReads = false;
+    try {
+      fullReads = productsFullReads(typeof localStorage === 'undefined' ? null : localStorage);
+    } catch {
+      fullReads = false;
+    }
     const subs = [
       subscribeItems(setItems, () => {}, { includeArchived: false }),
+      fullReads
+        ? listenBalances((rows) => setBalances(rows || []), () => setBalances(null))
+        : listenBalancesDelta((rows) => setBalances(rows || []), () => setBalances(null)),
       listenMovesSince((rows) => setMoves(rows || []), { max: movesPlan.max }),
       listenOperations((rows) => setOperations(rows || [])),
       // ★★ منذ الافتتاح والأحدثُ أوّلًا: بلغ السقفَ ⟵ سقط الأقدم لا عيّنةٌ عشوائيّة (استعلامُ `in` بالنوع بلا ترتيب).
@@ -154,11 +168,11 @@ export default function LogisticsDashboard() {
 
   const summary = useMemo(
     () => logisticsSummary(
-      { items, moves, operations, odooDocs, suppliers, customers, counts },
+      { items, moves, operations, odooDocs, suppliers, customers, counts, balances },
       nowMs,
       { movesCap: movesPlan.movesCap, odooCap: ODOO_FEED_CAP },
     ),
-    [items, moves, operations, odooDocs, suppliers, customers, counts, nowMs, movesPlan],
+    [items, moves, operations, odooDocs, suppliers, customers, counts, balances, nowMs, movesPlan],
   );
 
   if (!ready) {
@@ -281,7 +295,14 @@ export default function LogisticsDashboard() {
       <div className="o_dashboard">
         {/* المؤشّرات التنفيذيّة */}
         <div className="o_dashboard_kpis">
-          <Kpi icon="dollarSign" value={int(k.totalValue)} label="قيمة المخزون (د.ل)" sub={k.itemsUnpriced ? `${int(k.itemsUnpriced)} صنف بلا سعر` : null} />
+          <Kpi
+            icon="dollarSign"
+            value={int(k.totalValue)}
+            label="قيمة المخزون (د.ل)"
+            sub={k.valueSource === 'balances'
+              ? `بتكلفة أودو · في الطريق ${int(k.transitValue)}${k.unpricedLines ? ` · ${int(k.unpricedLines)} سطرًا بلا تكلفة` : ''}`
+              : (k.itemsUnpriced ? `${int(k.itemsUnpriced)} صنف بلا سعر` : null)}
+          />
           <Kpi icon="package" value={int(k.itemsTotal)} label="عدد الأصناف" />
           <Kpi icon="alertTriangle" value={int(k.reorderCount)} label="تحت حدّ الطلب" alert={k.reorderCount > 0} sub={k.reorderWithoutMin ? `${int(k.reorderWithoutMin)} بلا حدّ` : null} />
           <Kpi

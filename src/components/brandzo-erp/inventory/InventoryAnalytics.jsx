@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import { subscribeItems } from '../../../services/items/itemService.js';
 import { listenRecentMoves } from '../../../services/ledger/ledgerService.js';
+import { listenBalances, listenBalancesDelta } from '../../../services/balances/balancesService.js';
+import { productsFullReads } from '../../../services/items/catalogDelta.js';
+import { balanceValuation, itemsWithLedger } from '../../../services/inventory/balanceValuation.js';
 import {
   valuationReport,
   reorderReport,
@@ -32,10 +35,12 @@ const num = (n) => (Number(n) || 0).toLocaleString('ar-LY');
 export default function InventoryAnalytics() {
   const [me, setMe] = useState(null);
   const [ready, setReady] = useState(false);
-  const [items, setItems] = useState([]);
+  const [masterItems, setItems] = useState([]);
+  // ‹ODOO-ORD› الأرصدةُ مصدرُ القيمة والرصيد (تكلفةُ أودو في سطورها) — null حتّى تصل فيبقى الماسترُ احتياطًا.
+  const [balances, setBalances] = useState(null);
   const [moves, setMoves] = useState([]);
   const [stagnantDays, setStagnantDays] = useState(90);
-  const nowMs = useMemo(() => Date.now(), [items, moves]);
+  const nowMs = useMemo(() => Date.now(), [masterItems, moves, balances]);
 
   useEffect(() => {
     const unsub = subscribeAuth(async (user) => {
@@ -49,19 +54,40 @@ export default function InventoryAnalytics() {
     if (!me) return undefined;
     const ui = subscribeItems(setItems, () => {}, { includeArchived: false });
     const um = listenRecentMoves(setMoves, MOVES_CAP);
-    return () => { ui?.(); um?.(); };
+    let fullReads = false;
+    try {
+      fullReads = productsFullReads(typeof localStorage === 'undefined' ? null : localStorage);
+    } catch {
+      fullReads = false;
+    }
+    const ub = fullReads
+      ? listenBalances((rows) => setBalances(rows || []), () => setBalances(null))
+      : listenBalancesDelta((rows) => setBalances(rows || []), () => setBalances(null));
+    return () => { ui?.(); um?.(); ub?.(); };
   }, [me]);
 
-  const valuation = useMemo(() => valuationReport(items), [items]);
+  const items = useMemo(() => (balances ? itemsWithLedger(masterItems, balances) : masterItems), [masterItems, balances]);
+  const ledgerValue = useMemo(() => (balances ? balanceValuation(balances, masterItems) : null), [balances, masterItems]);
+  const valuation = useMemo(() => {
+    const base = valuationReport(items);
+    return ledgerValue ? { ...base, total: ledgerValue.total, categories: ledgerValue.categories } : base;
+  }, [items, ledgerValue]);
   const reorder = useMemo(() => reorderReport(items), [items]);
   const stagnant = useMemo(
     () => stagnantReport(items, moves, nowMs, { stagnantDays }),
     [items, moves, nowMs, stagnantDays],
   );
-  const summary = useMemo(
-    () => inventorySummary(items, moves, nowMs, { stagnantDays }),
-    [items, moves, nowMs, stagnantDays],
-  );
+  const summary = useMemo(() => {
+    const base = inventorySummary(items, moves, nowMs, { stagnantDays });
+    if (!ledgerValue) return base;
+    // القيمةُ والمقامُ من الأرصدة — فنسبةُ الراكد تُقاس على قيمة المستودعين الحقيقيّة.
+    return {
+      ...base,
+      totalValue: ledgerValue.total,
+      itemsUnpriced: ledgerValue.unpriced.lines,
+      stagnantShare: ledgerValue.total > 0 ? base.stagnantValue / ledgerValue.total : null,
+    };
+  }, [items, moves, nowMs, stagnantDays, ledgerValue]);
   // ‹WMS-202› نافذةُ التصنيف هي نافذةُ الراكد نفسُها — فلا رقمان في شاشةٍ
   // واحدةٍ يقيسان المدّةَ ويختلفان، وهو أوّلُ ما يُفقد ثقةَ القارئ.
   const velocity = useMemo(() => velocityOf(moves, { nowMs, windowDays: stagnantDays }), [moves, nowMs, stagnantDays]);

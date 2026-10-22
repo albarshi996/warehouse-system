@@ -11,7 +11,7 @@
   "counts": {
     "modules": 122,
     "serviceDomains": 52,
-    "serviceFiles": 720,
+    "serviceFiles": 722,
     "collections": 104,
     "roles": 20,
     "odooModels": 12,
@@ -2892,14 +2892,21 @@
       "domain": "inventory",
       "dir": "src/services/inventory",
       "files": [
+        "balanceValuation.js",
+        "balanceValuation.test.js",
         "inventoryAnalytics.js",
         "inventoryAnalytics.test.js"
       ],
-      "fileCount": 2,
-      "testCount": 1,
+      "fileCount": 4,
+      "testCount": 2,
       "exports": [
+        "TRANSIT_ACCOUNT",
+        "balanceCost",
+        "balanceValuation",
         "canonKey",
         "inventorySummary",
+        "itemCostIndex",
+        "itemsWithLedger",
         "lastOutflowByItem",
         "outflowQtySince",
         "reorderReport",

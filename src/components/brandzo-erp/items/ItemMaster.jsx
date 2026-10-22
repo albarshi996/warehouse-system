@@ -12,7 +12,8 @@ import { exportItemsMaster } from '../../../services/excel/excelExport.js';
 import { listenBalances, listenBalancesDelta } from '../../../services/balances/balancesService.js';
 import { productsFullReads } from '../../../services/items/catalogDelta.js';
 import { selectItems } from '../../../services/items/itemCache.js';
-import { totalQty, stockValue, fefoSort, expiryStatus } from '../../../services/balances/balanceKey.js';
+import { totalQty, fefoSort, expiryStatus } from '../../../services/balances/balanceKey.js';
+import { balanceValuation } from '../../../services/inventory/balanceValuation.js';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import Icon from '../../ui/Icon.jsx';
 import ListView from '../../odoo/ListView.jsx';
@@ -439,7 +440,8 @@ export default function ItemMaster() {
             </div>
             <div className="o_kpi">
               <span className="o_kpi_icon"><Icon name="dollarSign" size={20} /></span>
-              <span className="o_kpi_value">{int(stockValue(balances))} د.ل</span>
+              {/* ‹ODOO-ORD› المستودعان بتكلفة أودو — بلا حساب التسوية الذي كانت `stockValue` تجمعه، والطريقُ يُعرض في اللوجستيات. */}
+              <span className="o_kpi_value">{int(balanceValuation(balances, items).total)} د.ل</span>
               <span className="o_kpi_label">قيمة المخزون</span>
             </div>
             <div className="o_kpi alert">

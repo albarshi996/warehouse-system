@@ -36,6 +36,7 @@ import {
 } from '../reports/odooReports.js';
 import { OPENING_MS, actualMoves, actualRecords, isOdooDoc, libyaDayOfStamp, stampMs } from '../documents/actualWork.js';
 import { SOURCE_ORDER_SCHEMAS } from '../documents/schemas/sourceOrders.js';
+import { balanceValuation, itemsWithLedger } from '../inventory/balanceValuation.js';
 
 const DEFAULT_TOP = 8;
 const MS_PER_DAY = 86400000;
@@ -185,7 +186,12 @@ export function logisticsSummary(data = {}, nowMs = 0, opts = {}) {
     movesCap = 0,
     odooCap = 0,
   } = opts;
-  const items = asArray(data.items);
+  const masterItems = asArray(data.items);
+  // ‹ODOO-ORD› الأرصدةُ إن وصلت هي الحقيقة: القيمةُ بتكلفة أودو في سطورها، والراكدُ وإعادةُ الطلب برصيد الدفتر لا رصيد
+  // الماستر القديم. وما لم تصل (`balances` غائبة) يبقى السلوكُ القديم — لا صفرَ مُلفَّقًا ولا انتظار.
+  const ledger = Array.isArray(data.balances) ? data.balances : null;
+  const items = ledger ? itemsWithLedger(masterItems, ledger) : masterItems;
+  const ledgerValue = ledger ? balanceValuation(ledger, masterItems) : null;
   const rawMoves = asArray(data.moves);
   // الحركاتُ تُقرأ منذ الافتتاح؛ والتصفيةُ هنا حصانةٌ لو غُذّي النموذجُ من مصدرٍ أوسع.
   const moves = actualMoves(rawMoves);
@@ -197,7 +203,10 @@ export function logisticsSummary(data = {}, nowMs = 0, opts = {}) {
   const customers = asArray(data.customers);
   const counts = data.counts && typeof data.counts === 'object' ? data.counts : {};
 
-  const valuation = valuationReport(items);
+  const itemValuation = valuationReport(items);
+  const valuation = ledgerValue
+    ? { total: ledgerValue.total, categories: ledgerValue.categories, itemsUnpriced: ledgerValue.unpriced.lines }
+    : itemValuation;
   const reorder = reorderReport(items);
   const win = stagnantWindow(rawMoves, nowMs, { stagnantDays, historySinceMs, movesCap });
   const stagnant = win.ready ? stagnantReport(items, moves, nowMs, { stagnantDays }) : null;
@@ -211,6 +220,11 @@ export function logisticsSummary(data = {}, nowMs = 0, opts = {}) {
       totalValue: valuation.total,
       itemsTotal,
       itemsUnpriced: valuation.itemsUnpriced,
+      // ‹ODOO-ORD› مصدرُ القيمة: الأرصدةُ بتكلفة أودو، أو الماسترُ إن لم تصل. والطريقُ بجانبها، وما بلا تكلفةٍ سطورًا.
+      valueSource: ledgerValue ? 'balances' : 'items',
+      transitValue: ledgerValue ? ledgerValue.transit.value : null,
+      unpricedLines: ledgerValue ? ledgerValue.unpriced.lines : null,
+      valueByWarehouse: ledgerValue ? ledgerValue.byWarehouse : null,
       reorderCount: reorder.count,
       reorderWithoutMin: reorder.withoutMin,
       // الراكدُ: null حتّى يكتمل التاريخ — «لم يُقَس» لا «صفر».
