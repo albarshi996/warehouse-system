@@ -1,6 +1,6 @@
 {
   "$schema": "arch-wiki/v1",
-  "project": "Brandzo Warehouse & Supply-Chain System",
+  "project": "BHOME Warehouse & Supply-Chain System",
   "generatedBy": "scripts/build-arch.mjs",
   "note": "ملف مولَّد آليًّا من الكود — لا يُحرَّر يدويًّا. المصدر الواحد المخصّص للـAI.",
   "stack": {
@@ -47,7 +47,7 @@
     {
       "name": "arch-wiki",
       "route": "/dashboard/arch-wiki",
-      "title": "Brandzo | خريطة النظام",
+      "title": "BHOME | خريطة النظام",
       "summary": "خريطة النظام (Arch Wiki) — التوثيق المعماريّ الحيّ، صفحة محميّة للمدير.",
       "file": "src/pages/dashboard/arch-wiki.astro",
       "usesServices": []
@@ -63,7 +63,7 @@
     {
       "name": "assets-inventory",
       "route": "/dashboard/assets-inventory",
-      "title": "Brandzo — جرد الأصول",
+      "title": "BHOME — جرد الأصول",
       "summary": "يُخفي أدواتَ الكتابة عمّن لا يملكها.",
       "file": "src/pages/dashboard/assets-inventory.astro",
       "usesServices": [
@@ -149,7 +149,7 @@
     {
       "name": "custody",
       "route": "/dashboard/custody",
-      "title": "Brandzo | العُهد العينية",
+      "title": "BHOME | العُهد العينية",
       "summary": "العُهد العينية للموظفين — سلاسل الإمداد (المرجع التشغيلي ٥-١).",
       "file": "src/pages/dashboard/custody.astro",
       "usesServices": [
@@ -281,7 +281,7 @@
     {
       "name": "fleet-operations",
       "route": "/dashboard/fleet-operations",
-      "title": "Brandzo | عمليات الأسطول",
+      "title": "BHOME | عمليات الأسطول",
       "summary": "عمليات الأسطول — سلاسل الإمداد (المرجع التشغيلي م-٢).",
       "file": "src/pages/dashboard/fleet-operations.astro",
       "usesServices": [
@@ -484,7 +484,7 @@
     {
       "name": "maintenance-center",
       "route": "/dashboard/maintenance-center",
-      "title": "Brandzo | مركز الصيانة",
+      "title": "BHOME | مركز الصيانة",
       "summary": "مركز الصيانة — سلاسل الإمداد (المرجع التشغيلي م-٣ · Odoo Maintenance).",
       "file": "src/pages/dashboard/maintenance-center.astro",
       "usesServices": [
@@ -504,7 +504,7 @@
     {
       "name": "meetings",
       "route": "/dashboard/meetings",
-      "title": "Brandzo | الاجتماعات ومحاضرها",
+      "title": "BHOME | الاجتماعات ومحاضرها",
       "summary": "الاجتماعات ومحاضرها — أداةُ محاضر موحّدة، يدويّةٌ بالكامل.",
       "file": "src/pages/dashboard/meetings.astro",
       "usesServices": []
@@ -587,7 +587,7 @@
     {
       "name": "org-structure",
       "route": "/dashboard/org-structure",
-      "title": "Brandzo | الهيكل التنظيمي",
+      "title": "BHOME | الهيكل التنظيمي",
       "summary": "الهيكل التنظيمي التفاعلي — الإصدار الأول القابل للتعديل.",
       "file": "src/pages/dashboard/org-structure.astro",
       "usesServices": [
@@ -908,7 +908,7 @@
     {
       "name": "supply-chain",
       "route": "/dashboard/supply-chain",
-      "title": "Brandzo | لوحة سلاسل الإمداد",
+      "title": "BHOME | لوحة سلاسل الإمداد",
       "summary": "لوحة سلاسل الإمداد التنفيذية — المرجع التشغيلي ٤-٣ (Executive Dashboard).",
       "file": "src/pages/dashboard/supply-chain.astro",
       "usesServices": [
@@ -982,7 +982,7 @@
     {
       "name": "vehicles-inventory",
       "route": "/dashboard/vehicles-inventory",
-      "title": "Brandzo | جرد المركبات",
+      "title": "BHOME | جرد المركبات",
       "summary": "جرد المركبات — سجلّ الأسطول الحيّ (إدارة الحركة).",
       "file": "src/pages/dashboard/vehicles-inventory.astro",
       "usesServices": [
@@ -10345,7 +10345,7 @@
       {
         "id": "client-desktop",
         "layer": "العملاء",
-        "name": "Brandzo Hub (سطح المكتب)",
+        "name": "BHOME (سطح المكتب)",
         "tech": "Tauri (Rust shell)",
         "role": "تطبيق سطح مكتب يغلّف الواجهة المستضافة",
         "identifier": "ly.brandzo.hub",

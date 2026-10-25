@@ -150,9 +150,9 @@ export function minutesHtml(meeting, opts = {}) {
 
   return (
     `<div class="doc">` +
-    `<div class="d-head"><div class="d-logo">Brandzo</div>` +
+    `<div class="d-head"><div class="d-logo">BHOME</div>` +
     `<div class="d-t"><h1>محضر اجتماع تحضيري</h1>` +
-    `<div class="en">Preparatory Meeting Minutes · Brandzo Hub</div></div>` +
+    `<div class="en">Preparatory Meeting Minutes · BHOME</div></div>` +
     `<div class="d-ref">${esc(meeting.number || 'بلا رقم')}<br>${esc(meeting.date || '')}</div></div>` +
 
     `<div class="d-grid">` +
@@ -182,7 +182,7 @@ export function minutesHtml(meeting, opts = {}) {
     (meta.outcome ? `<div class="d-outcome">${esc(meta.outcome)}</div>` : '') +
 
     sigBlock(meeting.signatories, opts.assetBase || '') +
-    `<div class="d-foot">وُلّد من نظام Brandzo Hub — ${esc(meeting.number || '')} · لا يُعتد بمحضر غير مُرقَّم</div>` +
+    `<div class="d-foot">وُلّد من نظام BHOME — ${esc(meeting.number || '')} · لا يُعتد بمحضر غير مُرقَّم</div>` +
     `</div>`
   );
 }
@@ -234,9 +234,9 @@ export function groupMinutesHtml(meeting, opts = {}) {
 
   return (
     `<div class="doc">` +
-    `<div class="d-head"><div class="d-logo">Brandzo</div>` +
+    `<div class="d-head"><div class="d-logo">BHOME</div>` +
     `<div class="d-t"><h1>محضر اجتماع جماعيّ</h1>` +
-    `<div class="en">Joint Meeting Minutes · Brandzo Hub</div></div>` +
+    `<div class="en">Joint Meeting Minutes · BHOME</div></div>` +
     `<div class="d-ref">${esc(meeting.number || 'بلا رقم')}<br>${esc(meeting.date || '')}</div></div>` +
 
     `<div class="d-grid">` +
@@ -264,7 +264,7 @@ export function groupMinutesHtml(meeting, opts = {}) {
     (meeting.notes && meeting.notes.trim() ? `<h3 class="d-h">ملاحظات</h3>${multiline(meeting.notes)}` : '') +
 
     sigBlock(meeting.signatories, opts.assetBase || '') +
-    `<div class="d-foot">وُلّد من نظام Brandzo Hub — ${esc(meeting.number || '')} · لا يُعتد بمحضر غير مُرقَّم</div>` +
+    `<div class="d-foot">وُلّد من نظام BHOME — ${esc(meeting.number || '')} · لا يُعتد بمحضر غير مُرقَّم</div>` +
     `</div>`
   );
 }
@@ -286,9 +286,9 @@ export function invitationHtml(meeting, opts = {}) {
 
   return (
     `<div class="doc letter">` +
-    `<div class="d-head"><div class="d-logo">Brandzo</div>` +
+    `<div class="d-head"><div class="d-logo">BHOME</div>` +
     `<div class="d-t"><h1>دعوة لاجتماع تحضيري</h1>` +
-    `<div class="en">Preparatory Meeting Invitation · Brandzo Hub</div></div>` +
+    `<div class="en">Preparatory Meeting Invitation · BHOME</div></div>` +
     `<div class="d-ref">${esc(meeting.letterNumber || 'بلا رقم')}<br>${esc(opts.date || meta.issuedAt || '')}</div></div>` +
 
     `<p class="l-to"><b>السادة / ${esc(meeting.dept)}</b> &nbsp;&nbsp; المحترمين</p>` +
@@ -427,9 +427,9 @@ export function systemReportHtml(report, opts = {}) {
 
   return (
     `<div class="doc report">` +
-    `<div class="d-head"><div class="d-logo">Brandzo</div>` +
+    `<div class="d-head"><div class="d-logo">BHOME</div>` +
     `<div class="d-t"><h1>النظام الإداري التعاوني الموحّد</h1>` +
-    `<div class="en">Unified Collaborative Administrative System · Brandzo Hub</div></div>` +
+    `<div class="en">Unified Collaborative Administrative System · BHOME</div></div>` +
     `<div class="d-ref">${esc(opts.number || 'مسودّة — بلا رقم')}<br>${esc(opts.date || '')}</div></div>` +
 
     `<div class="d-grid">` +
@@ -473,7 +473,7 @@ export function systemReportHtml(report, opts = {}) {
     `</div></div>` +
 
     sigBlock(opts.signatories || [], opts.assetBase || '') +
-    `<div class="d-foot">${esc(org)} — ${esc(opts.number || 'مسودّة')} · وُلّد من نظام Brandzo Hub بتجميع محاضر الاجتماعات التحضيرية</div>` +
+    `<div class="d-foot">${esc(org)} — ${esc(opts.number || 'مسودّة')} · وُلّد من نظام BHOME بتجميع محاضر الاجتماعات التحضيرية</div>` +
     `</div>`
   );
 }

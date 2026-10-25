@@ -27,7 +27,7 @@ export default function CandidatePrint({ candidate: c, job }) {
         <div className="cp-brand">
           <span className="cp-logo">BFP</span>
           <div>
-            <strong>Brandzo</strong>
+            <strong>BHOME</strong>
             <small>Franchise Partners</small>
           </div>
         </div>
@@ -113,7 +113,7 @@ export default function CandidatePrint({ candidate: c, job }) {
       </div>
 
       <footer className="cp-foot">
-        <span>Brandzo — نادي الأهلي، بنغازي، ليبيا</span>
+        <span>BHOME — نادي الأهلي، بنغازي، ليبيا</span>
         <span dir="ltr">0912203770 · www.brandzo.com</span>
       </footer>
     </div>

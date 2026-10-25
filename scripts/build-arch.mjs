@@ -470,7 +470,7 @@ const infra = scanInfra();
 
 const architecture = {
   $schema: 'arch-wiki/v1',
-  project: 'Brandzo Warehouse & Supply-Chain System',
+  project: 'BHOME Warehouse & Supply-Chain System',
   generatedBy: 'scripts/build-arch.mjs',
   note: 'ملف مولَّد آليًّا من الكود — لا يُحرَّر يدويًّا. المصدر الواحد المخصّص للـAI.',
   stack: {
@@ -617,7 +617,7 @@ function renderDashboard(arch) {
 <body>
 <header>
   <div class="bar">
-    <span class="logo">Brandzo</span>
+    <span class="logo">BHOME</span>
     <div class="htitle">Arch Wiki<small>خريطة النظام الحيّة — مولَّدة من الكود</small></div>
     <label class="search">🔎<input id="q" placeholder="ابحث في الموديولات والخدمات والصلاحيات…" autocomplete="off"></label>
   </div>

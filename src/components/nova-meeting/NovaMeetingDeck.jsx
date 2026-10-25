@@ -162,7 +162,7 @@ function ShortcutCard({ base, shortcutKey, compact = false }) {
 function Cover() {
   return (
     <div className="nv-cover">
-      <p>إدارة السلاسل والإمداد — Brandzo Hub · اجتماع تنسيق مع {meetingMeta.beneficiary}</p>
+      <p>إدارة السلاسل والإمداد — BHOME · اجتماع تنسيق مع {meetingMeta.beneficiary}</p>
       <div>
         <span>{meetingMeta.docNumber} · الإصدار {meetingMeta.version} · {meetingMeta.status}</span>
         <h1>{meetingMeta.titleEn}<br /><i>Plan</i></h1>

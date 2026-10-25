@@ -89,7 +89,7 @@ export function customerLabelProblem(session, parcelNo, { order, overrides = nul
  *
  * لا يقبل `customerName` ولا `orderRef` من المستدعي: يقرؤهما من `order`.
  */
-export function buildCustomerLabel(session, parcelNo, { order, at = '', company = 'Brandzo' } = {}) {
+export function buildCustomerLabel(session, parcelNo, { order, at = '', company = 'BHOME' } = {}) {
   if (customerLabelProblem(session, parcelNo, { order })) return null;
   const card = parcelCard(session, parcelNo);
   const parsed = parseShipmentCode(card.code);
@@ -129,7 +129,7 @@ export function buildCustomerLabel(session, parcelNo, { order, at = '', company 
  *
  * @returns {{labels:object[], problem:string}}
  */
-export function buildAllCustomerLabels(session, { order, at = '', company = 'Brandzo' } = {}) {
+export function buildAllCustomerLabels(session, { order, at = '', company = 'BHOME' } = {}) {
   const shipmentProblem = shipmentCodeProblem(session?.shipment);
   if (shipmentProblem) return { labels: [], problem: shipmentProblem };
 

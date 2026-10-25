@@ -92,14 +92,14 @@ export default function PutawayForm({ state, dispatch }) {
 
   const fieldColumns = [
     [
-      { label: 'نوع العملية', value: 'براندزو هَب: تحويل داخلي' },
+      { label: 'نوع العملية', value: 'BHOME: تحويل داخلي' },
       { label: 'موقع المصدر', value: 'WH/Input' },
       { label: 'المستند المصدر', value: RECEIPT_REF },
     ],
     [
       { label: 'التاريخ المجدول', value: SAMPLE_PO.receiptDate },
       { label: 'الوجهة', value: pa.bin },
-      { label: 'الشركة', value: 'براندزو هَب' },
+      { label: 'الشركة', value: 'BHOME' },
     ],
   ];
 

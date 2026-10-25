@@ -148,7 +148,7 @@ export function inspectionToSheets(insp) {
   const s = summarize(insp);
 
   const info = [
-    ['Brandzo', '', 'نظام جرد المركبات — سجلّ الأسطول', ''],
+    ['BHOME', '', 'نظام جرد المركبات — سجلّ الأسطول', ''],
     ['Vehicle Inspection Report', '', `المركبة: ${g('brand')} ${g('model')}`.trim(), ''],
     ['', '', '', ''],
     ['رقم النموذج', g('formNo'), 'نوع المركبة', cell(insp?.info?.category)],

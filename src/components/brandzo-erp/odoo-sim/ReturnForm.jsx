@@ -103,7 +103,7 @@ export default function ReturnForm({ state, dispatch }) {
     [
       { label: 'تاريخ الاستلام', value: '2026-07-18' },
       { label: 'الوجهة', value: ret.reason === 'good' ? 'WH/Stock' : 'WH/Quarantine → المورّد' },
-      { label: 'الشركة', value: 'براندزو هَب' },
+      { label: 'الشركة', value: 'BHOME' },
     ],
   ];
 

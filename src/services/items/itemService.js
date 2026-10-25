@@ -572,7 +572,7 @@ export const unarchiveItem = async (sku) => {
   invalidateItemsCache();
 };
 
-/** Common units used in the Brandzo catalogue. Extend as needed. */
+/** Common units used in the BHOME catalogue. Extend as needed. */
 export const UNIT_OPTIONS = [
   { value: 'piece', labelAr: 'قطعة' },
   { value: 'box', labelAr: 'كرتون' },

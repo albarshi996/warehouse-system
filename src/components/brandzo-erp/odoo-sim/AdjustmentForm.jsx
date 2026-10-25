@@ -74,7 +74,7 @@ export default function AdjustmentForm({ state, dispatch }) {
     [
       { label: 'تاريخ السند', value: '2026-07-20' },
       { label: 'أثر القيد', value: exists ? fmt(value) : '—' },
-      { label: 'الشركة', value: 'براندزو هَب' },
+      { label: 'الشركة', value: 'BHOME' },
     ],
   ];
 

@@ -117,7 +117,7 @@ export function pickSelection(all, { mode = 'all', code = '', from = '', to = ''
  * `barcodeValue` هو **ما يُشفَّر فعلًا**: الكود القانونيّ (انظر ترويسة الملفّ).
  * و`headline` ما تقرؤه العين.
  */
-export function buildSheetLabel(value, { record = null, qualifier = {}, company = 'Brandzo', copy = 1 } = {}) {
+export function buildSheetLabel(value, { record = null, qualifier = {}, company = 'BHOME', copy = 1 } = {}) {
   const scan = classifyScan(value);
   if (scan.kind === BARCODE_KINDS.UNKNOWN.id) return null;
 
@@ -174,7 +174,7 @@ export function buildSheetLabel(value, { record = null, qualifier = {}, company 
  *
  * @returns {{labels:object[], size:object, pages:number, problem:string, dropped:number}}
  */
-export function buildLabelSheet({ codes = [], records = {}, size = '', qualifier = {}, company = 'Brandzo', copies = 1 } = {}) {
+export function buildLabelSheet({ codes = [], records = {}, size = '', qualifier = {}, company = 'BHOME', copies = 1 } = {}) {
   const list = (codes ?? []).map(normalizeScan).filter(Boolean);
   if (!list.length) return { labels: [], size: LABEL_SIZES.shelf, pages: 0, problem: 'لا شيء ليُطبع.', dropped: 0 };
 

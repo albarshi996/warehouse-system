@@ -4,7 +4,7 @@
  *
  * المشكلة الفعلية: فقدان أجهزة المسح والطابعات والعدد اليدوية خسارة شهرية
  * متكررة غير موثقة. القاعدة: لا يُسلَّم أي جهاز إلا بـ«سند استلام عهدة»
- * رسمي مُرقَّم (CUST-2026-####) يُطبع بهوية Brandzo ويُسجَّل رقميًّا.
+ * رسمي مُرقَّم (CUST-2026-####) يُطبع بهوية BHOME ويُسجَّل رقميًّا.
  *
  * عند الفقد/الإتلاف تُوثَّق قيمة الخصم (تُعتمد من HR قبل تنفيذها في الرواتب).
  *
@@ -14,7 +14,7 @@
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
 ---
 
-<DashboardLayout title="Brandzo | العُهد العينية" light>
+<DashboardLayout title="BHOME | العُهد العينية" light>
 
 <style is:inline>
   :root {
@@ -112,7 +112,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
 <div class="cbar">
   <div class="cbrand">
-    <div class="clogo">Brandzo</div>
+    <div class="clogo">BHOME</div>
     <div class="ctitle">العُهد العينية — سندات الاستلام الرسمية</div>
     <span class="chip-c" id="cloudChip"><span class="dot"></span><span id="cloudChipText">جارٍ الاتصال…</span></span>
   </div>
@@ -350,7 +350,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     } catch (e) { showToast('❌ ' + e.message); }
   };
 
-  /* ─── طباعة السند بهوية Brandzo ─── */
+  /* ─── طباعة السند بهوية BHOME ─── */
   window.printVoucher = (id) => {
     const r = records.find((x) => x.id === id);
     if (!r) return;
@@ -358,8 +358,8 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     $('printArea').innerHTML = `
       <div class="voucher">
         <div class="v-head">
-          <div class="v-logo">Brandzo</div>
-          <div class="v-title"><h1>سند استلام عهدة عينية</h1><div class="en">Equipment Custody Receipt · Brandzo Hub</div></div>
+          <div class="v-logo">BHOME</div>
+          <div class="v-title"><h1>سند استلام عهدة عينية</h1><div class="en">Equipment Custody Receipt · BHOME</div></div>
           <div class="v-num">${esc(r.number)}</div>
         </div>
         <div class="v-grid">
@@ -384,7 +384,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
           <div class="v-sig"><div class="line"></div><b>الموظف المستلم:</b> ${esc(r.employeeName)}</div>
           <div class="v-sig"><div class="line"></div><b>المسلِّم (الإدارة):</b> ${esc(r.createdBy || '')}</div>
         </div>
-        <div class="v-foot">وُلّد من نظام Brandzo Hub — ${esc(r.number)} · لا يُعتد بسند غير مُرقَّم</div>
+        <div class="v-foot">وُلّد من نظام BHOME — ${esc(r.number)} · لا يُعتد بسند غير مُرقَّم</div>
       </div>`;
     window.print();
   };

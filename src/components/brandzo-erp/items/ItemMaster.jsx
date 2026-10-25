@@ -91,7 +91,7 @@ export default function ItemMaster() {
     const ws = XLSX.utils.json_to_sheet(uomDebtExportRows(uomDebt));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'دين الوحدات');
-    XLSX.writeFile(wb, 'Brandzo-UoM-Debt.xlsx');
+    XLSX.writeFile(wb, 'BHOME-UoM-Debt.xlsx');
   }
 
   /**
@@ -107,7 +107,7 @@ export default function ItemMaster() {
   function exportMaster() {
     try {
       const stamp = new Date().toISOString().slice(0, 10);
-      const name = exportItemsMaster(filtered, { fileName: `Brandzo_Items_Master_${stamp}` });
+      const name = exportItemsMaster(filtered, { fileName: `BHOME_Items_Master_${stamp}` });
       setToast({ kind: 'ok', text: `صُدِّر ${filtered.length} صنفًا إلى ${name}` });
     } catch (e) {
       setToast({ kind: 'err', text: e?.message || 'تعذّر التصدير.' });
@@ -372,7 +372,7 @@ export default function ItemMaster() {
 
       <div className="o_ds">
         <p style={{ fontSize: 'var(--o-font-size-sm)', color: 'var(--o-main-color-muted)', margin: '0 0 14px', lineHeight: 1.6 }}>
-          إنشاء وتعديل بيانات أصناف Brandzo. كود SKU هو المعرّف الفريد لكل صنف.
+          إنشاء وتعديل بيانات أصناف BHOME. كود SKU هو المعرّف الفريد لكل صنف.
         </p>
 
         {toast && <div className={`o_alert ${toast.kind === 'error' ? 'danger' : 'success'}`}>{toast.text}</div>}

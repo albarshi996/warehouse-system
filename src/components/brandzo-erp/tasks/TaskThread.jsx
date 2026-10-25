@@ -47,7 +47,7 @@ function buildWhatsAppText(task) {
     ? '\n\nخطوات التنفيذ:\n' + task.checklist.map((s, i) => `${i + 1}. ${s.text}`).join('\n')
     : '';
   return (
-    `Brandzo Hub — مهمّة مُسنَدة\n` +
+    `BHOME — مهمّة مُسنَدة\n` +
     `العنوان: ${task.title}\n` +
     `الأولويّة: ${PRIORITY_LABELS[task.priority] || 'عادي'}\n` +
     `الاستحقاق: ${task.dueDate || '—'}${task.dueTime ? ' — ' + task.dueTime : ''}\n` +

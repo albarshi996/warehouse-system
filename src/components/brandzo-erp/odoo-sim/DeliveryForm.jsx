@@ -114,13 +114,13 @@ export default function DeliveryForm({ state, dispatch }) {
   const fieldColumns = [
     [
       { label: 'عنوان التسليم', value: 'براندزو للتجزئة — بنغازي' },
-      { label: 'نوع العملية', value: 'براندزو هَب: أوامر التسليم' },
+      { label: 'نوع العملية', value: 'BHOME: أوامر التسليم' },
       { label: 'المستند المصدر', value: SAMPLE_PO.name },
     ],
     [
       { label: 'التاريخ المجدول', value: SAMPLE_PO.receiptDate },
       { label: 'موقع المصدر', value: 'WH/Stock' },
-      { label: 'الشركة', value: 'براندزو هَب' },
+      { label: 'الشركة', value: 'BHOME' },
     ],
   ];
 

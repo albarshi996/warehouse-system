@@ -1,7 +1,7 @@
 [package]
 name = "brandzo-hub"
 version = "1.0.0"
-description = "Brandzo Hub — نظام إدارة مستودعات براندزو (قشرة سطح مكتب حول النظام السحابي)"
+description = "BHOME — نظام إدارة مستودعات BHOME (قشرة سطح مكتب حول النظام السحابي)"
 authors = ["Mohammed AlBarshi"]
 edition = "2021"
 

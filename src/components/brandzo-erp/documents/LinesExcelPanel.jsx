@@ -93,7 +93,7 @@ export default function LinesExcelPanel({ schema, lines, disabled, onChange, onF
           <button
             type="button"
             className="btn btn-secondary btn-sm"
-            onClick={() => download(lineTemplateMatrix(schema), `Brandzo-قالب-بنود-${code}.xlsx`)}
+            onClick={() => download(lineTemplateMatrix(schema), `BHOME-قالب-بنود-${code}.xlsx`)}
           >
             تنزيلُ القالب
           </button>
@@ -101,7 +101,7 @@ export default function LinesExcelPanel({ schema, lines, disabled, onChange, onF
           <button
             type="button"
             className="btn btn-secondary btn-sm"
-            onClick={() => download(linesSheetMatrix(schema, lines), `Brandzo-بنود-${code}.xlsx`)}
+            onClick={() => download(linesSheetMatrix(schema, lines), `BHOME-بنود-${code}.xlsx`)}
             disabled={!(lines || []).some((l) => l && Object.values(l).some((v) => String(v ?? '').trim()))}
           >
             تصديرُ البنود الحاليّة

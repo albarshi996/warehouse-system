@@ -119,7 +119,7 @@ export const STAGES = [
     titleAr: 'الاستلام وفحص الجودة', titleEn: 'Goods Received Note & QC',
     module: 'Inventory', modules: ['Inventory', 'Quality'], phaseAr: 'الاستلام والرقابة',
     odooPath: 'Inventory > Receipts  ·  Quality > Quality Controls',
-    descAr: 'أهم مستند في الدورة — الإقرار الرسمي بدخول البضاعة عهدة Brandzo. يُمسح الباركود ويُدخل رقم الدفعة (Lot)، ثم بانتظار فحص الجودة. لا تحويل إلى Done قبل اعتماد QC.',
+    descAr: 'أهم مستند في الدورة — الإقرار الرسمي بدخول البضاعة عهدة BHOME. يُمسح الباركود ويُدخل رقم الدفعة (Lot)، ثم بانتظار فحص الجودة. لا تحويل إلى Done قبل اعتماد QC.',
     flow: ['ready', 'in_progress', 'waiting_qc', 'done'],
     guard: { at: 'done', rule: 'qc' },
   },

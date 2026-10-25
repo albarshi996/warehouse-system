@@ -181,7 +181,7 @@ const Ordered = ({ items, columns = 2 }) => (
 function Cover() {
   return (
     <div className="rs-cover">
-      <p>إدارة السلاسل والإمداد والمخازن — Brandzo Hub · اجتماع مع {meetingMeta.counterpart}</p>
+      <p>إدارة السلاسل والإمداد والمخازن — BHOME · اجتماع مع {meetingMeta.counterpart}</p>
       <div>
         <span>{meetingMeta.docNumber} · الإصدار {meetingMeta.version} · {meetingMeta.status}</span>
         <h1>{meetingMeta.titleEn}<br /><i>Chain</i></h1>

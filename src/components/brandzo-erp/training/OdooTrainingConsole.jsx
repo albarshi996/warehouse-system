@@ -13,7 +13,7 @@ import { useOverlayBack } from '../../../services/ui/useOverlayBack.js';
 /**
  * Odoo Training Simulator — وضع التدريب.
  *
- * A fully offline, state-driven walkthrough of the Brandzo Hub document cycle:
+ * A fully offline, state-driven walkthrough of the BHOME document cycle:
  *   • 12-stage state machine — each stage must be completed to unlock the next.
  *   • The 21 official forms open (as their real mock HTML) at their stages.
  *   • The four golden rules are HARD guards that block the trainee and explain
@@ -893,7 +893,7 @@ export default function OdooTrainingConsole() {
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold text-ink-2">وضع التدريب — محاكي دورة مستندات Odoo</h2>
           <p className="text-muted mt-1 text-sm max-w-2xl leading-relaxed">
-            محاكاة تفاعلية لدورة Brandzo Hub المستندية الكاملة (12 مرحلة، 21 نموذجاً رسمياً). أكمل كل مرحلة لفتح
+            محاكاة تفاعلية لدورة BHOME المستندية الكاملة (12 مرحلة، 21 نموذجاً رسمياً). أكمل كل مرحلة لفتح
             التالية — والنظام يمنعك عند مخالفة أي قاعدة ذهبية. بيانات وهمية بالكامل، بلا اتصال حقيقي بـ Odoo.
           </p>
         </div>

@@ -123,7 +123,7 @@ function AdditionalInfo() {
   const rows = [
     ['المسؤول', 'محمد البرشي'],
     ['مجموعة التوريد', SAMPLE_PO.name],
-    ['نوع العملية', 'براندزو هَب: عمليات الاستلام'],
+    ['نوع العملية', 'BHOME: عمليات الاستلام'],
     ['الأولوية', 'عادية'],
   ];
   return (
@@ -271,12 +271,12 @@ export default function InventoryApp({ state, dispatch }) {
     [
       { label: 'الاستلام من', value: 'مختبرات الخليج للتجميل' },
       { label: 'المستند المصدر', value: SAMPLE_PO.name },
-      { label: 'نوع العملية', value: 'براندزو هَب: عمليات الاستلام' },
+      { label: 'نوع العملية', value: 'BHOME: عمليات الاستلام' },
     ],
     [
       { label: 'التاريخ المجدول', value: SAMPLE_PO.receiptDate },
       { label: 'الوجهة', value: 'WH/Stock' },
-      { label: 'الشركة', value: 'براندزو هَب' },
+      { label: 'الشركة', value: 'BHOME' },
     ],
   ];
 

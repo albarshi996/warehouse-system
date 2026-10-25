@@ -32,7 +32,7 @@ function buildMessage(task) {
     : '';
 
   return (
-    `🏭 *Brandzo Hub — مهمة تشغيلية*\n` +
+    `🏭 *BHOME — مهمة تشغيلية*\n` +
     `━━━━━━━━━━━━━━━━━━━━\n` +
     `📌 *${task.title}*\n` +
     `━━━━━━━━━━━━━━━━━━━━\n` +
@@ -54,7 +54,7 @@ function buildEmailBody(task) {
     : '';
 
   return (
-    `Brandzo Hub 2026 — مهمة تشغيلية\n` +
+    `BHOME 2026 — مهمة تشغيلية\n` +
     `${'═'.repeat(40)}\n` +
     `العنوان: ${task.title}\n` +
     `الأولوية: ${PRIORITY_LABELS[task.priority] || 'عادي'}\n` +
@@ -210,7 +210,7 @@ function buildPrintDocument(task) {
 </head>
 <body>
   <div class="header">
-    <div class="brand">🏭 Brandzo Hub 2026<small>مهمة تشغيلية — Operational Task</small></div>
+    <div class="brand">🏭 BHOME 2026<small>مهمة تشغيلية — Operational Task</small></div>
     <div class="meta">BZ-${escapeHtml(task.id)}<br />تاريخ الإنشاء: ${escapeHtml(createdAt)}</div>
   </div>
   <div class="accent-stripe"></div>
@@ -390,7 +390,7 @@ export default function TaskManager() {
       console.error(err);
     }
 
-    const subject = encodeURIComponent(`[Brandzo Task] ${task.title} — ${PRIORITY_LABELS[task.priority] || 'عادي'}`);
+    const subject = encodeURIComponent(`[BHOME Task] ${task.title} — ${PRIORITY_LABELS[task.priority] || 'عادي'}`);
     const body = encodeURIComponent(buildEmailBody(task));
     window.location.href = `mailto:${task.email.trim()}?subject=${subject}&body=${body}`;
     showToast('📧 تم فتح البريد الإلكتروني', false);
@@ -439,7 +439,7 @@ export default function TaskManager() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `Brandzo-Tasks-${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `BHOME-Tasks-${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(link);
     link.click();
     link.remove();

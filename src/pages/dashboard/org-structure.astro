@@ -16,7 +16,7 @@
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
 ---
 
-<DashboardLayout title="Brandzo | الهيكل التنظيمي" light>
+<DashboardLayout title="BHOME | الهيكل التنظيمي" light>
 
 <style is:inline>
   :root {
@@ -253,7 +253,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 
 <div class="obar">
   <div class="obrand">
-    <div class="ologo">Brandzo</div>
+    <div class="ologo">BHOME</div>
     <div class="otitle">الهيكل التنظيمي — الإصدار الأول القابل للتعديل</div>
     <span class="ochip" id="cloudChip"><span class="dot"></span><span id="cloudChipText">جارٍ الاتصال…</span></span>
   </div>
@@ -951,9 +951,9 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     $('orgPrint').innerHTML = `
       <div class="sheet">
         <div class="sh-head">
-          <div class="sh-logo">Brandzo</div>
+          <div class="sh-logo">BHOME</div>
           <div class="sh-t"><h1>${esc(m.title || 'الهيكل التنظيمي')}</h1>
-            <div class="en">Organizational Structure · Brandzo Hub — ${esc(m.status === 'approved' ? 'نسخة معتمدة' : 'مسودة للعرض')}</div></div>
+            <div class="en">Organizational Structure · BHOME — ${esc(m.status === 'approved' ? 'نسخة معتمدة' : 'مسودة للعرض')}</div></div>
           <div class="sh-ref">${esc(m.reference || '')}<br>${esc(m.issuedAt || '')}${cloudVersion ? `<br>v${cloudVersion}` : ''}</div>
         </div>
         <div class="chart" style="overflow:visible;">${chartHtml(doc.tree, { skin: 'portal' })}</div>
@@ -964,12 +964,12 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
         <div class="sh-sigs">
           ${sigs.map((s) => `<div class="sh-sig"><div class="line"></div><b>${esc(s.name)}</b><span>${esc(s.role)}</span></div>`).join('')}
         </div>
-        <div class="sh-foot">وُلّد من نظام Brandzo Hub — المصدر الواحد للهيكل التنظيمي · ${esc(m.reference || '')}</div>
+        <div class="sh-foot">وُلّد من نظام BHOME — المصدر الواحد للهيكل التنظيمي · ${esc(m.reference || '')}</div>
       </div>
 
       <div class="sheet">
         <div class="sh-head">
-          <div class="sh-logo">Brandzo</div>
+          <div class="sh-logo">BHOME</div>
           <div class="sh-t"><h1>الكادر الوظيفي — المرحلتان</h1><div class="en">Staffing Plan</div></div>
           <div class="sh-ref">${esc(m.reference || '')}</div>
         </div>
@@ -980,7 +980,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
         <div class="sh-sigs">
           ${sigs.map((s) => `<div class="sh-sig"><div class="line"></div><b>${esc(s.name)}</b><span>${esc(s.role)}</span></div>`).join('')}
         </div>
-        <div class="sh-foot">وُلّد من نظام Brandzo Hub · ${esc(m.reference || '')}</div>
+        <div class="sh-foot">وُلّد من نظام BHOME · ${esc(m.reference || '')}</div>
       </div>`;
     window.print();
   };

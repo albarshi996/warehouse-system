@@ -165,7 +165,7 @@ const Flow = ({ nodes }) => (
 function Cover() {
   return (
     <div className="mtg-cover">
-      <p>إدارة السلاسل والإمداد والمخازن — Brandzo Hub · اجتماع مع {meetingMeta.counterpart}</p>
+      <p>إدارة السلاسل والإمداد والمخازن — BHOME · اجتماع مع {meetingMeta.counterpart}</p>
       <div>
         <span>{meetingMeta.docNumber} · الإصدار {meetingMeta.version} · {meetingMeta.status}</span>
         <h1>Procure<br /><i>to Pay</i></h1>

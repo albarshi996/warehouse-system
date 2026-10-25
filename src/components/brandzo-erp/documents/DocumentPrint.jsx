@@ -76,7 +76,7 @@ export default function DocumentPrint({ schema, doc, attachments = [], reconcili
         <div className="dp-brand">
           <span className="dp-logo">BFP</span>
           <div>
-            <strong>Brandzo</strong>
+            <strong>BHOME</strong>
             <small>Franchise Partners</small>
           </div>
         </div>
@@ -281,7 +281,7 @@ export default function DocumentPrint({ schema, doc, attachments = [], reconcili
       </div>
 
       <footer className="dp-foot">
-        <span>Brandzo — نادي الأهلي، بنغازي، ليبيا</span>
+        <span>BHOME — نادي الأهلي، بنغازي، ليبيا</span>
         <span dir="ltr">0912203770 · www.brandzo.com</span>
       </footer>
     </div>

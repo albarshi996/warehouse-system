@@ -18,7 +18,7 @@
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
 ---
 
-<DashboardLayout title="Brandzo | جرد المركبات" light>
+<DashboardLayout title="BHOME | جرد المركبات" light>
 
 <style is:inline>
   :root {
@@ -261,7 +261,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
 <!-- TOP BAR -->
 <div class="screen-bar">
   <div class="bar-brand">
-    <div class="brand-logo-v">Brandzo</div>
+    <div class="brand-logo-v">BHOME</div>
     <div class="brand-divider"></div>
     <div class="bar-title">جرد المركبات — سجلّ الأسطول الحيّ</div>
     <span class="cloud-chip" id="cloudChip"><span class="dot"></span><span id="cloudChipText">جارٍ الاتصال…</span></span>
@@ -291,7 +291,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   <div class="header-card">
     <div class="header-inner">
       <div class="header-branding">
-        <div class="header-logo-block"><span>Brandzo</span></div>
+        <div class="header-logo-block"><span>BHOME</span></div>
         <div class="header-text">
           <h2>سجلّ الأسطول الحيّ</h2>
           <p>منظومة مشتركة: المخازن · الحركة · الموارد البشرية — فحص · صيانة · زيوت · حوادث</p>
@@ -462,7 +462,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
   <div class="header-card">
     <div class="header-inner">
       <div class="header-branding">
-        <div class="header-logo-block"><span>Brandzo</span></div>
+        <div class="header-logo-block"><span>BHOME</span></div>
         <div class="header-text">
           <h2>نموذج استلام وفحص المركبة</h2>
           <p>Vehicle Receiving & Inspection Report · يُطبع ويُصدَّر PDF بهوية إنجاز المشارق المعتمدة</p>
@@ -1120,7 +1120,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
       ${inner}
       <div class="pp-footer">
         <span>نموذج ${esc(insp.info?.formNo || '—')} · ${esc(insp.info?.plateNo || '')}</span>
-        <span>Brandzo Hub — نظام جرد المركبات · صفحة ${pageNo}</span>
+        <span>BHOME — نظام جرد المركبات · صفحة ${pageNo}</span>
       </div>
     </div>`;
   }
@@ -1260,14 +1260,14 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     XLSX.utils.book_append_sheet(wb, mk(sheets.summary, [{ wch: 30 }, { wch: 16 }, { wch: 14 }]), SHEET_NAMES.summary);
     const plate = (insp.info?.plateNo || 'غير-محدد').replace(/\s+/g, '-');
     const date = insp.info?.inspDate || new Date().toISOString().split('T')[0];
-    XLSX.writeFile(wb, `Brandzo_فحص_${plate}_${date}.xlsx`);
+    XLSX.writeFile(wb, `BHOME_فحص_${plate}_${date}.xlsx`);
     showToast('📊 صدرت النسخة الاحتياطية الكاملة (شاملة الملحقات)');
   };
 
   window.exportRegistryExcel = function () {
     if (!vehicles.length) return showToast('السجلّ فارغ — لا شيء للتصدير');
     const rows = [
-      ['سجلّ الأسطول — Brandzo (لحظة التصدير: ' + new Date().toISOString().slice(0, 16).replace('T', ' ') + ')'],
+      ['سجلّ الأسطول — BHOME (لحظة التصدير: ' + new Date().toISOString().slice(0, 16).replace('T', ' ') + ')'],
       [],
       ['اللوحة', 'النوع', 'الماركة', 'الموديل', 'السنة', 'اللون', 'الهيكل', 'الجهة', 'المستلم', 'العداد', 'انتهاء الرخصة', 'انتهاء التأمين', 'آخر فحص', 'حكم آخر فحص', 'نسبة الفحص', 'صيانة مفتوحة', 'آخر زيت', 'استحقاق الزيت', 'عدد الحوادث'],
       ...vehicles.map((v) => [
@@ -1285,7 +1285,7 @@ import DashboardLayout from '../../layouts/DashboardLayout.astro';
     const ws = XLSX.utils.aoa_to_sheet(rows);
     ws['!cols'] = rows[2].map((_, i) => ({ wch: i === 0 ? 16 : 14 }));
     XLSX.utils.book_append_sheet(wb, ws, 'سجل الأسطول');
-    XLSX.writeFile(wb, `Brandzo_سجل_الأسطول_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    XLSX.writeFile(wb, `BHOME_سجل_الأسطول_${new Date().toISOString().slice(0, 10)}.xlsx`);
     showToast('📊 صدر سجلّ الأسطول');
   };
 

@@ -400,7 +400,7 @@ export function reportFileName(criteria, nowMs) {
   // من `new Date(undefined).toISOString()` فيُفقد الملفّ.
   const fallback = Number.isFinite(nowMs) ? new Date(nowMs).toISOString().slice(0, 10) : 'export';
   const stamp = rangeStamp(criteria) || fallback;
-  return `Brandzo-تقرير-المستندات-${stamp}.xlsx`;
+  return `BHOME-تقرير-المستندات-${stamp}.xlsx`;
 }
 
 /**

@@ -68,7 +68,7 @@ export default function CycleCountForm({ state, dispatch }) {
     [
       { label: 'تاريخ الجرد', value: '2026-07-20' },
       { label: 'حالة الرصيد', value: started ? 'مجمّد للجرد' : 'نشط' },
-      { label: 'الشركة', value: 'براندزو هَب' },
+      { label: 'الشركة', value: 'BHOME' },
     ],
   ];
 

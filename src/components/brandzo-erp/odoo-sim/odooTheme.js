@@ -122,7 +122,7 @@ export const SAMPLE_PO = {
   orderDeadline: '2026-07-14 10:00:00',
   receiptDate: '2026-07-16',
   buyer: 'محمد البرشي',
-  company: 'براندزو هَب',
+  company: 'BHOME',
   paymentTerms: '30 يوماً',
   currency: 'LYD',
   lines: [

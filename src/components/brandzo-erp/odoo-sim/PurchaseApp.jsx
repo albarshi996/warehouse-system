@@ -50,7 +50,7 @@ function PRForm({ state, dispatch }) {
   const fieldColumns = [
     [
       { label: 'مقدّم الطلب', value: 'أمين المستودع' },
-      { label: 'القسم', value: 'المستودعات — براندزو هَب' },
+      { label: 'القسم', value: 'المستودعات — BHOME' },
       { label: 'سبب الطلب', value: 'بلوغ نقطة إعادة الطلب' },
     ],
     [

@@ -54,7 +54,7 @@ function toUrl(rel, base) {
   return base + rel;
 }
 
-const SW_TEMPLATE = `/* Brandzo Hub — العامل الخفي (مولّد آليًّا، لا تُعدّل نسخة dist). */
+const SW_TEMPLATE = `/* BHOME — العامل الخفي (مولّد آليًّا، لا تُعدّل نسخة dist). */
 const BUILD_ID = '__BUILD_ID__';
 const BASE = '__BASE__';
 const CACHE = 'brandzo-' + BUILD_ID;

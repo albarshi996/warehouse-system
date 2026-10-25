@@ -84,7 +84,7 @@ export function exportAoaSheets(sheets, fileName) {
       XLSX.utils.book_append_sheet(wb, ws, String(name).slice(0, 31));
     }
     wb.Workbook = { Views: [{ RTL: true }] };
-    const out = ensureXlsxName(fileName, 'Brandzo_report');
+    const out = ensureXlsxName(fileName, 'BHOME_report');
     XLSX.writeFile(wb, out);
     return out;
   } catch (error) {
@@ -96,7 +96,7 @@ export function exportAoaSheets(sheets, fileName) {
 export function exportDataset(datasetKey, records, opts = {}) {
   try {
     const wb = buildWorkbook([{ datasetKey, records }]);
-    const fileName = ensureXlsxName(opts.fileName, `Brandzo_${datasetKey}`);
+    const fileName = ensureXlsxName(opts.fileName, `BHOME_${datasetKey}`);
     XLSX.writeFile(wb, fileName);
     return fileName;
   } catch (error) {
@@ -135,7 +135,7 @@ export const exportOutboundLog = (entries, opts) => exportDataset('outbound', en
  * @param {string} datasetKey
  */
 export function exportTemplate(datasetKey) {
-  return exportDataset(datasetKey, [], { fileName: `Brandzo_template_${datasetKey}` });
+  return exportDataset(datasetKey, [], { fileName: `BHOME_template_${datasetKey}` });
 }
 
 /**
@@ -176,7 +176,7 @@ export function buildTemplateWorkbook(datasetKey, guide, opts = {}) {
 export function exportTemplateWithGuide(datasetKey, guide, opts = {}) {
   try {
     const wb = buildTemplateWorkbook(datasetKey, guide, opts);
-    const fileName = ensureXlsxName(opts.fileName, `Brandzo_template_${datasetKey}`);
+    const fileName = ensureXlsxName(opts.fileName, `BHOME_template_${datasetKey}`);
     XLSX.writeFile(wb, fileName);
     return fileName;
   } catch (error) {

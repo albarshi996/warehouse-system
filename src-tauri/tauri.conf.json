@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Brandzo Hub",
+  "productName": "BHOME",
   "version": "1.0.0",
   "identifier": "ly.brandzo.hub",
   "build": {
@@ -9,7 +9,7 @@
   "app": {
     "windows": [
       {
-        "title": "Brandzo Hub — نظام إدارة المستودعات",
+        "title": "BHOME — نظام إدارة المستودعات",
         "width": 1280,
         "height": 820,
         "minWidth": 800,

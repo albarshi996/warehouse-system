@@ -198,7 +198,7 @@ export default function TaskForm({
         : '';
 
     const message =
-      `🏭 *Brandzo Hub — مهمة تشغيلية*\n` +
+      `🏭 *BHOME — مهمة تشغيلية*\n` +
       `━━━━━━━━━━━━━━━━━━━━\n` +
       `📌 *${title}*\n` +
       `━━━━━━━━━━━━━━━━━━━━\n` +
@@ -237,9 +237,9 @@ export default function TaskForm({
         ? '\n\nخطوات التنفيذ:\n' + checklist.map((s, i) => `${i + 1}. ${s.text}`).join('\n')
         : '';
 
-    const subject = encodeURIComponent(`[Brandzo Task] ${title} — ${prioMap[priority]}`);
+    const subject = encodeURIComponent(`[BHOME Task] ${title} — ${prioMap[priority]}`);
     const body = encodeURIComponent(
-      `Brandzo Hub 2026 — مهمة تشغيلية\n` +
+      `BHOME 2026 — مهمة تشغيلية\n` +
       `${'═'.repeat(40)}\n` +
       `العنوان: ${title}\n` +
       `الأولوية: ${prioMap[priority]}\n` +

@@ -35,7 +35,7 @@ export const PRINT_STATES = Object.freeze({
  * @returns {object|null} النموذج، أو null لطبليةٍ بلا هويّةٍ صالحة
  *          (وهو الصواب: **لا ملصق قبل الاعتماد** — الهويّة تولد معه).
  */
-export function buildLabel(unit, { events = [], allUnits = [], session = null, copy = 1, company = 'Brandzo' } = {}) {
+export function buildLabel(unit, { events = [], allUnits = [], session = null, copy = 1, company = 'BHOME' } = {}) {
   const card = buildCard(unit, { events, allUnits });
   if (!card) return null;
 

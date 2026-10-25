@@ -205,5 +205,5 @@ console.log('⌨️ Ctrl+S=Summarize | Ctrl+P=PDF | Ctrl+T=Translate')
 
 ## License
 
-Part of the Brandzo Warehouse Management System
+Part of the BHOME Warehouse Management System
 All rights reserved © 2026

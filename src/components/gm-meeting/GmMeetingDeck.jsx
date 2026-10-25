@@ -699,7 +699,7 @@ export default function GmMeetingDeck({ base = '' }) {
       <div className="gm-toolbar">
         <a className="gm-back" href={`${base}/dashboard`}><BackIcon /> لوحة البوابة</a>
         <div className="gm-identity">
-          <b>Brandzo</b>
+          <b>BHOME</b>
           <span>{meetingMeta.titleAr}</span>
           <span className="gm-ltr">{meetingMeta.docNumber}</span>
         </div>

@@ -1,4 +1,4 @@
-# دليل المطوّر — Brandzo Hub
+# دليل المطوّر — BHOME
 
 # Developer Guide
 

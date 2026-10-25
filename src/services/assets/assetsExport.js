@@ -80,7 +80,7 @@ export const deptRow = (a) => [
 export function assetWorkbookModel(assets, { exportedOn = '' } = {}) {
   const list = assets ?? [];
   const summary = [
-    ['شركة Brandzo — ملخص جرد الأصول'],
+    ['شركة BHOME — ملخص جرد الأصول'],
     ['تاريخ التصدير:', exportedOn],
     [],
     ['إجمالي الأصول', list.length],
@@ -112,7 +112,7 @@ export function assetWorkbookModel(assets, { exportedOn = '' } = {}) {
 
 /** اسمُ ملفّ التصدير — واليومُ محلّيٌّ لا UTC (ليبيا على +2). */
 export function exportFileName(day) {
-  return `Brandzo_Inventory_${day}.xlsx`;
+  return `BHOME_Inventory_${day}.xlsx`;
 }
 
 /**
