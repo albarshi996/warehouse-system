@@ -1,7 +1,7 @@
 # بناء برنامج التنصيب لسطح المكتب (BHOME Setup.exe)
-# يعمل عند أي تعديل في src-tauri/ أو يدويًّا، ويرفع ملف التنصيب إلى صفحة Releases.
-# البرنامج قشرة حول النظام السحابي الحيّ — تحديثات المحتوى تصل عبر الويب
-# (العامل الخفي) فلا يلزم إعادة بنائه إلا عند تغيير القشرة نفسها.
+# يبني الواجهة محليًّا (npm run build:desktop) ويحزمها داخل المثبّت — وضع
+# desktop-local: يعمل من ملفّاتٍ محلّيّة لا من الموقع البعيد. يُشغَّل يدويًّا أو
+# عند تغيّر القشرة أو الاعتماديات، وكلُّ تشغيلٍ يُعيد بناء الواجهة من المصدر الحاليّ.
 name: Build Desktop Installer
 
 on:
@@ -9,6 +9,9 @@ on:
     branches: ['main']
     paths:
       - 'src-tauri/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'astro.config.desktop.mjs'
       - '.github/workflows/desktop-installer.yml'
   workflow_dispatch:
 
@@ -21,6 +24,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable

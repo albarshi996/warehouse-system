@@ -11,6 +11,7 @@
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",
+    "build:desktop": "astro build --config astro.config.desktop.mjs",
     "preview": "astro preview",
     "astro": "astro",
     "where": "node scripts/where.mjs",

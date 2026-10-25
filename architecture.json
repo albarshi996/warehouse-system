@@ -10399,7 +10399,7 @@
         "tech": "Tauri (Rust shell)",
         "role": "تطبيق سطح مكتب يغلّف الواجهة المستضافة",
         "identifier": "ly.brandzo.hub",
-        "wraps": "https://albarshi996.github.io/warehouse-system/",
+        "wraps": "../dist-desktop",
         "refs": [
           "src-tauri/tauri.conf.json"
         ]
@@ -10529,6 +10529,7 @@
       "dev": "astro dev",
       "start": "astro dev",
       "build": "astro build",
+      "build:desktop": "astro build --config astro.config.desktop.mjs",
       "preview": "astro preview",
       "astro": "astro",
       "where": "node scripts/where.mjs",

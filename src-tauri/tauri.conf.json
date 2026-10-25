@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "identifier": "ly.brandzo.hub",
   "build": {
-    "frontendDist": "https://albarshi996.github.io/warehouse-system/"
+    "beforeBuildCommand": "npm run build:desktop",
+    "frontendDist": "../dist-desktop"
   },
   "app": {
     "windows": [
@@ -29,6 +30,9 @@
     "windows": {
       "nsis": {
         "installMode": "currentUser"
+      },
+      "webviewInstallMode": {
+        "type": "offlineInstaller"
       }
     }
   }

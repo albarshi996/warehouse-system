@@ -1,6 +1,9 @@
 # build output
 dist/
+dist-desktop/
 .astro/
+# Rust/Tauri build output
+src-tauri/target/
 
 # dependencies
 node_modules/

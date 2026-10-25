@@ -8,6 +8,7 @@ export default [
   {
     ignores: [
       '**/dist/',
+      '**/dist-desktop/',
       '**/.astro/',
       '**/node_modules/',
       '.claude/',
