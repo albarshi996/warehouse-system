@@ -34,6 +34,7 @@ const PROOFS = [
   { file: 'db/test/proof-sync.sql', min: 13, what: 'طبقةُ المزامنة' },
   { file: 'db/test/proof-rls-read.sql', min: 17, what: 'صلاحيّةُ القراءة' },
   { file: 'db/test/proof-rls-write.sql', min: 10, what: 'صلاحيّةُ الكتابة' },
+  { file: 'db/test/proof-accounting.sql', min: 12, what: 'المحاسبة المحلّيّة' },
 ];
 
 /**
