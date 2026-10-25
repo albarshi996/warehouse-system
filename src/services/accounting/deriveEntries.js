@@ -67,3 +67,71 @@ export function deriveEntries(documents = [], { states = ['done', 'approved'], c
     })
     .filter(Boolean);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * الدورةُ الكاملة — كلُّ أنواع دفتر الذمم تصير قيدًا مزدوجًا (الشريحة الثانية).
+ *
+ * الطرفُ المقابلُ لكلّ نوع: البيعُ إيرادٌ، والمرتجعُ مرتجعَ مبيعاتٍ (لا مصروف)،
+ * واستلامُ البضاعة مخزونًا، والتحصيلُ الميدانيُّ نقدًا في عهدة المندوب. وحركةُ
+ * ذمّة الطرف (مدين/دائن) تُطابق دفترَ الذمم بالبناء لأنّ المبلغَ واتّجاهَه منه.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/** الطرفُ المقابل لكلّ نوعٍ في دفتر الذمم (يغطّي أنواع `LEDGER_RULES` كلَّها). */
+export const COUNTERPART = Object.freeze({
+  INV: 'SALES', VSI: 'SALES', VCS: 'SALES',
+  RCP: 'CASH', RCV: 'CASH_IN_TRANSIT',
+  CN: 'SALES_RETURNS', RET: 'SALES_RETURNS', CRN: 'SALES_RETURNS',
+  GRN: 'INVENTORY', SPV: 'CASH', SRN: 'INVENTORY',
+});
+
+/** أنواعُ الدورة الكاملة (لاستماع الشاشة). */
+export const LEDGER_DOC_TYPES = Object.freeze(Object.keys(COUNTERPART));
+
+/**
+ * قيدٌ مزدوجٌ من أيّ مستندٍ له أثرٌ في دفتر الذمم، أو null.
+ * جهةُ ذمّة الطرف:
+ *   العميل أصل (AR): زيادةُ ذمّته = مدين، نقصُها = دائن.
+ *   المورّد التزام (AP): زيادةُ ما نَدينُه = دائن، نقصُه = مدين.
+ */
+export function deriveLedgerEntry(doc) {
+  const ple = entryFor(doc); // المصدرُ الواحد: المبلغ · الطرف · الاتّجاه · التاريخ · المعرّف
+  if (!ple) return null;
+  const counterpart = COUNTERPART[ple.docType];
+  if (!counterpart) return null;
+  const units = toMinor(ple.amount);
+  if (units <= 0) return null;
+
+  const partyAcc = subAccount(ple.party === 'customer' ? 'AR' : 'AP', ple.partyCode);
+  const outstandingUp = ple.direction === 'debit'; // يزيد ما على الطرف
+  const partyIsDebit = ple.party === 'customer' ? outstandingUp : !outstandingUp;
+  const partyDebit = partyIsDebit ? units : 0;
+  const partyCredit = partyIsDebit ? 0 : units;
+
+  const entry = postEntry({
+    key: ple.id,
+    date: ple.date,
+    memo: `${ple.labelAr} ${ple.docNumber}`.trim(),
+    lines: [
+      { account: partyAcc, party: ple.partyCode, debit: partyDebit, credit: partyCredit },
+      { account: counterpart, debit: partyCredit, credit: partyDebit },
+    ],
+  });
+  entry.party = ple.party;
+  entry.partyCode = ple.partyCode;
+  entry.docType = ple.docType;
+  return entry;
+}
+
+/** قيودُ الدورة الكاملة من مجموعة مستندات — المعتمَدة وحدها، وما قبل T0 يُسقط. */
+export function deriveLedgerEntries(documents = [], { states = ['done', 'approved'] } = {}) {
+  return (Array.isArray(documents) ? documents : [])
+    .filter((d) => states.includes(d?.state) && COUNTERPART[d?.type])
+    .map((d) => {
+      try {
+        return deriveLedgerEntry(d);
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+}

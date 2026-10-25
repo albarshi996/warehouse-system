@@ -16,6 +16,12 @@ export const ACCOUNTS = Object.freeze({
   BANK: { code: 'BANK', nameAr: 'البنك', type: 'asset', normal: 'debit' },
   AR: { code: 'AR', nameAr: 'ذمم العملاء', type: 'asset', normal: 'debit', subledger: 'customer' },
   AP: { code: 'AP', nameAr: 'ذمم الموردين', type: 'liability', normal: 'credit', subledger: 'supplier' },
+  // الطرفُ المقابل لحركات الدورة الكاملة. لا تُطابَق هذه بعد (لا مصدرَ خارجيّ
+  // لها في هذه الشريحة) — لكنّها تجعل القيدَ مزدوجًا حقيقيًّا لا طرفًا معلّقًا.
+  SALES: { code: 'SALES', nameAr: 'المبيعات', type: 'income', normal: 'credit' },
+  SALES_RETURNS: { code: 'SALES_RETURNS', nameAr: 'مرتجعات المبيعات', type: 'contra_income', normal: 'debit' },
+  INVENTORY: { code: 'INVENTORY', nameAr: 'المخزون', type: 'asset', normal: 'debit' },
+  CASH_IN_TRANSIT: { code: 'CASH_IN_TRANSIT', nameAr: 'نقدٌ في عهدة المندوب', type: 'asset', normal: 'debit' },
 });
 
 const up = (v) => String(v ?? '').trim().toUpperCase();

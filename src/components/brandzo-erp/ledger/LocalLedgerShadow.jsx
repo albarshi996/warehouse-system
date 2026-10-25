@@ -7,7 +7,8 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import { listenDocumentsByTypes } from '../../../services/documents/documentsService.js';
-import { reconcilePayments } from '../../../services/accounting/reconcile.js';
+import { reconcileLedger } from '../../../services/accounting/reconcile.js';
+import { LEDGER_DOC_TYPES } from '../../../services/accounting/deriveEntries.js';
 import { LEDGER_T0 } from '../../../services/accounting/journal.js';
 
 const fmt = (n) =>
@@ -23,7 +24,7 @@ export default function LocalLedgerShadow() {
     let unsub = () => {};
     try {
       unsub = listenDocumentsByTypes(
-        ['RCP', 'SPV'],
+        LEDGER_DOC_TYPES,
         (rows) => {
           setDocs(Array.isArray(rows) ? rows : []);
           setReady(true);
@@ -42,7 +43,7 @@ export default function LocalLedgerShadow() {
     };
   }, []);
 
-  const { rows, allMatch, journalErrors } = useMemo(() => reconcilePayments(docs), [docs]);
+  const { rows, allMatch, journalErrors } = useMemo(() => reconcileLedger(docs), [docs]);
   const totalLedger = useMemo(() => rows.reduce((s, r) => s + r.ledger, 0), [rows]);
   const totalJournal = useMemo(() => rows.reduce((s, r) => s + r.journal, 0), [rows]);
 
@@ -50,15 +51,16 @@ export default function LocalLedgerShadow() {
     <div dir="rtl" className="text-right">
       <div className="bg-white border border-ink/10 rounded-xl p-4 mb-4">
         <p className="text-sm text-ink-2 leading-relaxed">
-          قيدٌ مزدوجٌ مُشتقٌّ من القبض والسداد منذ حدّ الافتتاح <b>{LEDGER_T0}</b>، يُطابَق طرفًا طرفًا
-          بدفتر الذمم القائم. <b>عرضٌ للقراءة فقط</b> — لا كتابةَ حيّة ولا مساسَ بأودو أو دفتر الذمم.
+          قيدٌ مزدوجٌ مُشتقٌّ من كامل الدورة المستندية (فاتورة · استلام · قبض · سداد · إشعار · مرتجع)
+          منذ حدّ الافتتاح <b>{LEDGER_T0}</b>، ورصيدُ كلّ طرفٍ يُطابَق بدفتر الذمم القائم.
+          <b> عرضٌ للقراءة فقط</b> — لا كتابةَ حيّة ولا مساسَ بأودو أو دفتر الذمم.
         </p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         <Stat label="الأطراف" value={String(rows.length)} />
-        <Stat label="مجموع الذمم" value={fmt(totalLedger)} />
-        <Stat label="مجموع القيد" value={fmt(totalJournal)} />
+        <Stat label="إجمالي أرصدة الذمم" value={fmt(totalLedger)} />
+        <Stat label="إجمالي أرصدة القيد" value={fmt(totalJournal)} />
         <div
           className={`rounded-xl p-3 border ${
             allMatch ? 'border-success/30 bg-success/5' : 'border-danger/40 bg-danger/5'
@@ -90,8 +92,8 @@ export default function LocalLedgerShadow() {
             <tr>
               <th className="p-3 text-right font-semibold">الطرف</th>
               <th className="p-3 text-right font-semibold">النوع</th>
-              <th className="p-3 text-left font-semibold">دفتر الذمم</th>
-              <th className="p-3 text-left font-semibold">القيد المزدوج</th>
+              <th className="p-3 text-left font-semibold">رصيد الذمم</th>
+              <th className="p-3 text-left font-semibold">رصيد القيد المزدوج</th>
               <th className="p-3 text-left font-semibold">الفرق</th>
             </tr>
           </thead>
@@ -106,7 +108,7 @@ export default function LocalLedgerShadow() {
             {ready && rows.length === 0 && (
               <tr>
                 <td colSpan={5} className="p-6 text-center text-ink-2">
-                  لا قبضَ ولا سدادَ بعد حدّ الافتتاح.
+                  لا حركاتِ ذممٍ بعد حدّ الافتتاح.
                 </td>
               </tr>
             )}
