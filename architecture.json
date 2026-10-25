@@ -9,9 +9,9 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 122,
-    "serviceDomains": 52,
-    "serviceFiles": 722,
+    "modules": 123,
+    "serviceDomains": 53,
+    "serviceFiles": 729,
     "collections": 104,
     "roles": 20,
     "odooModels": 12,
@@ -431,6 +431,14 @@
       "title": "تعلم أودو — محاكاة واجهة Odoo",
       "summary": "تعلم أودو (Learn Odoo) — بيئة تدريب تحاكي واجهة Odoo Enterprise الحقيقية",
       "file": "src/pages/dashboard/learn-odoo.astro",
+      "usesServices": []
+    },
+    {
+      "name": "ledger-shadow",
+      "route": "/dashboard/ledger-shadow",
+      "title": "مطابقة الدفتر المحليّ",
+      "summary": "",
+      "file": "src/pages/dashboard/ledger-shadow.astro",
       "usesServices": []
     },
     {
@@ -1132,6 +1140,42 @@
         "updateDoc",
         "where",
         "writeBatch"
+      ],
+      "collections": []
+    },
+    {
+      "domain": "accounting",
+      "dir": "src/services/accounting",
+      "files": [
+        "accounts.js",
+        "deriveEntries.js",
+        "journal.js",
+        "journal.test.js",
+        "money.js",
+        "reconcile.js",
+        "reconcile.test.js"
+      ],
+      "fileCount": 7,
+      "testCount": 2,
+      "exports": [
+        "ACCOUNTS",
+        "CASH_EVENTS",
+        "LEDGER_T0",
+        "LYD_MINOR",
+        "NORMAL",
+        "accountDef",
+        "baseOf",
+        "createLedger",
+        "deriveEntries",
+        "deriveEntry",
+        "fromMinor",
+        "isWholeMinor",
+        "postEntry",
+        "reconcilePayments",
+        "reverseEntry",
+        "roundHalfAwayFromZero",
+        "subAccount",
+        "toMinor"
       ],
       "collections": []
     },

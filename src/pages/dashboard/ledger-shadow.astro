@@ -1,0 +1,15 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import LocalLedgerShadow from '../../components/brandzo-erp/ledger/LocalLedgerShadow.jsx';
+---
+
+<DashboardLayout title="مطابقة الدفتر المحليّ" light>
+  <div class="text-right" dir="rtl">
+    <h1 class="text-2xl font-bold text-ink mb-1">الدفتر المحليّ — مطابقة الظلّ</h1>
+    <p class="text-sm text-ink-2 mb-5">
+      محرّكُ القيد المزدوج يشتقّ أثرَ القبض والسداد ويطابقه بدفتر الذمم القائم — برهانُ صفر الفرق،
+      عرضًا للقراءة فقط (الشريحة الأولى من الدفتر المحليّ).
+    </p>
+    <LocalLedgerShadow client:load />
+  </div>
+</DashboardLayout>
