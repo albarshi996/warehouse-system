@@ -11,7 +11,8 @@ const source = (rel) =>
   fs.readFileSync(new URL(rel, import.meta.url), 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, ' ');
 
 test('★★ ملفُّ المستخدم يُقرأ مرّةً للصفحة — والقراءةُ الفاشلة تُحذف فتُعاد', () => {
-  const src = source('./authService.js');
+  // المنطقُ انتقل إلى محوَّل المصادقة خلف المقبس (`_auth/`)؛ السلوكُ كما كان.
+  const src = source('./_auth/firebaseAuth.js');
   assert.match(src, /const profileReads = new Map\(\);/);
   assert.match(src, /read\.catch\(\(\) => profileReads\.delete\(uid\)\);/, 'بلا حذفٍ يعلق الدورُ الافتراضيُّ على الصفحة كلّها');
   assert.match(src, /const data = await readUserDoc\(user\.uid\);/);

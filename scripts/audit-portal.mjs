@@ -233,9 +233,16 @@ const IMPORTS_FIREBASE = /^\s*import[\s\S]*?from\s+'[^']*(firebase|config\/fireb
  *   وليس توسيعًا للرخصة بل تضييقٌ لها: كان المسموح «أيّ ملفٍّ ينتهي بـService»،
  *   وصار «ملفٌّ واحدٌ بعينه».
  */
-const SEAM_DIR = `${path.sep}services${path.sep}_db${path.sep}`;
+// مجلّداتُ الحدّ: بابُ البيانات `_db/`، ومقبسُ المصادقة `auth/_auth/` (نظيرُه،
+// يُبدَّل بـPUBLIC_AUTH_BACKEND، ومحوَّلُه القائمُ يستورد Firebase خلف الباب
+// كـ`firestore.js` تمامًا). كلاهما مُعلَنٌ ومحروسٌ باختبار حدٍّ خاصٍّ به.
+const SEAM_DIRS = [
+  `${path.sep}services${path.sep}_db${path.sep}`,
+  `${path.sep}services${path.sep}auth${path.sep}_auth${path.sep}`,
+];
 const isStorageName = (f) =>
-  /(Service|service)\.js$/.test(path.basename(f)) || path.resolve(f).includes(SEAM_DIR);
+  /(Service|service)\.js$/.test(path.basename(f)) ||
+  SEAM_DIRS.some((d) => path.resolve(f).includes(d));
 
 /**
  * ⚠️ خطّا أساسٍ للقديم — **يُنقصان ولا يزيدان** (نمط خطّ أساس اللينت المعتمَد).
