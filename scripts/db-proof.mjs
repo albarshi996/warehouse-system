@@ -42,6 +42,7 @@ const PROOFS = [
   { file: 'db/test/proof-treasury-scope.sql', min: 9, what: 'نطاقُ الخزينة بالمحل' },
   { file: 'db/test/proof-org-write.sql', min: 10, what: 'أبوابُ كتابة المحلات' },
   { file: 'db/test/proof-ledger-scope.sql', min: 9, what: 'نطاقُ القيد بالمحل' },
+  { file: 'db/test/proof-reports.sql', min: 7, what: 'تقاريرُ القيد' },
 ];
 
 /**
