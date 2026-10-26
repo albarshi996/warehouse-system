@@ -11,12 +11,16 @@
  */
 import { authBackendNameFrom, pickAuthBackend } from './backend.js';
 import * as firebase from './firebaseAuth.js';
+import * as local from './localAuth.js';
 
 /** بيئةُ البناء — محروسةٌ كي لا تنكسر أدواتُ السطر في Node العاري. */
 const ENV = (typeof import.meta !== 'undefined' && import.meta.env) || {};
 
-/** المحوّلاتُ المتاحة — يُضاف `local` هنا يوم يُبنى ويُقاس. */
-const BACKENDS = { firebase };
+/**
+ * المحوّلاتُ المتاحة. `firebase` الافتراضُ (البناءُ الحيّ)، و`local` الدخولُ على
+ * الجهاز بلا إنترنت — يُختار بـ`PUBLIC_AUTH_BACKEND=local` في بناء سطح المكتب.
+ */
+const BACKENDS = { firebase, local };
 
 /** اسمُ محوَّل المصادقة العامل — يُقرأ في التشخيص. */
 export const AUTH_BACKEND = authBackendNameFrom(ENV);
