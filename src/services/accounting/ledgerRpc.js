@@ -30,6 +30,7 @@ export function buildPostJournalBody(entry) {
     p_source_type: String(entry.docType || entry.source_type || ''),
     p_source_id: String(entry.docId || entry.source_id || ''),
     p_reverses: entry.reverses || null,
+    p_shop: entry.shop_id || entry.shop || null,
   };
 }
 

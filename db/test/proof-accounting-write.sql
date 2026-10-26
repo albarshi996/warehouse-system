@@ -87,7 +87,7 @@ SELECT must_pass('دورُ الويب ينفّذ الباب ولا يملك INSE
   $q$DO $d$
      BEGIN
        IF has_function_privilege('web_user',
-            'post_journal(text,date,bigint,jsonb,text,text,text,text)', 'EXECUTE') IS NOT TRUE
+            'post_journal(text,date,bigint,jsonb,text,text,text,text,text)', 'EXECUTE') IS NOT TRUE
          THEN RAISE EXCEPTION 'web_user بلا تنفيذٍ للباب'; END IF;
        IF has_table_privilege('web_user', 'journal_entries', 'INSERT')
          THEN RAISE EXCEPTION 'web_user يملك INSERT مباشرًا!'; END IF;
