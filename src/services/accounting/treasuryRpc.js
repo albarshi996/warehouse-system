@@ -50,10 +50,16 @@ async function rpc(fn, body, { fetch: doFetch = globalThis.fetch, apiUrl, token,
 
 /* ═══════════ بانياتُ الأجسام (خالصة، بأسماء معاملات الدوالّ) ═══════════ */
 
-export function openSessionBody({ id, shift = '', opening = 0, openedBy = '' } = {}) {
+export function openSessionBody({ id, shift = '', opening = 0, openedBy = '', shop = null } = {}) {
   if (!str(id).trim()) throw new Error('وردية بلا معرّف.');
   if (!Number.isInteger(opening) || opening < 0) throw new Error('رصيدُ البداية وحدةٌ صغرى صحيحةٌ غيرُ سالبة.');
-  return { p_id: str(id).trim(), p_shift: str(shift), p_opening: opening, p_opened_by: str(openedBy) };
+  return {
+    p_id: str(id).trim(),
+    p_shift: str(shift),
+    p_opening: opening,
+    p_opened_by: str(openedBy),
+    p_shop: shop ? str(shop) : null,
+  };
 }
 
 export function movementBody({ sessionId, kind, method, amount, memo = '' } = {}) {

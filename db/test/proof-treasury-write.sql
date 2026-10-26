@@ -79,7 +79,7 @@ SELECT must_fail('غيرُ المخوَّل لا يفتح وردية',
 SELECT must_pass('دورُ الويب ينفّذ البابَين ولا يكتب مباشرة',
   $q$DO $d$
      BEGIN
-       IF has_function_privilege('web_user', 'open_cash_session(text,text,bigint,text)', 'EXECUTE') IS NOT TRUE
+       IF has_function_privilege('web_user', 'open_cash_session(text,text,bigint,text,text)', 'EXECUTE') IS NOT TRUE
          THEN RAISE EXCEPTION 'بلا تنفيذٍ لبابِ الفتح'; END IF;
        IF has_function_privilege('web_user', 'add_cash_movement(text,text,text,bigint,text)', 'EXECUTE') IS NOT TRUE
          THEN RAISE EXCEPTION 'بلا تنفيذٍ لبابِ الإضافة'; END IF;

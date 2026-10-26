@@ -35,7 +35,9 @@ test('★★ openSessionBody بأسماء المعاملات، ويرفض الم
     p_shift: 'ص',
     p_opening: 100000,
     p_opened_by: 'أحمد',
+    p_shop: null,
   });
+  assert.equal(openSessionBody({ id: 'W-1', opening: 0, shop: 'S1' }).p_shop, 'S1');
   assert.throws(() => openSessionBody({ id: '  ', opening: 0 }), /معرّف/);
   assert.throws(() => openSessionBody({ id: 'W', opening: -1 }), /غيرُ سالبة/);
   assert.throws(() => openSessionBody({ id: 'W', opening: 10.5 }), /صحيحة/);
