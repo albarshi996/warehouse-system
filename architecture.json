@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 123,
+    "modules": 124,
     "serviceDomains": 53,
     "serviceFiles": 742,
     "collections": 104,
@@ -110,6 +110,14 @@
       "title": "إدارة الكوارث واستمرارية الأعمال",
       "summary": "إدارة الكوارث واستمرارية الأعمال (BCP) — الملحق م-٦ في المرجع التشغيلي.",
       "file": "src/pages/dashboard/business-continuity.astro",
+      "usesServices": []
+    },
+    {
+      "name": "cash-session",
+      "route": "/dashboard/cash-session",
+      "title": "حاسبة تسكير الوردية",
+      "summary": "",
+      "file": "src/pages/dashboard/cash-session.astro",
       "usesServices": []
     },
     {

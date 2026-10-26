@@ -1,0 +1,15 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import CashSessionCalc from '../../components/brandzo-erp/ledger/CashSessionCalc.jsx';
+---
+
+<DashboardLayout title="حاسبة تسكير الوردية" light>
+  <div class="text-right" dir="rtl">
+    <h1 class="text-2xl font-bold text-ink mb-1">الخزينة — حاسبة تسكير الوردية</h1>
+    <p class="text-sm text-ink-2 mb-5">
+      رصيدُ البداية وحركاتُ الخزينة ⇐ قيمةُ النقد المتوقَّعة في الدرج، ومقارنتُها بالمعدود. النقدُ وحده
+      يدخل الدرج، والفرقُ يحتاج سببًا — حاسبةٌ للقراءة فقط لا تحفظ شيئًا.
+    </p>
+    <CashSessionCalc client:load />
+  </div>
+</DashboardLayout>
