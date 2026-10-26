@@ -36,6 +36,7 @@ const PROOFS = [
   { file: 'db/test/proof-rls-write.sql', min: 10, what: 'صلاحيّةُ الكتابة' },
   { file: 'db/test/proof-accounting.sql', min: 12, what: 'المحاسبة المحلّيّة' },
   { file: 'db/test/proof-accounting-write.sql', min: 8, what: 'بابُ كتابة القيد' },
+  { file: 'db/test/proof-treasury.sql', min: 13, what: 'الخزينة والتسكير' },
 ];
 
 /**
