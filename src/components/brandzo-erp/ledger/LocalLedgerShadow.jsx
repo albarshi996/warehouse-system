@@ -8,13 +8,23 @@
 import { useEffect, useMemo, useState } from 'react';
 import { listenDocumentsByTypes } from '../../../services/documents/documentsService.js';
 import { reconcileLedger } from '../../../services/accounting/reconcile.js';
+import { trialBalance } from '../../../services/accounting/reports.js';
 import { LEDGER_DOC_TYPES } from '../../../services/accounting/deriveEntries.js';
 import { LEDGER_T0 } from '../../../services/accounting/journal.js';
+import { accountDef, baseOf } from '../../../services/accounting/accounts.js';
 
 const fmt = (n) =>
   (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const PARTY_AR = { customer: 'عميل', supplier: 'مورّد' };
+
+/** اسمُ الحساب عربيًّا: الأساسُ من الدليل، والذمّةُ الفرعيّةُ باسمها ثمّ رمز الطرف. */
+function accountLabel(account) {
+  const def = accountDef(account);
+  const nameAr = def ? def.nameAr : account;
+  const party = String(account).includes(':') ? String(account).split(':')[1] : '';
+  return party ? `${nameAr} — ${party}` : nameAr;
+}
 
 export default function LocalLedgerShadow() {
   const [docs, setDocs] = useState([]);
@@ -46,6 +56,7 @@ export default function LocalLedgerShadow() {
   const { rows, allMatch, journalErrors } = useMemo(() => reconcileLedger(docs), [docs]);
   const totalLedger = useMemo(() => rows.reduce((s, r) => s + r.ledger, 0), [rows]);
   const totalJournal = useMemo(() => rows.reduce((s, r) => s + r.journal, 0), [rows]);
+  const tb = useMemo(() => trialBalance(docs), [docs]);
 
   return (
     <div dir="rtl" className="text-right">
@@ -129,6 +140,60 @@ export default function LocalLedgerShadow() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="mt-6">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-base font-bold text-ink">ميزانُ المراجعة</h3>
+          <span
+            className={`text-xs font-semibold px-2 py-1 rounded-lg border ${
+              tb.balanced
+                ? 'border-success/30 bg-success/5 text-success'
+                : 'border-danger/40 bg-danger/5 text-danger'
+            }`}
+          >
+            {tb.balanced ? 'متوازنٌ — مجموعُ الأرصدة = 0.00' : 'غيرُ متوازن'}
+          </span>
+        </div>
+        <div className="bg-white border border-ink/10 rounded-xl overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-brand-navy/5 text-ink-2">
+              <tr>
+                <th className="p-3 text-right font-semibold">الحساب</th>
+                <th className="p-3 text-left font-semibold">مدين</th>
+                <th className="p-3 text-left font-semibold">دائن</th>
+                <th className="p-3 text-left font-semibold">الرصيد</th>
+              </tr>
+            </thead>
+            <tbody>
+              {!ready && (
+                <tr>
+                  <td colSpan={4} className="p-6 text-center text-ink-2">
+                    جارٍ التحميل…
+                  </td>
+                </tr>
+              )}
+              {ready && tb.rows.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="p-6 text-center text-ink-2">
+                    لا قيودَ بعد حدّ الافتتاح.
+                  </td>
+                </tr>
+              )}
+              {tb.rows.map((r) => (
+                <tr key={r.account} className="border-t border-ink/5">
+                  <td className="p-3 text-ink">
+                    {accountLabel(r.account)}
+                    <span className="text-ink-2 text-xs"> ({baseOf(r.account)})</span>
+                  </td>
+                  <td className="p-3 text-left tabular-nums">{r.debit ? fmt(r.debit) : '—'}</td>
+                  <td className="p-3 text-left tabular-nums">{r.credit ? fmt(r.credit) : '—'}</td>
+                  <td className="p-3 text-left tabular-nums font-semibold text-ink">{fmt(r.balance)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
