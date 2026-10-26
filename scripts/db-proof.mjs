@@ -44,6 +44,7 @@ const PROOFS = [
   { file: 'db/test/proof-ledger-scope.sql', min: 9, what: 'نطاقُ القيد بالمحل' },
   { file: 'db/test/proof-reports.sql', min: 7, what: 'تقاريرُ القيد' },
   { file: 'db/test/proof-treasury-reports.sql', min: 6, what: 'تقريرُ الوردية' },
+  { file: 'db/test/proof-ledger-sync.sql', min: 9, what: 'كتابةُ الدفتر بالمزامنة' },
 ];
 
 /**

@@ -47,6 +47,10 @@ import {
   BUDGET_READS_PER_DAY, readsTodayOrCap, capReached,
 } from './watermark.js';
 import { mapForPath, genericMapFor, buildUpsert, lit } from './pg-maps.js';
+// ★ سلسلةٌ خالصةٌ بلا Firestore (مُتحقَّقٌ منها): اشتقاقُ القيد المزدوج وعقدُ
+//   نداء باب القاعدة فقط — لا write APIs، فلا يُخلّ بضمانة هذا الملفّ البنيويّة.
+import { ledgerCallBodies, POSTABLE_STATES } from '../../src/services/accounting/ledgerSync.js';
+import { LEDGER_DOC_TYPES } from '../../src/services/accounting/deriveEntries.js';
 
 /**
  * ★★ Firebase يُحمَّل **عند الحاجة لا عند الاستيراد**.
@@ -173,6 +177,20 @@ const SUB_PATHS = PATHS.filter((p) => p.includes('/'));
 
 /** ما يُقرأ فعلًا هذه الدورة. */
 const SYNCED = FULL_MIRROR ? PATHS.filter((p) => !p.includes('/')) : MAPPED;
+
+/**
+ * ═══ الكاتبُ الواحد (§3) — تغذيةُ الدفتر المحاسبيّ بالمزامنة ═══
+ *
+ * ★★★ **مطفأةٌ ما لم تُرفع `SYNC_LEDGER=1`.** قرارُ المالك 2026-10-25: الدفترُ
+ *     المحليّ يملك المحاسبة، وآلةُ المزامنة — لا البوّابة — هي كاتبُه الوحيد.
+ *     فبعد نسخ المستندات تُشتقّ قيودُها المزدوجةُ وتُكتب عبر باب القاعدة
+ *     `post_journal_local` (024). خاملةٌ افتراضيًّا: بدونها لا يُقرأ سطرٌ من
+ *     الدفتر ولا يُكتب حرف، والمزامنةُ تعمل كما كانت حرفًا بحرف.
+ *
+ * ★★ ولا كتابةَ مزدوجة: البوّابةُ تكتب مستندَها في Firebase كما هي، والدفترُ
+ *    يُشتقّ من المرآة لا بجانبِ كتابتها — تحوّلٌ لا ازدواج.
+ */
+const SYNC_LEDGER = process.env.SYNC_LEDGER === '1';
 
 /** خريطةُ مسارٍ: المفصَّلةُ إن وُجدت، وإلّا العامّةُ إلى `mirror_docs`. */
 function mapFor(path) {
@@ -454,6 +472,69 @@ async function runCycle(fb, db, minute) {
   return { cycleId, paths: entries.length, totalQueries, totalDocs };
 }
 
+/** يفكّ JSON من عمود jsonb، ويعيد البديلَ إن تعذّر — فلا صفٌّ معطوبٌ يُسقط الدفعة. */
+function safeJson(text, fallback) {
+  if (text === undefined || text === null || text === '') return fallback;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * ═══ الكاتبُ الواحد: اشتقاقُ قيود الدفتر من المستندات المنسوخة وكتابتُها ═══
+ *
+ * ★★★ **يقرأ من PostgreSQL لا من Firestore:** المستنداتُ مرآةٌ عندنا بعد النسخ،
+ *     فاشتقاقُ قيودها لا يكلّف حصّةَ قراءةٍ من قوقل. والكتابةُ عبر باب القاعدة
+ *     `post_journal_local` وحدَه: مفتاحٌ حتميّ، فإعادةُ الدورة تتخطّى القائمَ
+ *     (القفزُ لا الرفض) — فلا قيدَ يُكرَّر ولو جرت الدورةُ ألفَ مرّة.
+ *
+ * ★★★ **الحالاتُ النهائيّةُ وحدَها** (`POSTABLE_STATES` = منجَز/مغلق): لا تُرحَّل
+ *     حالةٌ متغيّرةٌ («معتمَد») تُعدَّل أو تُلغى بعد ترحيلها فتترك قيدًا منحرفًا
+ *     أو شبحيًّا. والقرارُ وبرهانُه في `ledgerSync.js`.
+ *
+ * ★ يُقرأ كلُّ نهائيٍّ ماليٍّ كلَّ دورة؛ وهو محليٌّ (بلا حصّة)، والقائمُ يُتخطّى.
+ *   ويُدرَج تقييدٌ تزايديٌّ بالعلامة لاحقًا إن لزم — القرارُ بعد تشغيل المالك.
+ */
+function postLedger() {
+  const typeList = LEDGER_DOC_TYPES.map((t) => lit(t)).join(', ');
+  const stateList = POSTABLE_STATES.map((s) => lit(s)).join(', ');
+  const rows = psqlRows(
+    'SELECT id, type, number, state, header, lines FROM documents' +
+      ` WHERE state IN (${stateList}) AND type IN (${typeList});`
+  );
+  if (!rows.length) {
+    console.log('  --  الدفتر: لا مستنداتٍ ماليّةً نهائيّةً بعدُ في المرآة.');
+    return;
+  }
+
+  const docs = rows.map(([id, type, number, state, header, lines]) => ({
+    id, type, number, state, header: safeJson(header, {}), lines: safeJson(lines, []),
+  }));
+
+  const bodies = ledgerCallBodies(docs);
+  if (!bodies.length) {
+    console.log(`  --  الدفتر: ${docs.length} مستندًا، لا قيدَ مشتقًّا (قبل حدّ الافتتاح أو بلا مبلغ).`);
+    return;
+  }
+
+  const calls = bodies
+    .map(
+      (b) =>
+        `SELECT post_journal_local(${lit(b.p_key)}, ${lit(b.p_date)}::date, ${Number(b.p_amount)}::bigint,` +
+        ` ${lit(JSON.stringify(b.p_lines))}::jsonb, ${lit(b.p_memo || '')}, ${lit(b.p_source_type || '')},` +
+        ` ${lit(b.p_source_id || '')}, ${b.p_reverses ? lit(b.p_reverses) : 'NULL'},` +
+        ` ${b.p_shop ? lit(b.p_shop) : 'NULL'});`
+    )
+    .join('\n');
+
+  psql(`BEGIN;\n${calls}\nCOMMIT;`);
+  console.log(
+    `  ok  الدفتر: ${docs.length} مستندًا ⇒ ${bodies.length} قيدًا مزدوجًا رُحّل أو تُخطّي (القفزُ لا الرفض).`
+  );
+}
+
 /* ═══════════════════ المسار ═══════════════════ */
 
 function printPlan() {
@@ -473,7 +554,10 @@ function printPlan() {
     `  الفرعيّةُ (غيرُ منسوخة):  ${SUB_PATHS.length}  ⟵ تحتاج فهرسَ مجموعاتٍ أو مرورًا على الآباء`
   );
   console.log(`  تُقرأ هذه الدورة:       ${SYNCED.length}`);
-  console.log(`  فهرسُ المجموعات:       ${COLLECTION_GROUP ? 'مُفعَّل' : 'معطَّل'}\n`);
+  console.log(`  فهرسُ المجموعات:       ${COLLECTION_GROUP ? 'مُفعَّل' : 'معطَّل'}`);
+  console.log(
+    `  الدفترُ المحاسبيّ:      ${SYNC_LEDGER ? 'يُغذّى بالمزامنة (post_journal_local)' : 'مطفأ (SYNC_LEDGER=1 لتفعيله)'}\n`
+  );
 
   for (const path of MAPPED) {
     const p = PLAN[path];
@@ -531,6 +615,16 @@ async function main() {
     console.log(`\n--- cycle @ minute ${minute} ---`);
     const res = await runCycle(fb, db, minute);
     console.log(`    paths=${res.paths} queries=${res.totalQueries} docs=${res.totalDocs}`);
+
+    // ★ الكاتبُ الواحد: مطفأٌ ما لم تُرفع الراية، ويُتخطّى في `--dry`.
+    if (SYNC_LEDGER && !DRY) {
+      try {
+        postLedger();
+      } catch (err) {
+        // يُسجَّل ولا يُبتلع: فشلُ الدفتر لا يُسقط المزامنةَ نفسها.
+        console.error(`  XX  الدفتر: ${String(err?.message || err)}`);
+      }
+    }
 
     if (ONCE) break;
     // خطوةُ دقيقةٍ واحدة: الجدولةُ كلُّها في `isDue` بحسب طبقةِ كلّ مسار.
