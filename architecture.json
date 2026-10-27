@@ -11,7 +11,7 @@
   "counts": {
     "modules": 124,
     "serviceDomains": 53,
-    "serviceFiles": 764,
+    "serviceFiles": 766,
     "collections": 104,
     "roles": 20,
     "odooModels": 12,
@@ -1199,6 +1199,8 @@
         "ledgerSync.test.js",
         "localLedgerStore.js",
         "localLedgerStore.test.js",
+        "localShadowView.js",
+        "localShadowView.test.js",
         "localTreasuryStore.js",
         "localTreasuryStore.test.js",
         "money.js",
@@ -1209,8 +1211,8 @@
         "treasuryRpc.js",
         "treasuryRpc.test.js"
       ],
-      "fileCount": 22,
-      "testCount": 10,
+      "fileCount": 24,
+      "testCount": 11,
       "exports": [
         "ACCOUNTS",
         "CASH_EVENTS",
@@ -1227,6 +1229,7 @@
         "POSTABLE_STATES",
         "accountDef",
         "addCashMovement",
+        "balanceTone",
         "baseOf",
         "buildPostJournalBody",
         "closeBody",
@@ -1242,6 +1245,9 @@
         "fromMinor",
         "isWholeMinor",
         "ledgerCallBodies",
+        "localLedgerView",
+        "localShadowView",
+        "localTreasuryView",
         "markClosed",
         "movementBody",
         "movementsInWindow",
@@ -1258,6 +1264,7 @@
         "summarize",
         "toMinor",
         "trialBalance",
+        "trialBalanceFromEntries",
         "validateMovement"
       ],
       "collections": []
