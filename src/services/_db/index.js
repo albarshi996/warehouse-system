@@ -15,8 +15,9 @@
  * ═══ التقسيم ═══
  *   `backend.js`     القرارُ — منطقٌ خالصٌ يُختبَر في Node بلا سحابة
  *   `firestore.js`   المحوَّلُ القائم — إعادةُ تصديرٍ حرفيّةٌ بلا طبقة
- *   `index.js`       هذا الملفّ: يصل الاثنين ولا يقرّر شيئًا بنفسه
- *   `postgres.js`    ← يُضاف هنا، ويُقاس بالعقد نفسِه (`REQUIRED_SYMBOLS`)
+ *   `index.js`       هذا الملفّ: يصل المحوّلات ولا يقرّر شيئًا بنفسه
+ *   `postgres.js`    المرآةُ الهجينة — تُقاس بالعقد نفسِه (`REQUIRED_SYMBOLS`)
+ *   `localSqlite/`   المحوَّلُ المحلّيّ (SQLite عبر Tauri) — خاملٌ حتّى القطع
  *
  * الاستعمال في الخدمات:
  *   import { db, doc, setDoc, serverTimestamp } from '../_db/index.js';
@@ -25,6 +26,7 @@
 import { backendNameFrom, pickBackend } from './backend.js';
 import * as firestore from './firestore.js';
 import * as postgres from './postgres.js';
+import * as localSqlite from './localSqlite/index.js';
 
 /**
  * بيئةُ البناء. يملؤها Astro وقتَ البناء ولا وجودَ لها في Node العاري —
@@ -38,8 +40,12 @@ const ENV = (typeof import.meta !== 'undefined' && import.meta.env) || {};
  * ★ و`postgres` **هجينٌ لا بديل**: يقرأ المنسوخَ من قاعدتنا ويمرّر ما سواه
  *   إلى Firebase، والكتابةُ كلُّها تبقى هناك. فاختيارُه لا يقطع شيئًا —
  *   ولهذا جاز أن يُسجَّل هنا قبل أن تكتمل الهجرةُ كلُّها.
+ *
+ * ★★ و`local-sqlite` قاعدةٌ مدمجةٌ على الجهاز (الكتابةُ والقراءةُ محلّيّتان، بلا
+ *    إنترنت) — مُسجَّلٌ **خاملًا**: لا يُختار إلّا بـ`PUBLIC_DB_BACKEND=local-sqlite`،
+ *    فالافتراضُ يبقى Firestore ولا يتغيّر سلوكُ الحيّ قبل الترحيل والقطع (م٣).
  */
-const BACKENDS = { firestore, postgres };
+const BACKENDS = { firestore, postgres, 'local-sqlite': localSqlite };
 
 /** اسمُ المحوَّل العامل — يُقرأ في التشخيص. */
 export const BACKEND = backendNameFrom(ENV);
