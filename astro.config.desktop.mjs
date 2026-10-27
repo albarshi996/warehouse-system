@@ -1,6 +1,13 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 
+// ★★★ الوضعُ المحلّيّ لسطح المكتب: الدخولُ على الجهاز بلا إنترنت (المحوَّل `local`
+//     خلف مقبس `_auth`). يُضبط في بيئة البناء فيصل `import.meta.env` كـ
+//     PUBLIC_DB_BACKEND في astro.yml — والويبُ لا يُمسّ (ملفُّ إعدادٍ منفصل).
+//     ⚠️ البياناتُ ما زالت Firebase؛ هذه الرايةُ تخصّ الدخولَ وحدَه حتّى تُبنى
+//     طبقةُ البيانات المحلّيّة (خطوةٌ تالية أكبر).
+process.env.PUBLIC_AUTH_BACKEND = 'local';
+
 // بناءُ سطح المكتب (desktop-local) — يُحزَم في مثبّت Tauri ويُخدَم من جذر التطبيق.
 // منفصلٌ تمامًا عن astro.config.mjs فلا يمسّ نشرَ GitHub Pages:
 //  • base الجذر '/' (لا مسار /warehouse-system) — والكودُ يشتقّ base='' من BASE_URL

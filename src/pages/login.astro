@@ -6,6 +6,12 @@
 import '../styles/global.css';
 import PwaHead from '../components/pwa/PwaHead.astro';
 import LoginForm from '../components/brandzo-erp/access/LoginForm.jsx';
+import LocalLoginForm from '../components/brandzo-erp/access/LocalLoginForm.jsx';
+
+// ★ الوضعُ المحلّيّ (بناءُ سطح المكتب يضبط PUBLIC_AUTH_BACKEND=local): شاشةُ
+//   دخولٍ باسمِ مستخدمٍ بلا إنترنت مع إنشاء المالك أوّلَ مرّة. والافتراضُ (الويب)
+//   شاشةُ Firebase كما هي — لا يتغيّر النشرُ الحيّ.
+const isLocalAuth = (import.meta.env.PUBLIC_AUTH_BACKEND || '').trim() === 'local';
 ---
 
 {/* bz-light: صفحة الدخول أوّل ما يراه المستخدم كل جلسة — تُوحَّد مع اللوحة
@@ -29,7 +35,7 @@ import LoginForm from '../components/brandzo-erp/access/LoginForm.jsx';
       >
         هذا الحساب موقوف — راجع المدير العام لإعادة تفعيله.
       </div>
-      <LoginForm client:load />
+      {isLocalAuth ? <LocalLoginForm client:load /> : <LoginForm client:load />}
     </div>
     <script>
       if (new URLSearchParams(location.search).get('disabled') === '1') {

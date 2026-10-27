@@ -36,8 +36,10 @@ const SRC = join(ROOT, 'src');
 const ALLOWED_FIREBASE = {
   // ★★★ ملفٌّ واحدٌ لا غير. هذا هو الحدّ.
   'firebase/firestore': ['src/services/_db/firestore.js'],
-  // المصادقةُ تبقى على Firebase: نفسُ البريد ونفسُ كلمة المرور بعد الهجرة.
-  'firebase/auth': ['src/config/firebase.js', 'src/services/auth/authService.js'],
+  // المصادقةُ تبقى على Firebase، لكنْ خلف مقبسٍ مُبدَّل (`_auth/`) كبابِ البيانات:
+  // التنفيذُ انتقل من `authService.js` إلى `_auth/firebaseAuth.js` بقرارٍ مكتوب،
+  // ليصير ثمّ نقطةُ وصلٍ لمحوَّلٍ محليٍّ لاحقًا.
+  'firebase/auth': ['src/config/firebase.js', 'src/services/auth/_auth/firebaseAuth.js'],
   // مثيلُ التطبيق — تبنيه القاعدةُ والأرشيفُ عليه.
   'firebase/app': ['src/config/firebase.js', 'src/services/archive/archiveStorageService.js'],
   // Firebase Storage — خدمةٌ أخرى خارج نطاق هذه الهجرة.

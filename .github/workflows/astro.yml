@@ -128,6 +128,8 @@ jobs:
           #
           # وفراغُها (وهو حالُها اليوم) يُبقي البوّابةَ على Firebase حرفيًّا.
           PUBLIC_DB_BACKEND: ${{ secrets.PUBLIC_DB_BACKEND }}
+          # مقبسُ المصادقة — فارغٌ ⇒ Firebase كما كان (نظيرُ محوَّل البيانات).
+          PUBLIC_AUTH_BACKEND: ${{ secrets.PUBLIC_AUTH_BACKEND }}
           PUBLIC_PG_API_URL: ${{ secrets.PUBLIC_PG_API_URL }}
           PUBLIC_PG_AUTH_URL: ${{ secrets.PUBLIC_PG_AUTH_URL }}
           PUBLIC_DB_HYBRID: ${{ secrets.PUBLIC_DB_HYBRID }}
