@@ -9,7 +9,7 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 124,
+    "modules": 125,
     "serviceDomains": 53,
     "serviceFiles": 766,
     "collections": 104,
@@ -447,6 +447,14 @@
       "title": "مطابقة الدفتر المحليّ",
       "summary": "",
       "file": "src/pages/dashboard/ledger-shadow.astro",
+      "usesServices": []
+    },
+    {
+      "name": "local-shadow",
+      "route": "/dashboard/local-shadow",
+      "title": "ظلّ المخزن المحلّيّ",
+      "summary": "",
+      "file": "src/pages/dashboard/local-shadow.astro",
       "usesServices": []
     },
     {

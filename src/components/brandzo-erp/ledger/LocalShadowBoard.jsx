@@ -27,7 +27,7 @@ function accountLabel(account) {
   return party ? `${nameAr} — ${party}` : nameAr;
 }
 
-export default function LocalShadowBoard() {
+export default function LocalShadowBoard({ db = door }) {
   const [view, setView] = useState(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState('');
@@ -36,7 +36,7 @@ export default function LocalShadowBoard() {
     let alive = true;
     (async () => {
       try {
-        const v = await localShadowView(door);
+        const v = await localShadowView(db);
         if (alive) setView(v);
       } catch (e) {
         if (alive) setError(e?.message || 'تعذّرت قراءةُ المخزن المحلّيّ');
