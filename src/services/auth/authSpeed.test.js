@@ -36,5 +36,5 @@ test('★★★ الطبقةُ لا تُرفع قبل التحقّق — لكن�
   assert.ok(check > 0 && hide > check, 'الإخفاءُ بعد حارس الصفحة لا قبله');
   assert.ok(!/setTimeout\([^)]*display = 'none'/.test(src), 'المؤقّتُ لا يُخفي الطبقة أبدًا');
   assert.match(src, /clearTimeout\(slow\);\s*if \(overlay\) overlay\.style\.display = 'none';/);
-  assert.match(src, /new CustomEvent\('brandzo:db-status', \{ detail: \{ online: true \} \}\)/, 'العلامةُ تعرف أنّ القاعدة متّصلة');
+  assert.match(src, /new CustomEvent\('brandzo:db-status', \{ detail: \{ online: !isLocal \} \}\)/, 'العلامةُ تعرف الاتّصال — وفي الوضع المحلّيّ تُعلن «وضع محلي» بصدق');
 });

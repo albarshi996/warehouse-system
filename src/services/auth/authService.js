@@ -16,6 +16,7 @@ export {
   signOutUser,
   sendPasswordReset,
   fetchUserProfile,
+  AUTH_BACKEND,
 } from './_auth/index.js';
 
 /** يترجم رمز خطأ Firebase Auth إلى رسالة عربية واضحة. */

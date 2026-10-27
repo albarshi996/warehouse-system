@@ -201,10 +201,26 @@ export async function createLocalUser(store, { username, name = '', password, ro
 }
 
 /* ═══════════════════ المثيلُ الافتراضيّ — ما يصله المقبس ═══════════════════ */
-const instance = createLocalAuth({ store: defaultUserStore(), session: defaultSession() });
+
+// ★ مخزنٌ وجلسةٌ **واحدان** يتشاركهما المحوَّلُ وواجهةُ التمهيد (إنشاءُ المالك)،
+//   كي يجد الدخولُ ما أنشأته الشاشةُ على نفس المخزن (مثيلُ وحدةٍ واحد).
+const sharedStore = defaultUserStore();
+const instance = createLocalAuth({ store: sharedStore, session: defaultSession() });
 
 export const subscribeAuth = instance.subscribeAuth;
 export const signIn = instance.signIn;
 export const signOutUser = instance.signOutUser;
 export const sendPasswordReset = instance.sendPasswordReset;
 export const fetchUserProfile = instance.fetchUserProfile;
+
+/* ═══════════════════ واجهةُ التمهيد للشاشة المحلّيّة (خارج عقد المقبس) ═══════════════════ */
+
+/** عددُ المستخدمين على الجهاز — صفرٌ يعني «أنشئ المالك أوّلًا». */
+export function localUserCount() {
+  return sharedStore.countUsers();
+}
+
+/** ينشئ مستخدمًا على الجهاز (أوّلُ حسابٍ مالك) على المخزن المشترك. */
+export function localSignup({ username, name, password }) {
+  return createLocalUser(sharedStore, { username, name, password });
+}

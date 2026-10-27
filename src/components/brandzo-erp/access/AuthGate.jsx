@@ -4,6 +4,7 @@ import {
   fetchUserProfile,
   signOutUser,
   getBasePath,
+  AUTH_BACKEND,
 } from '../../../services/auth/authService.js';
 import { isPathAllowed, landingPathFor, toCatalogPath } from '../../../services/auth/pageAccess.js';
 import { recordVisit } from '../../../services/activity/visitService.js';
@@ -33,6 +34,12 @@ export default function AuthGate() {
     const base = getBasePath();
     const overlay = document.getElementById('bz-auth-overlay');
 
+    // ★★★ الوضعُ المحلّيّ (بناءُ سطح المكتب، المحوَّل `local`): البياناتُ ما زالت
+    //     Firebase بلا جلسةٍ سحابيّة، فقراءةُ مصفوفة التجاوزات محكومٌ عليها بالفشل.
+    //     فلا نعلّق الطبقةَ عليها (نكتفي بالكتالوج — الرجوعُ الآمنُ المعلَن)، ونُعلن
+    //     «وضع محلي» بصدقٍ بدل ادّعاء اتّصالٍ سحابيٍّ لا وجودَ له. الويبُ لا يُمسّ.
+    const isLocal = AUTH_BACKEND === 'local';
+
     // ‹ODOO-ORD› حين يضعف الاتّصال كانت الطبقةُ تدور صامتةً دقائق (2026-10-22). لا نتجاوز التحقّق — الشاشةُ لا تُفتح لمن
     // لم يُعرف — بل نقول ما يجري ونعطي زرَّ إعادة المحاولة.
     const slow = setTimeout(() => {
@@ -58,7 +65,10 @@ export default function AuthGate() {
         return;
       }
 
-      const [profile, matrix] = await Promise.all([fetchUserProfile(user), fetchMatrixOnce()]);
+      const [profile, matrix] = await Promise.all([
+        fetchUserProfile(user),
+        isLocal ? Promise.resolve(null) : fetchMatrixOnce(),
+      ]);
 
       if (profile?.active === false) {
         try {
@@ -80,7 +90,7 @@ export default function AuthGate() {
       if (overlay) overlay.style.display = 'none';
       // ‹ODOO-ORD› علامةُ «جاري الاتصال بقاعدة البيانات...» في التخطيط لا يُحدّثها إلّا هذا الحدث — وكان لا يُطلقه إلّا
       // شاشةُ المستودعات، فبقيت العلامةُ «تتّصل» أبدًا في كلّ صفحةٍ أخرى. قراءةُ الملفّ نجحت ⟵ القاعدةُ متّصلة.
-      window.dispatchEvent(new CustomEvent('brandzo:db-status', { detail: { online: true } }));
+      window.dispatchEvent(new CustomEvent('brandzo:db-status', { detail: { online: !isLocal } }));
 
       // ‹VIS-202› سجلُّ الزيارة — **بعد** أن يُعرف المستخدمُ ويُسمح له بالصفحة،
       // فلا يُسجَّل موقوفٌ ولا محوَّلٌ عن صفحةٍ لا يملكها.
