@@ -1,0 +1,15 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import LocalShadowBoard from '../../components/brandzo-erp/ledger/LocalShadowBoard.jsx';
+---
+
+<DashboardLayout title="ظلّ المخزن المحلّيّ" light>
+  <div class="text-right" dir="rtl">
+    <h1 class="text-2xl font-bold text-ink mb-1">ظلُّ المخزن المحلّيّ — الدفتر والخزينة</h1>
+    <p class="text-sm text-ink-2 mb-5">
+      مرآةٌ لِما كُتب فعلًا في قاعدة الجهاز المحلّيّة: قيودُ الدفتر المزدوج (ميزانُ المراجعة وأرصدةُ الذمم)
+      وورديّاتُ الخزينة بفروقها — عرضًا للقراءة فقط، بلا إنترنت. لا كتابةَ حيّة ولا مساسَ بأودو أو الخلفيّة الافتراضيّة.
+    </p>
+    <LocalShadowBoard client:load />
+  </div>
+</DashboardLayout>

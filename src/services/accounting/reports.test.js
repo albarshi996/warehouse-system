@@ -4,7 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { trialBalance } from './reports.js';
+import { trialBalance, trialBalanceFromEntries } from './reports.js';
 
 const D = '2026-10-21';
 const inv = (id, code, total) => ({
@@ -43,4 +43,20 @@ test('★ مدين كلِّ الصفوف = دائنُها (مجموعان متس
   const dr = tb.rows.reduce((s, r) => s + r.debit, 0);
   const cr = tb.rows.reduce((s, r) => s + r.credit, 0);
   assert.equal(Math.round((dr - cr) * 1000), 0);
+});
+
+test('★★ trialBalanceFromEntries: الرَّوزُ من قيودٍ مُطبَّعةٍ جاهزةٍ (نظيرُ القراءة من المخزن)', () => {
+  // قيودٌ بالوحدة الصغرى، كما تُخزَّن وتُقرأ من المخزن المحلّيّ.
+  const entries = [
+    { date: '2026-10-21', lines: [{ account: 'CASH', debit: 400000, credit: 0 }, { account: 'AR:C-1', debit: 0, credit: 400000 }] },
+    { date: '2026-10-21', lines: [{ account: 'AR:C-1', debit: 5000000, credit: 0 }, { account: 'SALES', debit: 0, credit: 5000000 }] },
+  ];
+  const tb = trialBalanceFromEntries(entries);
+  assert.equal(tb.balanced, true, JSON.stringify(tb.rows));
+  const bal = Object.fromEntries(tb.rows.map((r) => [r.account, r.balance]));
+  assert.equal(bal['AR:C-1'], 4600, 'جُمع السطران على الحساب نفسِه');
+  assert.equal(bal.CASH, 400);
+  assert.equal(bal.SALES, -5000);
+  // فارغٌ ⇒ متوازنٌ بلا صفوف.
+  assert.deepEqual(trialBalanceFromEntries([]), { rows: [], balanced: true, accounts: 0 });
 });
