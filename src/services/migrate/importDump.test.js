@@ -10,7 +10,7 @@ import { readFileSync } from 'node:fs';
 
 import { createLocalDb } from '../_db/localSqlite/localDb.js';
 import { createSqlStore } from '../_db/localSqlite/sqlStore.js';
-import { fromExportValue, parseDumpEntry, importDocuments, reconcileCounts } from './importDump.js';
+import { fromExportValue, parseDumpEntry, importDocuments, reconcileCounts, expandCounts } from './importDump.js';
 
 const NOW = () => 1_760_000_000_000;
 
@@ -94,6 +94,23 @@ test('★★ reconcileCounts: صفرُ فرقٍ يمرّ، وأيُّ فرقٍ �
   const bad = await reconcileCounts(db, { items: 3 });
   assert.equal(bad.allMatch, false);
   assert.equal(bad.rows[0].diff, -1, 'نقصٌ واحدٌ يُكشف');
+});
+
+test('★★★ expandCounts: يجمع المجموعاتِ الفرعيّةَ بالبادئة، ويكشف الفرق', () => {
+  const actual = {
+    items: 2,
+    'operations/op1/scans': 2,
+    'operations/op2/scans': 3,
+    'operations/op1/other': 9, // لا يُحسب لـscans
+  };
+  const ok = expandCounts({ items: 2, 'operations/scans': 5 }, actual);
+  assert.equal(ok.allMatch, true, JSON.stringify(ok.rows));
+  const byPath = Object.fromEntries(ok.rows.map((r) => [r.path, r.got]));
+  assert.equal(byPath['operations/scans'], 5, 'جُمع من op1(2)+op2(3) لا other');
+
+  const bad = expandCounts({ items: 9, 'operations/scans': 4 }, actual);
+  assert.equal(bad.allMatch, false);
+  assert.deepEqual(bad.rows.map((r) => r.diff).sort((a, b) => a - b), [-7, 1]);
 });
 
 /* ═══════════════════ البيّنةُ الحيّة على SQLite حقيقيّة ═══════════════════ */
