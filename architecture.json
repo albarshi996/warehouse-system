@@ -10,8 +10,8 @@
   },
   "counts": {
     "modules": 125,
-    "serviceDomains": 53,
-    "serviceFiles": 766,
+    "serviceDomains": 54,
+    "serviceFiles": 768,
     "collections": 104,
     "roles": 20,
     "odooModels": 12,
@@ -817,6 +817,7 @@
       "file": "src/pages/dashboard/retail-hub.astro",
       "usesServices": [
         "auth",
+        "env",
         "retail",
         "ui"
       ]
@@ -2534,6 +2535,21 @@
         "documents",
         "entity_attachments"
       ]
+    },
+    {
+      "domain": "env",
+      "dir": "src/services/env",
+      "files": [
+        "platform.js",
+        "platform.test.js"
+      ],
+      "fileCount": 2,
+      "testCount": 1,
+      "exports": [
+        "isDesktop",
+        "isDesktopFrom"
+      ],
+      "collections": []
     },
     {
       "domain": "excel",

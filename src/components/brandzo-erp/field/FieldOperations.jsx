@@ -21,6 +21,7 @@ import {
   setCustomerLocation,
 } from '../../../services/field/fieldService.js';
 import { captureLocation, locationPermissionState } from '../../../services/field/locationCapture.js';
+import { isDesktop } from '../../../services/env/platform.js';
 import { listUsers } from '../../../services/auth/usersService.js';
 import { listenRecentVisits } from '../../../services/field/fieldService.js';
 import { visitsDueOn, planCompliance, coverageGaps } from '../../../services/field/journeyPlan.js';
@@ -550,7 +551,11 @@ function FieldMap({ visits, due, coordsByCode }) {
     if (!L || !ref.current) return undefined;
     if (!mapRef.current) {
       mapRef.current = L.map(ref.current).setView([32.1167, 20.0667], 12);
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapRef.current);
+      // ★ بلاطاتُ الخريطة بعيدةٌ (openstreetmap)؛ في البناء المكتبيّ الأوفلاين لا
+      //   تُطلب (تتعثّر بلا إنترنت) — فتبقى المواقعُ على خلفيّةٍ محايدة.
+      if (!isDesktop()) {
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapRef.current);
+      }
       layerRef.current = L.layerGroup().addTo(mapRef.current);
     }
     const layer = layerRef.current;
