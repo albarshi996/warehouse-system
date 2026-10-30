@@ -74,3 +74,17 @@ test('★ وحالةُ الاتّصال تُقرأ من المتصفّح، وخ�
   assert.match(SERVICE, /typeof navigator === 'undefined'/, 'Node يمرّ');
   assert.match(SERVICE, /navigator\.onLine !== false/, 'والنفيُ وحدَه يمنع');
 });
+
+// ─── ★★★ القاعدةُ المحلّيّةُ تحجز أوفلاين (جاهزيّة القطع) ──────────────────
+test('★★★ تحت القاعدة المحلّيّة: يُحجز الرقمُ ولو غيرَ متّصلٍ (العدّادُ على الجهاز)', () => {
+  assert.equal(numberingVerdict({ online: false, local: true }).ok, true, 'محلّيٌّ ⟵ لا يُشترط الاتّصال');
+  assert.equal(numberingVerdict({ online: true, local: true }).ok, true);
+  // وبلا local يبقى الحارسُ السحابيُّ كما كان (نقضُ الانحدار).
+  assert.equal(numberingVerdict({ online: false, local: false }).ok, false, 'سحابيٌّ غيرُ متّصلٍ ⟵ يُمنع');
+  assert.equal(numberingVerdict({ online: false }).ok, false);
+});
+
+test('★★★ الخدمةُ تمرّر local من خلفيّة الباب — فالأوفلاين المحلّيُّ لا يُمنع', () => {
+  assert.match(SERVICE, /BACKEND === 'local-sqlite'/, 'تُسقط شرطَ الاتّصال تحت local-sqlite');
+  assert.match(SERVICE, /local:/, 'وتُمرّره إلى الحكم');
+});
