@@ -27,7 +27,7 @@ test('★ استعلامٌ كامل: شرطٌ + ترتيبٌ + حدّ — بال
     sql,
     'SELECT id, data FROM kv_docs WHERE collection = ? AND ' +
       "COALESCE(json_extract(data, '$.status.__ts__'), json_extract(data, '$.status')) = ? " +
-      "ORDER BY COALESCE(json_extract(data, '$.createdAt.__ts__'), json_extract(data, '$.createdAt')) DESC " +
+      "ORDER BY COALESCE(json_extract(data, '$.createdAt.__ts__'), json_extract(data, '$.createdAt')) DESC, id DESC " +
       'LIMIT 5'
   );
   assert.deepEqual(params, ['documents', 'done']);
@@ -35,7 +35,7 @@ test('★ استعلامٌ كامل: شرطٌ + ترتيبٌ + حدّ — بال
 
 test('المعرّفُ في IN يُقارن بعمود id', () => {
   const { sql, params } = buildSelect('users', [w(DOC_ID, 'in', ['a', 'b', 'c'])]);
-  assert.equal(sql, 'SELECT id, data FROM kv_docs WHERE collection = ? AND id IN (?, ?, ?)');
+  assert.equal(sql, 'SELECT id, data FROM kv_docs WHERE collection = ? AND id IN (?, ?, ?) ORDER BY id ASC');
   assert.deepEqual(params, ['users', 'a', 'b', 'c']);
 });
 
@@ -66,19 +66,23 @@ test('★ المؤشّرُ startAfter يضيف مقارنةً على أوّل ت
     sql,
     'SELECT id, data FROM kv_docs WHERE collection = ? AND ' +
       "COALESCE(json_extract(data, '$.n.__ts__'), json_extract(data, '$.n')) > ? " +
-      "ORDER BY COALESCE(json_extract(data, '$.n.__ts__'), json_extract(data, '$.n')) ASC " +
+      "ORDER BY COALESCE(json_extract(data, '$.n.__ts__'), json_extract(data, '$.n')) ASC, id ASC " +
       'LIMIT 2'
   );
   assert.deepEqual(params, ['c', 100]);
 });
 
-test('★ startAfter بلقطةِ وثيقةٍ يستخرج قيمةَ حقل الترتيب (#4)', () => {
+test('★★ startAfter بلقطةٍ يبني مؤشّرًا مركّبًا (field, id) فلا يُسقط المتعادلين (#4)', () => {
   const snap = { id: 'b', get: (f) => (f === 'n' ? 2 : undefined) };
-  const { params } = buildSelect('c', [ob('n', 'asc'), sa(snap), lim(2)]);
-  assert.deepEqual(params, ['c', 2]);
+  const { sql, params } = buildSelect('c', [ob('n', 'asc'), sa(snap), lim(2)]);
+  const nExpr = "COALESCE(json_extract(data, '$.n.__ts__'), json_extract(data, '$.n'))";
+  assert.ok(sql.includes(`(${nExpr} > ? OR (${nExpr} = ? AND id > ?))`), sql);
+  assert.deepEqual(params, ['c', 2, 2, 'b'], 'قيمةُ الحقل مرّتين ثمّ معرّفُ اللقطة');
 
   const byId = { id: 'b', get: () => undefined };
-  assert.deepEqual(buildSelect('c', [ob(DOC_ID, 'asc'), sa(byId)]).params, ['c', 'b'], 'ترتيبٌ بالمعرّف ⟵ snap.id');
+  const r = buildSelect('c', [ob(DOC_ID, 'asc'), sa(byId)]);
+  assert.ok(r.sql.includes('id > ?'), r.sql);
+  assert.deepEqual(r.params, ['c', 'b'], 'ترتيبٌ بالمعرّف ⟵ id > snap.id');
 });
 
 test('المؤشّرُ مع ترتيبٍ متعدّدِ الحقول يُرفَض بصوتٍ عالٍ لا يُقارَب (#4)', () => {
@@ -105,6 +109,6 @@ test('العدُّ بلا حدٍّ لا يلفّ بمجموعةٍ فرعيّة',
 });
 
 test('★★ قائمةٌ فارغةٌ في IN لا تُنتج SQL معطوبًا', () => {
-  assert.match(buildSelect('c', [w('x', 'in', [])]).sql, /AND 0$/, 'in [] = لا شيء يطابق');
-  assert.match(buildSelect('c', [w('x', 'not-in', [])]).sql, /AND 1$/, 'not-in [] = الكلّ');
+  assert.match(buildSelect('c', [w('x', 'in', [])]).sql, /AND 0 ORDER BY id ASC$/, 'in [] = لا شيء يطابق');
+  assert.match(buildSelect('c', [w('x', 'not-in', [])]).sql, /AND 1 ORDER BY id ASC$/, 'not-in [] = الكلّ');
 });

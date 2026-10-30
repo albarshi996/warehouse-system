@@ -126,8 +126,25 @@ function whereClause(col, wheres, orderBy, startAfter) {
       throw new Error('المؤشّرُ (startAfter) لا يُدعم مع ترتيبٍ متعدّد الحقول في م١');
     }
     const o = orderBy[0];
-    frags.push(`${fieldExpr(o.field)} ${o.dir === 'desc' ? '<' : '>'} ?`);
-    params.push(encodeParam(cursorValue(startAfter[0], o)));
+    const op = o.dir === 'desc' ? '<' : '>';
+    const raw = startAfter[0];
+    const isSnap = raw && typeof raw.get === 'function';
+    if (o.field === DOC_ID) {
+      // الترتيبُ بالمعرّف: المعرّفُ فريدٌ فلا تعادل — مقارنةٌ أحاديّةٌ على عمود id.
+      frags.push(`id ${op} ?`);
+      params.push(isSnap ? raw.id : encodeParam(raw));
+    } else if (isSnap) {
+      // لقطةُ وثيقةٍ على حقلٍ عاديّ: الترتيبُ الكلّيُّ (field, id)، فالمؤشّرُ شرطٌ
+      // مركّبٌ يطابقه — وإلّا سقطت الصفوفُ المتعادلةُ في الحقل صامتةً (فقدُ بيانات).
+      const val = encodeParam(cursorValue(raw, o));
+      const expr = fieldExpr(o.field);
+      frags.push(`(${expr} ${op} ? OR (${expr} = ? AND id ${op} ?))`);
+      params.push(val, val, raw.id);
+    } else {
+      // قيمةٌ أوّليّةٌ مباشرةٌ: لا معرّفَ لنُركّب عليه، فمقارنةٌ أحاديّةٌ على الحقل.
+      frags.push(`${fieldExpr(o.field)} ${op} ?`);
+      params.push(encodeParam(raw));
+    }
   }
   return { sql: frags.join(' AND '), params };
 }
@@ -137,9 +154,15 @@ export function buildSelect(col, constraints) {
   const { wheres, orderBy, lim, startAfter } = collect(constraints);
   const { sql: where, params } = whereClause(col, wheres, orderBy, startAfter);
   let sql = `SELECT id, data FROM kv_docs WHERE ${where}`;
-  if (orderBy.length) {
-    sql += ' ORDER BY ' + orderBy.map((o) => `${fieldExpr(o.field)} ${o.dir === 'desc' ? 'DESC' : 'ASC'}`).join(', ');
-  }
+  // ★ Firestore يرتّب ضمنًا بمعرّف الوثيقة (`__name__`) ويجعله فاصلَ تعادلٍ آخرَ
+  //   كلّ ترتيب. فنضيف `id` دائمًا: ترتيبًا وحيدًا حين لا orderBy صريح (وإلّا أعاد
+  //   SQLite بترتيب rowid غيرِ المستقرّ)، وفاصلَ تعادلٍ بعد الحقول المطلوبة. واتّجاهُه
+  //   يتبع اتّجاهَ آخر orderBy (كـ__name__ في firebase-js-sdk)، وASC بلا orderBy.
+  const cols = orderBy.map((o) => `${fieldExpr(o.field)} ${o.dir === 'desc' ? 'DESC' : 'ASC'}`);
+  const lastDir = orderBy.length ? orderBy[orderBy.length - 1].dir : 'asc';
+  const idCol = `id ${lastDir === 'desc' ? 'DESC' : 'ASC'}`;
+  if (!cols.some((c) => c === 'id ASC' || c === 'id DESC')) cols.push(idCol);
+  sql += ' ORDER BY ' + cols.join(', ');
   if (lim !== null && lim !== undefined) sql += ` LIMIT ${Math.max(0, Number(lim) | 0)}`;
   return { sql, params };
 }

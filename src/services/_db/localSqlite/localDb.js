@@ -13,8 +13,10 @@
  *    يُنبَّه المستمعون محلّيًّا — فـ`onSnapshot` حيٌّ داخل العمليّة بلا بثٍّ سحابيّ.
  *
  * ⚠️ حدودُ م١ (مكتوبةٌ لا مخفيّة): المؤشّرُ (`startAfter`) بقيمةٍ أوّليّةٍ لترتيبٍ
- *    واحد؛ و`getCountFromServer` يتجاهل `limit`؛ والجداولُ العلائقيّةُ تُرحَّل في
- *    م٢. المحوَّلُ **خاملٌ** حتّى يُختار `local-sqlite` — فلا يُمسّ سلوكُ الحيّ.
+ *    واحد؛ والجداولُ العلائقيّةُ تُرحَّل في م٢. والترتيبُ الافتراضيُّ (بلا orderBy)
+ *    بمعرّف الوثيقة كـ`__name__` في Firestore، وهو فاصلُ تعادلٍ ثابتٌ دائمًا.
+ *    والعمليّاتُ المغيّرةُ **مُسلسَلةٌ** (عزلٌ لا ذرّيّةٌ فقط). المحوَّلُ **خاملٌ**
+ *    حتّى يُختار `local-sqlite` — فلا يُمسّ سلوكُ الحيّ.
  */
 import {
   joinPath,
@@ -166,9 +168,17 @@ export function createLocalDb({ store, now = Date.now } = {}) {
     }
   }
 
-  function onSnapshot(target, nextOrObserver, errCb) {
-    const next = typeof nextOrObserver === 'function' ? nextOrObserver : nextOrObserver && nextOrObserver.next;
-    const onError = typeof nextOrObserver === 'function' ? errCb : nextOrObserver && nextOrObserver.error;
+  function onSnapshot(target, a, b, c) {
+    // توقيعُ Firestore الكامل: (target, observer) · (target, next, error) ·
+    // (target, options, observer) · (target, options, next, error). كائنُ الخيارات
+    // (مثل {includeMetadataChanges}) ليس مراقبًا (لا next/error دالّةً) — فنُزيحه،
+    // وإلّا صار next=undefined فترمي refresh وتُبتلَع صامتةً (كسرُ شاشات المسح).
+    const isObserver = (x) => x && typeof x === 'object' && (typeof x.next === 'function' || typeof x.error === 'function');
+    const hasOptions = a && typeof a === 'object' && !isObserver(a);
+    const p1 = hasOptions ? b : a;
+    const p2 = hasOptions ? c : b;
+    const next = typeof p1 === 'function' ? p1 : p1 && p1.next;
+    const onError = typeof p1 === 'function' ? p2 : p1 && p1.error;
     const entry = { onError };
 
     if (target && target.__kind === 'doc') {
@@ -203,40 +213,68 @@ export function createLocalDb({ store, now = Date.now } = {}) {
     updatedAt: nowIso(),
   });
 
+  // ★★★ طابورُ إقصاءٍ للعمليّات المغيّرة: البرنامجُ عمليّةٌ واحدة، لكنّ القراءةَ-ثمّ-
+  //     الكتابةَ غيرَ المحميّة تتسابق (معاملتان متداخلتان — `await` على المخزن يُسلّم
+  //     الخيط — تقرآن القيمةَ نفسَها ثمّ تكتبان فوقَ بعض)، فيتكرّر رقمُ المستند ويُحجز
+  //     المخزونُ مرّتين. التسلسلُ هنا يعطي **عزلًا** لا ذرّيّةً فقط، فكلُّ عمليّةٍ ترى
+  //     أثرَ سابقتها (نظيرُ معاملة Firestore). والإخطارُ يجري **بعد تحرير القفل** كي
+  //     لا يُعاد الدخولُ إلى الطابور من ردِّ مستمعٍ يكتب فيتعلّق.
+  let writeTail = Promise.resolve();
+  function runExclusive(work) {
+    const run = writeTail.then(work, work);
+    writeTail = run.then(() => undefined, () => undefined);
+    return run;
+  }
+
+  async function notifyAll(affected) {
+    for (const [c, i] of affected) await notifyChange(c, i);
+  }
+
   async function setDoc(ref, data, opts) {
-    const merge = !!(opts && opts.merge);
-    const base = merge ? (await readPlain(ref)) || {} : {};
-    const next = applyData(base, data, { now, deep: true });
-    await store.write([upsertOp(ref, next)]);
-    await notifyChange(ref.col, ref.id);
+    const affected = await runExclusive(async () => {
+      const merge = !!(opts && opts.merge);
+      const base = merge ? (await readPlain(ref)) || {} : {};
+      const next = applyData(base, data, { now, deep: true });
+      await store.write([upsertOp(ref, next)]);
+      return [[ref.col, ref.id]];
+    });
+    await notifyAll(affected);
   }
 
   async function updateDoc(ref, ...rest) {
-    const current = await readPlain(ref);
-    if (current === null) throw new Error(`لا وثيقةَ لتحديثها: ${ref.path}`);
-    // ★ `deep: false` — التحديثُ يستبدل الخرائطَ المتداخلةَ كاملةً (نمطُ Firestore)؛
-    //   الدمجُ الجزئيُّ بمفاتيح المسار بالنقاط (`'a.b'`).
-    const next = applyData(current, updateArgsToData(rest), { now, deep: false });
-    await store.write([upsertOp(ref, next)]);
-    await notifyChange(ref.col, ref.id);
+    const affected = await runExclusive(async () => {
+      const current = await readPlain(ref);
+      if (current === null) throw new Error(`لا وثيقةَ لتحديثها: ${ref.path}`);
+      // ★ `deep: false` — التحديثُ يستبدل الخرائطَ المتداخلةَ كاملةً (نمطُ Firestore)؛
+      //   الدمجُ الجزئيُّ بمفاتيح المسار بالنقاط (`'a.b'`).
+      const next = applyData(current, updateArgsToData(rest), { now, deep: false });
+      await store.write([upsertOp(ref, next)]);
+      return [[ref.col, ref.id]];
+    });
+    await notifyAll(affected);
   }
 
   async function addDoc(colRef, data) {
     const ref = docRef(colRef.col, genId());
-    const next = applyData({}, data, { now, deep: true });
-    await store.write([upsertOp(ref, next)]);
-    await notifyChange(ref.col, ref.id);
+    const affected = await runExclusive(async () => {
+      const next = applyData({}, data, { now, deep: true });
+      await store.write([upsertOp(ref, next)]);
+      return [[ref.col, ref.id]];
+    });
+    await notifyAll(affected);
     return ref;
   }
 
   async function deleteDoc(ref) {
-    await store.write([{ op: 'delete', col: ref.col, id: ref.id }]);
-    await notifyChange(ref.col, ref.id);
+    await runExclusive(() => store.write([{ op: 'delete', col: ref.col, id: ref.id }]));
+    await notifyAll([[ref.col, ref.id]]);
   }
 
   /* ═══════════════════ الدفعة والمعاملة ═══════════════════ */
 
-  async function applyOps(ops) {
+  // القلبُ المشترك: يطبّق العمليّاتِ قراءةً-ثمّ-كتابةً ويُعيد المتأثّرين — **بلا
+  // إخطارٍ وبلا قفل**؛ يُنادى داخلَ runExclusive وحدَه (writeBatch/runTransaction).
+  async function applyOpsInner(ops) {
     const cache = new Map();
     const writeOps = [];
     const affected = [];
@@ -268,7 +306,12 @@ export function createLocalDb({ store, now = Date.now } = {}) {
     }
 
     await store.write(writeOps);
-    for (const [c, i] of affected) await notifyChange(c, i);
+    return affected;
+  }
+
+  async function applyOps(ops) {
+    const affected = await runExclusive(() => applyOpsInner(ops));
+    await notifyAll(affected);
   }
 
   function writeBatch() {
@@ -298,38 +341,45 @@ export function createLocalDb({ store, now = Date.now } = {}) {
     const fn = typeof dbArg === 'function' ? dbArg : updateFn;
     if (typeof fn !== 'function') throw new Error('runTransaction يحتاج دالّةَ تحديث');
 
-    const readCache = new Map();
-    const ops = [];
     const keyOf = (ref) => `${ref.col}\u0000${ref.id}`;
+    let affected = [];
+    // ★★★ المعاملةُ كلُّها (قراءةُ fn ثمّ تثبيتُ الكتابة) داخلَ القفل الواحد — فلا
+    //     تتداخل معاملتان فتقرآن المُثبَتَ نفسَه ثمّ تدهس إحداهما الأخرى؛ هذا هو
+    //     العزلُ الذي يمنع تكرارَ الأرقام والحجزَ المزدوج. وإنْ رمت fn، لم تُثبَّت
+    //     كتابةٌ ولم يُخطَر أحد (كإحباط معاملة Firestore).
+    const result = await runExclusive(async () => {
+      const readCache = new Map();
+      const ops = [];
+      const tx = {
+        // القراءةُ من الحالة المُثبَتة (لا من كتابات المعاملة نفسِها، كـFirestore)،
+        // وتُخبَّأ كي تبقى القراءةُ المكرّرةُ متّسقة.
+        async get(ref) {
+          const k = keyOf(ref);
+          if (!readCache.has(k)) readCache.set(k, await readPlain(ref));
+          const v = readCache.get(k);
+          return docSnap(ref.id, v === null ? undefined : v, ref);
+        },
+        set(ref, data, opts) {
+          ops.push({ mode: opts && opts.merge ? 'merge' : 'set', ref, data });
+          return tx;
+        },
+        update(ref, ...rest) {
+          ops.push({ mode: 'update', ref, data: updateArgsToData(rest) });
+          return tx;
+        },
+        delete(ref) {
+          ops.push({ mode: 'delete', ref });
+          return tx;
+        },
+      };
 
-    const tx = {
-      // القراءةُ من الحالة المُثبَتة (لا من كتابات المعاملة نفسِها، كـFirestore)،
-      // وتُخبَّأ كي تبقى القراءةُ المكرّرةُ متّسقة.
-      async get(ref) {
-        const k = keyOf(ref);
-        if (!readCache.has(k)) readCache.set(k, await readPlain(ref));
-        const v = readCache.get(k);
-        return docSnap(ref.id, v === null ? undefined : v, ref);
-      },
-      set(ref, data, opts) {
-        ops.push({ mode: opts && opts.merge ? 'merge' : 'set', ref, data });
-        return tx;
-      },
-      update(ref, ...rest) {
-        ops.push({ mode: 'update', ref, data: updateArgsToData(rest) });
-        return tx;
-      },
-      delete(ref) {
-        ops.push({ mode: 'delete', ref });
-        return tx;
-      },
-    };
-
-    const result = await fn(tx);
-    // ★ تُثبَّت الكتاباتُ عند الإتمام بقراءةٍ-ثمّ-كتابةٍ على المخزن (كـ`writeBatch`):
-    //   فالدمجُ يقرأ المُثبَت ولو لم يُقرأ المرجعُ قبلًا (#2)، والتحديثُ على مفقودٍ
-    //   يرمي عند الإتمام لا بالاعتماد على المخبوء وحدَه (#5).
-    await applyOps(ops);
+      const r = await fn(tx);
+      // تُثبَّت الكتاباتُ عند الإتمام بقراءةٍ-ثمّ-كتابةٍ على المخزن (كـ`writeBatch`):
+      // فالدمجُ يقرأ المُثبَت ولو لم يُقرأ المرجعُ قبلًا، والتحديثُ على مفقودٍ يرمي.
+      affected = await applyOpsInner(ops);
+      return r;
+    });
+    await notifyAll(affected);
     return result;
   }
 
