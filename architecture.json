@@ -1665,6 +1665,7 @@
         "canSeeHome",
         "canSeeItem",
         "countOverrides",
+        "createDoorUserStore",
         "createLocalAuth",
         "createLocalUser",
         "defaultSession",
