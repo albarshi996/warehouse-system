@@ -66,13 +66,20 @@ export const OFFLINE_NUMBER_MESSAGE =
   'ومسودّتُك محفوظةٌ ولم تضع: ثبّتها حين تعود الشبكة.';
 
 /**
- * هل يجوز حجزُ رقمٍ الآن؟ — حكمٌ خالصٌ يأخذ حالةَ الاتّصال ولا يقرؤها بنفسه،
- * فيُختبر في Node بلا متصفّح.
+ * هل يجوز حجزُ رقمٍ الآن؟ — حكمٌ خالصٌ يأخذ حالةَ الاتّصال (والخلفيّة) ولا يقرؤها
+ * بنفسه، فيُختبر في Node بلا متصفّح.
  *
- * @param {{online?: boolean}} [state] `false` تعني «غير متّصلٍ يقينًا»
+ * ★★★ تحت القاعدة المحلّيّة (`local-sqlite`) العدّادُ على الجهاز، فيُحجز الرقمُ
+ *     أوفلاين بلا سحابةٍ ولا تصادم (المعاملةُ المحلّيّةُ مُسلسَلة) — فلا يُشترط
+ *     الاتّصال. وإلّا فالرقمُ الرسميُّ يُحجز في السحابة، والنفيُ القاطعُ للاتّصال
+ *     يمنعه (معاملةٌ بلا شبكةٍ تتعلّق أبدًا).
+ *
+ * @param {{online?: boolean, local?: boolean}} [state] `online:false` «غير متّصلٍ
+ *        يقينًا»؛ `local:true` العدّادُ محلّيٌّ فلا يحتاج اتّصالًا.
  * @returns {{ok: boolean, code: string, message: string}}
  */
-export function numberingVerdict({ online } = {}) {
+export function numberingVerdict({ online, local } = {}) {
+  if (local === true) return { ok: true, code: '', message: '' };
   return online === false
     ? { ok: false, code: 'offline', message: OFFLINE_NUMBER_MESSAGE }
     : { ok: true, code: '', message: '' };
