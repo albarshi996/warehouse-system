@@ -10,8 +10,8 @@
   },
   "counts": {
     "modules": 125,
-    "serviceDomains": 55,
-    "serviceFiles": 770,
+    "serviceDomains": 56,
+    "serviceFiles": 772,
     "collections": 104,
     "roles": 20,
     "odooModels": 12,
@@ -4713,6 +4713,23 @@
       "collections": [
         "preparatory_meetings"
       ]
+    },
+    {
+      "domain": "migrate",
+      "dir": "src/services/migrate",
+      "files": [
+        "importDump.js",
+        "importDump.test.js"
+      ],
+      "fileCount": 2,
+      "testCount": 1,
+      "exports": [
+        "fromExportValue",
+        "importDocuments",
+        "parseDumpEntry",
+        "reconcileCounts"
+      ],
+      "collections": []
     },
     {
       "domain": "nova",
