@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import Icon from '../components/ui/Icon.astro';
 import PwaHead from '../components/pwa/PwaHead.astro';
+import DesktopUpdater from '../components/pwa/DesktopUpdater.jsx';
 import AuthGate from '../components/brandzo-erp/access/AuthGate.jsx';
 import UserMenu from '../components/brandzo-erp/access/UserMenu.jsx';
 import RoleNav from '../components/brandzo-erp/access/RoleNav.jsx';
@@ -20,6 +21,8 @@ import fontArabic700 from '../assets/fonts/plex-arabic-700-arabic.woff2';
 const base = import.meta.env.BASE_URL.endsWith('/')
   ? import.meta.env.BASE_URL.slice(0, -1)
   : import.meta.env.BASE_URL;
+// ★ التحديثُ التلقائيُّ في بناء سطح المكتب وحدَه (GitHub Releases، لا خدمةَ قوقل).
+const isDesktopBuild = import.meta.env.PUBLIC_IS_DESKTOP === 'true';
 
 // ─── القائمة الجانبية: تُقرأ من المصدر الواحد ────────────────────────────────
 // بنية القائمة وصلاحياتها انتقلت إلى `services/auth/navCatalog.js` كي يقرأها
@@ -999,5 +1002,6 @@ const currentPath = Astro.url.pathname;
         close: (el) => el.close(),
       });
     </script>
+    {isDesktopBuild && <DesktopUpdater client:idle />}
   </body>
 </html>

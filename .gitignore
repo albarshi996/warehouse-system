@@ -61,3 +61,7 @@ db/.env
 # pasted screenshots dropped at the repo root
 /Pasted image *.png
 
+# ★ مفاتيحُ توقيع التحديث التلقائيّ (Tauri updater) — السرُّ لا يدخل git أبدًا.
+#   العامُّ يُوضع في tauri.conf.json، والخاصُّ يُحفظ سرَّ GitHub (TAURI_SIGNING_PRIVATE_KEY).
+src-tauri/signing/
+

@@ -10,8 +10,8 @@
   },
   "counts": {
     "modules": 125,
-    "serviceDomains": 54,
-    "serviceFiles": 768,
+    "serviceDomains": 55,
+    "serviceFiles": 770,
     "collections": 104,
     "roles": 20,
     "odooModels": 12,
@@ -5999,6 +5999,20 @@
       "collections": []
     },
     {
+      "domain": "updater",
+      "dir": "src/services/updater",
+      "files": [
+        "autoUpdate.js",
+        "autoUpdate.test.js"
+      ],
+      "fileCount": 2,
+      "testCount": 1,
+      "exports": [
+        "runAutoUpdate"
+      ],
+      "collections": []
+    },
+    {
       "domain": "vanSales",
       "dir": "src/services/vanSales",
       "files": [
@@ -10643,6 +10657,7 @@
         "@astrojs/react",
         "@huggingface/transformers",
         "@tailwindcss/postcss",
+        "@tauri-apps/plugin-updater",
         "astro",
         "firebase",
         "html2pdf.js",
