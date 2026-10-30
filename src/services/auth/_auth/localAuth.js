@@ -13,6 +13,9 @@
  * ★ كلماتُ المرور عبر `localCrypto` (PBKDF2/WebCrypto). الجلسةُ لا تحمل الهاش.
  */
 import { hashPassword, verifyPassword } from './localCrypto.js';
+// بابُ البيانات المحلّيّ (SQLite عبر Tauri) — خفيفٌ بلا Firebase، ولا يُنادى جسرُ
+// Tauri إلّا عند استعمال المخزن فعلًا (أي بعد قطع البيانات). بناؤه مغلّفاتٌ فقط.
+import * as localDoor from '../../_db/localSqlite/index.js';
 
 const USERS_KEY = 'bz.local.users';
 const SESSION_KEY = 'bz.local.session';
@@ -60,6 +63,34 @@ export function defaultUserStore() {
       const map = read();
       map[String(record.username).trim()] = record;
       write(map);
+    },
+  };
+}
+
+/**
+ * مخزنُ مستخدمين على بابِ بياناتٍ بعقد Firestore (SQLite عبر Tauri على الجهاز) —
+ * **نفسُ واجهة `defaultUserStore`** (countUsers · getUser · putUser)، فيُستبدَل بها
+ * دون لمسِ المحوَّل. المجموعةُ `local_users` والمعرّفُ اسمُ المستخدم. منطقٌ محايدُ
+ * الخلفيّة يُختبَر فوق `createLocalDb` (ذاكرةٌ أو SQLite حقيقيّة).
+ *
+ * ★★ يُفعَّل **مع قطع البيانات** (`PUBLIC_DB_BACKEND=local-sqlite`) لا قبله: حتّى
+ *    لا يعتمد الدخولُ على جسر Tauri قبل بوّابة P0 — فيبقى localStorage يعمل حتّى
+ *    القطع، ثمّ تنتقل الحساباتُ إلى قاعدة الجهاز ذرّيًّا مع بقيّة البيانات.
+ */
+export function createDoorUserStore(door) {
+  const COL = 'local_users';
+  const idOf = (u) => String(u ?? '').trim();
+  return {
+    async countUsers() {
+      const snap = await door.getDocs(door.collection(door.db, COL));
+      return snap.size;
+    },
+    async getUser(username) {
+      const snap = await door.getDoc(door.doc(door.db, COL, idOf(username)));
+      return snap.exists() ? snap.data() : null;
+    },
+    async putUser(record) {
+      await door.setDoc(door.doc(door.db, COL, idOf(record.username)), record);
     },
   };
 }
@@ -204,7 +235,11 @@ export async function createLocalUser(store, { username, name = '', password, ro
 
 // ★ مخزنٌ وجلسةٌ **واحدان** يتشاركهما المحوَّلُ وواجهةُ التمهيد (إنشاءُ المالك)،
 //   كي يجد الدخولُ ما أنشأته الشاشةُ على نفس المخزن (مثيلُ وحدةٍ واحد).
-const sharedStore = defaultUserStore();
+// ★★ عند قطع البيانات (PUBLIC_DB_BACKEND=local-sqlite) تُحفظ الحساباتُ في قاعدة
+//    الجهاز عبر الباب المحلّيّ؛ وقبلَه (الوضعُ الراهن) يبقى localStorage يعمل.
+const ENV = (typeof import.meta !== 'undefined' && import.meta.env) || {};
+const sharedStore =
+  ENV.PUBLIC_DB_BACKEND === 'local-sqlite' ? createDoorUserStore(localDoor) : defaultUserStore();
 const instance = createLocalAuth({ store: sharedStore, session: defaultSession() });
 
 export const subscribeAuth = instance.subscribeAuth;

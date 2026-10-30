@@ -170,10 +170,17 @@ for (const f of serviceFiles) {
  */
 const DOC_IDS = new Set(['cv', 'current']);
 
+/**
+ * مجموعاتٌ **محلّيّةٌ فقط** على قاعدة الجهاز (SQLite عبر الباب المحلّيّ `createLocalDb`)
+ * — ليست في Firestore، فلا كتابةَ ترتدّ `permission-denied` ولا تحتاج قاعدةَ أمانٍ
+ * سحابيّة؛ تخويلُها ينتقل إلى طبقة Rust/SQL (خطّة §2). تُستثنى صراحةً لا بالصدفة.
+ */
+const LOCAL_ONLY = new Set(['local_users', 'journal_entries', 'cash_sessions', 'cash_movements']);
+
 const rules = fs.readFileSync(RULES_FILE, 'utf8');
 const covered = new Set([...rules.matchAll(/match\s+\/([a-zA-Z_][a-zA-Z0-9_]*)/g)].map((m) => m[1]));
 
-const uncovered = [...used].filter((c) => !DOC_IDS.has(c) && !covered.has(c));
+const uncovered = [...used].filter((c) => !DOC_IDS.has(c) && !LOCAL_ONLY.has(c) && !covered.has(c));
 if (uncovered.length === 0) {
   ok(`كل مجموعة يستخدمها الكود لها قاعدة (${covered.size} قاعدة في firestore.rules)`);
 } else {
