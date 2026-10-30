@@ -8,6 +8,11 @@ import react from '@astrojs/react';
 //     طبقةُ البيانات المحلّيّة (خطوةٌ تالية أكبر).
 process.env.PUBLIC_AUTH_BACKEND = 'local';
 
+// ★★★ رايةُ «هذا بناءٌ مكتبيٌّ (Tauri، أوفلاين)» — يقرؤها `isDesktop()` فتُسقط
+//     المواردَ البعيدةَ التي تتعثّر بلا إنترنت (العاملُ الخفيّ، بلاطاتُ الخرائط).
+//     الويبُ لا يضبطها، فتبقى false ولا يتغيّر سلوكُه.
+process.env.PUBLIC_IS_DESKTOP = 'true';
+
 // بناءُ سطح المكتب (desktop-local) — يُحزَم في مثبّت Tauri ويُخدَم من جذر التطبيق.
 // منفصلٌ تمامًا عن astro.config.mjs فلا يمسّ نشرَ GitHub Pages:
 //  • base الجذر '/' (لا مسار /warehouse-system) — والكودُ يشتقّ base='' من BASE_URL

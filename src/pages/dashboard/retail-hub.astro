@@ -789,6 +789,7 @@ import {
 import { mergeOverrides } from '../../services/retail/hubModel.js';
 import { listenHubOverrides, saveHubOverride, clearHubOverrides, canEditHub } from '../../services/retail/hubService.js';
 import { subscribeAuth, fetchUserProfile } from '../../services/auth/authService.js';
+import { isDesktop } from '../../services/env/platform.js';
 
 (function () {
   'use strict';
@@ -869,9 +870,8 @@ import { subscribeAuth, fetchUserProfile } from '../../services/auth/authService
   const rhMap = L.map('rh-map', { zoomControl: false }).setView([32.095, 20.12], 11);
   L.control.zoom({ position: 'topleft' }).addTo(rhMap);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap', maxZoom: 18
-  }).addTo(rhMap);
+  // بلاطاتُ openstreetmap بعيدةٌ — تُسقَط في البناء المكتبيّ الأوفلاين (isDesktop).
+  if (!isDesktop()) L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap', maxZoom: 18 }).addTo(rhMap);
 
   const fsControl = L.control({ position: 'topright' });
   fsControl.onAdd = function () {
