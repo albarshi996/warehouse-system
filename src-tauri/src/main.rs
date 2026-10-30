@@ -11,6 +11,9 @@ mod db;
 
 fn main() {
     tauri::Builder::default()
+        // ★ التحديثُ التلقائيّ: الواجهةُ تفحص وتثبّت الإصدارَ الأحدث من GitHub Releases
+        //   (لا خدمةَ قوقل). الإذنُ updater:default في capabilities.
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             db::init(app.handle())?;
             Ok(())

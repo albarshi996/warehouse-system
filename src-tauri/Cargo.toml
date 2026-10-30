@@ -12,6 +12,9 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = [] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+# ★ التحديثُ التلقائيّ (GitHub Releases، لا خدمةَ قوقل) — يفحص ويثبّت الإصدارَ
+#   الأحدث الموقَّع. الواجهةُ تناديه عبر الإذن updater:default.
+tauri-plugin-updater = "2"
 # ★ قاعدة SQLite مدمجةٌ في البرنامج (ميزة bundled تُجمّع SQLite من المصدر، فلا
 #   يحتاج جهازُ المستخدم تنصيبَ أيّ شيء). هذا هو «المخزنُ على الجهاز» الذي تُكتب
 #   فيه البيانات — بابُه الوحيد أوامرُ db.rs، والمنطقُ كلُّه في JavaScript المُختبَر.

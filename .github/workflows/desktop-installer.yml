@@ -45,6 +45,11 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # ★ توقيعُ التحديث التلقائيّ: المفتاحُ الخاصُّ سرُّ المستودع (لا يدخل git).
+          #   بوجوده يولّد tauri-action الحزمَ الموقّعةَ وملفَّ latest.json ويرفعها
+          #   إلى الإصدار، فيجده تطبيقُ المستخدم على releases/latest/.../latest.json.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: desktop-v__VERSION__
           releaseName: 'BHOME Desktop v__VERSION__'
