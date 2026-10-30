@@ -4724,6 +4724,7 @@
       "fileCount": 2,
       "testCount": 1,
       "exports": [
+        "expandCounts",
         "fromExportValue",
         "importDocuments",
         "parseDumpEntry",
