@@ -61,26 +61,38 @@ function runQuery(list, constraints) {
   let out = list
     .map((r) => ({ id: r.id, data: r.data, enc: JSON.parse(r.data) }))
     .filter((r) => wheres.every((c) => matchWhere(r, c)));
-  if (orders.length) {
-    out.sort((a, b) => {
-      for (const o of orders) {
-        const d = cmp(getVal(a, o.field), getVal(b, o.field));
-        if (d) return o.dir === 'desc' ? -d : d;
-      }
-      return 0;
-    });
-  }
+  // الترتيبُ دائمًا، ومعرّفُ الوثيقة فاصلُ تعادلٍ أخيرٌ (يطابق ORDER BY … , id في buildSelect
+  // وسلوكَ __name__ في Firestore) باتّجاه آخر orderBy — وبلا orderBy يصير الترتيبُ بالمعرّف ASC.
+  const lastDir = orders.length ? orders[orders.length - 1].dir : 'asc';
+  out.sort((a, b) => {
+    for (const o of orders) {
+      const d = cmp(getVal(a, o.field), getVal(b, o.field));
+      if (d) return o.dir === 'desc' ? -d : d;
+    }
+    const di = cmp(a.id, b.id);
+    return lastDir === 'desc' ? -di : di;
+  });
   if (saC && orders.length) {
     const o = orders[0];
-    const rawCursor = saC.vals[0];
-    const cursorVal =
-      rawCursor && typeof rawCursor.get === 'function'
-        ? o.field === '__id__'
-          ? rawCursor.id
-          : rawCursor.get(o.field)
-        : rawCursor;
-    const cur = encodeParam(cursorVal);
-    out = out.filter((r) => (o.dir === 'desc' ? cmp(getVal(r, o.field), cur) < 0 : cmp(getVal(r, o.field), cur) > 0));
+    const raw = saC.vals[0];
+    const isSnap = raw && typeof raw.get === 'function';
+    const op = o.dir === 'desc' ? -1 : 1; // اتّجاهُ «بعد»
+    if (o.field === '__id__') {
+      const cid = encodeParam(isSnap ? raw.id : raw);
+      out = out.filter((r) => cmp(r.id, cid) * op > 0);
+    } else if (isSnap) {
+      const val = encodeParam(raw.get(o.field));
+      const cid = raw.id;
+      out = out.filter((r) => {
+        const df = cmp(getVal(r, o.field), val) * op;
+        if (df > 0) return true;
+        if (df < 0) return false;
+        return cmp(r.id, cid) * op > 0; // تعادلٌ في الحقل ⟵ قارن المعرّف (مؤشّرٌ مركّب)
+      });
+    } else {
+      const cur = encodeParam(raw);
+      out = out.filter((r) => cmp(getVal(r, o.field), cur) * op > 0);
+    }
   }
   if (limitC && limitC.n != null) out = out.slice(0, Math.max(0, limitC.n | 0));
   return out.map((r) => ({ id: r.id, data: r.data }));
@@ -386,4 +398,87 @@ test('getCountFromServer يحترم الحدَّ (#10)', async () => {
   const c = d.collection(d.db, 'c');
   for (const id of ['a', 'b', 'c', 'e', 'f']) await d.setDoc(d.doc(c, id), { k: 1 });
   assert.equal((await d.getCountFromServer(d.query(c, d.where('k', '==', 1), d.limit(3)))).data().count, 3);
+});
+
+/* ═══════════════════ تصليبُ العقد (تدقيقُ جاهزيّة القطع) ═══════════════════ */
+
+test('★★★ عزلُ runTransaction: تنادٍ متزامنٌ على حجز رقمٍ لا يُكرّره ولا يدهس', async () => {
+  const d = build();
+  const ref = d.doc(d.db, 'counters', 'PO');
+  await d.setDoc(ref, { n: 0 });
+  // كلُّ معاملةٍ تقرأ ثمّ تحجز التالي — بلا عزلٍ تقرأ الثلاثُ صفرًا فتحجز «1» ثلاثًا.
+  const reserve = () =>
+    d.runTransaction(d.db, async (tx) => {
+      const cur = (await tx.get(ref)).data().n;
+      const next = cur + 1;
+      tx.update(ref, { n: next });
+      return next;
+    });
+  const got = await Promise.all([reserve(), reserve(), reserve()]);
+  assert.deepEqual(got.slice().sort((x, y) => x - y), [1, 2, 3], 'أرقامٌ فريدةٌ متتاليةٌ لا مكرَّرة');
+  assert.equal((await d.getDoc(ref)).data().n, 3, 'العدّادُ بلغ 3 لا 1 — لا دهس');
+});
+
+test('★★ عزلُ setDoc{merge} المتزامن: لا يضيع حقلٌ من كتابتين متداخلتين', async () => {
+  const d = build();
+  const ref = d.doc(d.db, 'c', '1');
+  await d.setDoc(ref, { base: 1 });
+  await Promise.all([d.setDoc(ref, { a: 1 }, { merge: true }), d.setDoc(ref, { b: 2 }, { merge: true })]);
+  assert.deepEqual((await d.getDoc(ref)).data(), { base: 1, a: 1, b: 2 }, 'الدمجان تسلسلا فبقي كلاهما');
+});
+
+test('★★★ onSnapshot يدعم صيغةَ (q, options, cb) — فلا تُبتلَع لقطاتُ المسح صامتةً', async () => {
+  const d = build();
+  const c = d.collection(d.db, 'scans');
+  await d.setDoc(d.doc(c, 's1'), { n: 1 });
+  const seen = [];
+  const unsub = d.onSnapshot(d.query(c), { includeMetadataChanges: true }, (snap) => seen.push(snap.size));
+  await tick();
+  assert.ok(seen.length >= 1, 'وصلت لقطةٌ أولى رغم وسيط الخيارات');
+  assert.equal(seen[seen.length - 1], 1);
+  await d.setDoc(d.doc(c, 's2'), { n: 2 });
+  await tick();
+  assert.equal(seen[seen.length - 1], 2, 'تحديثٌ حيٌّ بعد الكتابة');
+  unsub();
+});
+
+test('★ onSnapshot يبقى يدعم (q, cb) و(q, observer)', async () => {
+  const d = build();
+  const ref = d.doc(d.db, 'c', '1');
+  await d.setDoc(ref, { n: 1 });
+  const a = [];
+  const b = [];
+  const u1 = d.onSnapshot(ref, (snap) => a.push(snap.data() && snap.data().n));
+  const u2 = d.onSnapshot(ref, { next: (snap) => b.push(snap.data() && snap.data().n) });
+  await tick();
+  assert.equal(a[a.length - 1], 1);
+  assert.equal(b[b.length - 1], 1);
+  u1();
+  u2();
+});
+
+test('★★ الترتيبُ الافتراضيُّ (بلا orderBy) بمعرّف الوثيقة لا بترتيب الإدخال', async () => {
+  const d = build();
+  const c = d.collection(d.db, 'c');
+  for (const id of ['charlie', 'alpha', 'bravo']) await d.setDoc(d.doc(c, id), { k: 1 });
+  assert.deepEqual((await d.getDocs(c)).docs.map((s) => s.id), ['alpha', 'bravo', 'charlie'], 'مرتَّبٌ بالمعرّف');
+});
+
+test('★★★ ترحيلٌ بلقطةٍ على حقلٍ منخفض التمايز لا يُسقط المتعادلين (نقضُ فقد البيانات)', async () => {
+  const d = build();
+  const c = d.collection(d.db, 'c');
+  for (const [id, n] of [['d1', 5], ['d2', 5], ['d3', 5], ['d4', 9]]) await d.setDoc(d.doc(c, id), { n });
+  const p1 = await d.getDocs(d.query(c, d.orderBy('n', 'asc'), d.limit(2)));
+  assert.deepEqual(p1.docs.map((s) => s.id), ['d1', 'd2'], 'الصفحةُ الأولى بترتيب (n, id)');
+  const last = p1.docs[p1.docs.length - 1];
+  const p2 = await d.getDocs(d.query(c, d.orderBy('n', 'asc'), d.startAfter(last), d.limit(2)));
+  assert.deepEqual(p2.docs.map((s) => s.id), ['d3', 'd4'], 'd3 المتعادلُ في n لم يُسقَط — المؤشّرُ مركّب');
+});
+
+test('★★ فاصلُ تعادل المعرّف يتبع اتّجاهَ orderBy التنازليّ (كـ__name__)', async () => {
+  const d = build();
+  const c = d.collection(d.db, 'c');
+  for (const id of ['a', 'b', 'c']) await d.setDoc(d.doc(c, id), { n: 5 });
+  const ids = (await d.getDocs(d.query(c, d.orderBy('n', 'desc')))).docs.map((s) => s.id);
+  assert.deepEqual(ids, ['c', 'b', 'a'], 'المتعادلون في n ⟵ معرّفٌ تنازليّ');
 });
