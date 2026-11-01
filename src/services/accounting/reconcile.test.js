@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { deriveEntry, deriveEntries } from './deriveEntries.js';
-import { reconcilePayments } from './reconcile.js';
+import { reconcilePayments, reconcileLedger } from './reconcile.js';
 
 const D1 = '2026-10-21';
 const D2 = '2026-10-25';
@@ -87,4 +87,28 @@ test('★★★ تكرارُ نفس المستند لا يضاعف الطرف (�
   const { rows, allMatch } = reconcilePayments(docs);
   assert.equal(allMatch, true);
   assert.equal(rows.find((r) => r.partyCode === 'C-5').journal, 750, 'المعرّفُ الحتميّ يمنع المضاعفة');
+});
+
+/* ═══════════ ص: المطابقة بالمحلّ ═══════════ */
+
+test('★★★ ص: مطابقةٌ بالمحلّ — محلّان لا تختلط ذممُهما، وصفرُ فرقٍ لكلٍّ', () => {
+  const withShop = (doc, shop) => ({ ...doc, shop });
+  const docs = [
+    withShop(inv('10', 'C-1', 5000, D1), 'S1'),
+    withShop(rcp('11', 'C-1', 400, D1), 'S1'),
+    withShop(inv('12', 'C-2', 3000, D1), 'S2'),
+    withShop(rcp('13', 'C-2', 300, D1), 'S2'),
+  ];
+
+  // كلُّ المحلّات: الطرفان حاضران ومتطابقان (توافقٌ رجعيّ).
+  const all = reconcileLedger(docs);
+  assert.equal(all.allMatch, true, JSON.stringify(all.rows));
+  assert.ok(all.rows.find((r) => r.partyCode === 'C-1'));
+  assert.ok(all.rows.find((r) => r.partyCode === 'C-2'));
+
+  // محلُّ S1 وحدَه: طرفُه حاضرٌ متطابق، والآخرُ غائبٌ تمامًا (لا اختلاط).
+  const s1 = reconcileLedger(docs, { shop: 'S1' });
+  assert.equal(s1.allMatch, true, JSON.stringify(s1.rows));
+  assert.equal(s1.rows.find((r) => r.partyCode === 'C-1').ledger, 4600, 'فاتورة 5000 − قبض 400');
+  assert.equal(s1.rows.find((r) => r.partyCode === 'C-2'), undefined, 'محلٌّ آخرُ غائبٌ عن مطابقة S1');
 });

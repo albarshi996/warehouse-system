@@ -9,7 +9,7 @@
  * منطق خالص.
  */
 import { entriesFrom } from '../ledger/partnerLedger.js';
-import { deriveEntries, deriveLedgerEntries, CASH_EVENTS, COUNTERPART } from './deriveEntries.js';
+import { deriveEntries, deriveLedgerEntries, CASH_EVENTS, COUNTERPART, shopOfDoc } from './deriveEntries.js';
 import { createLedger, LEDGER_T0 } from './journal.js';
 import { fromMinor } from './money.js';
 
@@ -18,15 +18,26 @@ const up = (v) => String(v ?? '').trim().toUpperCase();
 const day = (v) => String(v ?? '').slice(0, 10);
 
 /**
+ * يُرشِّح المستنداتِ بمحلٍّ بعينه (ص) فيتّسق جانبا المطابقة (الذمم والقيد) على
+ * النطاق نفسِه؛ null/فارغ = كلُّ المحلّات (بلا ترشيح، توافقٌ رجعيّ).
+ */
+function shopDocs(documents, shop) {
+  const list = Array.isArray(documents) ? documents : [];
+  if (shop === undefined || shop === null || shop === '') return list;
+  return list.filter((d) => shopOfDoc(d) === shop);
+}
+
+/**
  * يطابق القبض/السداد طرفًا طرفًا.
  * @returns {{rows:Array<{partyCode,party,ledger,journal,diff}>, allMatch:boolean, journalErrors:Array}}
  */
-export function reconcilePayments(documents = [], { states = ['done', 'approved'] } = {}) {
+export function reconcilePayments(documents = [], { states = ['done', 'approved'], shop } = {}) {
+  const docs = shopDocs(documents, shop); // ص: نطاقُ المحلّ على الجانبين معًا
   // ── جانبُ دفتر الذمم: القبض/السداد بعد T0، مجموعٌ بالطرف ──
   // المعرّفُ الحتميّ يُقرأ مرّةً واحدةً — كضمانة الدفتر نفسها — فيطابق منعَ التكرار في القيد.
   const ledgerByParty = new Map();
   const seenLedger = new Set();
-  for (const e of entriesFrom(documents, { states })) {
+  for (const e of entriesFrom(docs, { states })) {
     if (!CASH_EVENTS[e.docType]) continue;
     if (day(e.date) < LEDGER_T0) continue;
     if (seenLedger.has(e.id)) continue;
@@ -36,7 +47,7 @@ export function reconcilePayments(documents = [], { states = ['done', 'approved'
   }
 
   // ── جانبُ القيد المزدوج: مجموعُ حركة ذمّة الطرف من القيود المشتقّة ──
-  const L = createLedger().postMany(deriveEntries(documents, { states }));
+  const L = createLedger().postMany(deriveEntries(docs, { states }));
   const journalByParty = new Map();
   for (const en of L.entries) {
     for (const l of en.lines) {
@@ -70,12 +81,13 @@ export function reconcilePayments(documents = [], { states = ['done', 'approved'
  *
  * الرصيدُ = ما على الطرف (موجبٌ للعميل دَينٌ لنا، وللمورّد دَينٌ علينا)، بعد T0.
  */
-export function reconcileLedger(documents = [], { states = ['done', 'approved'] } = {}) {
+export function reconcileLedger(documents = [], { states = ['done', 'approved'], shop } = {}) {
+  const docs = shopDocs(documents, shop); // ص: نطاقُ المحلّ على الجانبين معًا
   // ── دفتر الذمم: رصيدُ كلّ طرفٍ (مجموع deltas) بعد الافتتاح ──
   const ledgerByParty = new Map();
   const meta = new Map();
   const seen = new Set();
-  for (const e of entriesFrom(documents, { states })) {
+  for (const e of entriesFrom(docs, { states })) {
     if (!COUNTERPART[e.docType]) continue;
     if (day(e.date) < LEDGER_T0) continue;
     if (seen.has(e.id)) continue;
@@ -87,7 +99,7 @@ export function reconcileLedger(documents = [], { states = ['done', 'approved'] 
 
   // ── القيد المزدوج: رصيدُ الطرف من حسابه الفرعيّ ──
   // AR أصلٌ: الرصيدُ = مدين − دائن.  AP التزامٌ: ما علينا = دائن − مدين.
-  const L = createLedger().postMany(deriveLedgerEntries(documents, { states }));
+  const L = createLedger().postMany(deriveLedgerEntries(docs, { states }));
   const journalByParty = new Map();
   for (const [code, bal] of L.subBalances('AR')) journalByParty.set(up(code), money2(fromMinor(bal)));
   for (const [code, bal] of L.subBalances('AP')) journalByParty.set(up(code), money2(fromMinor(-bal)));
