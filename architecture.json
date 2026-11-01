@@ -9,9 +9,9 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 125,
-    "serviceDomains": 56,
-    "serviceFiles": 772,
+    "modules": 126,
+    "serviceDomains": 57,
+    "serviceFiles": 776,
     "collections": 104,
     "roles": 20,
     "odooModels": 12,
@@ -863,6 +863,14 @@
       "usesServices": []
     },
     {
+      "name": "shops",
+      "route": "/dashboard/shops",
+      "title": "إدارة المحلّات",
+      "summary": "",
+      "file": "src/pages/dashboard/shops.astro",
+      "usesServices": []
+    },
+    {
       "name": "sites",
       "route": "/dashboard/sites",
       "title": "",
@@ -1269,6 +1277,7 @@
         "reconcilePayments",
         "reverseEntry",
         "roundHalfAwayFromZero",
+        "shopOfDoc",
         "subAccount",
         "summarize",
         "toMinor",
@@ -5590,6 +5599,29 @@
         "picking_tasks",
         "shipments"
       ]
+    },
+    {
+      "domain": "shops",
+      "dir": "src/services/shops",
+      "files": [
+        "shopStore.js",
+        "shopStore.test.js",
+        "shopsService.js",
+        "shopsService.test.js"
+      ],
+      "fileCount": 4,
+      "testCount": 2,
+      "exports": [
+        "ACTIVE_SHOP_EVENT",
+        "ACTIVE_SHOP_KEY",
+        "SHOPS_COLLECTION",
+        "createShops",
+        "getActiveShop",
+        "normalizeShopCode",
+        "setActiveShop",
+        "subscribeActiveShop"
+      ],
+      "collections": []
     },
     {
       "domain": "stock",

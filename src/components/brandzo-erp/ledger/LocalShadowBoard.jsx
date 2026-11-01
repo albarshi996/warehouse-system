@@ -13,6 +13,8 @@ import { useEffect, useMemo, useState } from 'react';
 import * as door from '../../../services/_db/index.js';
 import { localShadowView, balanceTone } from '../../../services/accounting/localShadowView.js';
 import { accountDef, baseOf } from '../../../services/accounting/accounts.js';
+import { getActiveShop, subscribeActiveShop } from '../../../services/shops/shopStore.js';
+import ShopSwitcher from '../shops/ShopSwitcher.jsx';
 
 const fmt = (n) =>
   (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -31,12 +33,18 @@ export default function LocalShadowBoard({ db = door }) {
   const [view, setView] = useState(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState('');
+  const [shop, setShop] = useState(getActiveShop()); // ص: المحلُّ الفعّال يُرشِّح العرض
+
+  // يتزامن مع مبدّل المحلّ (بثُّ shopStore) فيُعاد العرضُ على المحلّ المختار.
+  useEffect(() => subscribeActiveShop((s) => setShop(s)), []);
 
   useEffect(() => {
     let alive = true;
+    setReady(false);
+    setError('');
     (async () => {
       try {
-        const v = await localShadowView(db);
+        const v = await localShadowView(db, shop);
         if (alive) setView(v);
       } catch (e) {
         if (alive) setError(e?.message || 'تعذّرت قراءةُ المخزن المحلّيّ');
@@ -47,7 +55,7 @@ export default function LocalShadowBoard({ db = door }) {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [shop]);
 
   const tb = view?.ledger?.trialBalance;
   const treasury = view?.treasury;
@@ -61,8 +69,12 @@ export default function LocalShadowBoard({ db = door }) {
   return (
     <div dir="rtl" className="text-right">
       <div className="bg-white border border-ink/10 rounded-xl p-4 mb-4">
+        <div className="mb-3 pb-3 border-b border-ink/5">
+          <ShopSwitcher db={db} />
+        </div>
         <p className="text-sm text-ink-2 leading-relaxed">
-          مرآةٌ لِما كُتب فعلًا في المخزن المحلّيّ على الجهاز: قيودُ الدفتر المزدوج وورديّاتُ الخزينة.
+          مرآةٌ لِما كُتب فعلًا في المخزن المحلّيّ على الجهاز: قيودُ الدفتر المزدوج وورديّاتُ الخزينة،
+          مُرشَّحةً بالمحلّ الفعّال أعلاه (أو كلِّ المحلّات).
           <b> عرضٌ للقراءة فقط</b> — لا كتابةَ حيّة ولا مساسَ بأودو أو الخلفيّة الافتراضيّة.
         </p>
       </div>
