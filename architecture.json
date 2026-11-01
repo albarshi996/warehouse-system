@@ -1292,6 +1292,7 @@
         "reverseEntry",
         "roundHalfAwayFromZero",
         "shopOfDoc",
+        "shouldPostLocalJournal",
         "subAccount",
         "summarize",
         "toMinor",

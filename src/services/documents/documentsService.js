@@ -28,6 +28,8 @@ import { buildMoves } from '../ledger/movements.js';
 import { postDocument } from '../ledger/ledgerService.js';
 import { ledgerRuleFor, partyCodeOf, invoiceOutstanding, overCollectionProblems } from '../ledger/partnerLedger.js';
 import { postToPartnerLedger, fetchPartnerLedger } from '../ledger/partnerLedgerService.js';
+import { createLedgerPost, shouldPostLocalJournal } from '../accounting/ledgerPostService.js';
+import * as dbDoor from '../_db/index.js';
 import { CASH_RULES } from '../field/repAccount.js';
 import { postToRepCash } from '../field/repAccountService.js';
 import { vsrPostProblem } from '../vanSales/settlement.js';
@@ -392,6 +394,25 @@ export async function transitionDocument(docId, to, { note = '', profile, schema
       await appendAudit(docId, {
         action: 'ledger-failed',
         note: `تعذّر قيد الأثر على الذمم (المستند منجَزٌ والبضاعة تحرّكت): ${err?.message || err}`,
+        profile,
+      });
+    }
+  }
+
+  // 📒 الدفترُ المزدوجُ المحلّيّ (المرحلة م): على بناء الجهاز (local-sqlite) وحدَه،
+  // «منجَز» يولّد قيدًا مزدوجًا موسومًا بالمحل في دفتر الجهاز — **أفضلَ جهدٍ** لا يُجهض
+  // الانتقال، وذرّيٌّ بالمعرّف فلا يُضاعف. على الويب (Firestore الافتراضيّة) لا يعمل
+  // إطلاقًا (البوّابةُ تمنعه)، فالخلفيّةُ الحيّةُ لا تتأثّر ولا يلزم تغييرُ القواعد الخادميّة.
+  if (shouldPostLocalJournal(dbDoor.BACKEND, to, POSTING_STATE, ledgerRuleFor(data.type))) {
+    try {
+      const r = await createLedgerPost(dbDoor).postDone({ ...data, id: docId });
+      if (r?.posted) {
+        await appendAudit(docId, { action: 'journal', note: `قُيّد في الدفتر المحلّيّ: ${r.posted} قيد`, profile });
+      }
+    } catch (err) {
+      await appendAudit(docId, {
+        action: 'journal-failed',
+        note: `تعذّر قيدُ الدفتر المحلّيّ (المستند منجَزٌ والبضاعةُ تحرّكت): ${err?.message || err}`,
         profile,
       });
     }

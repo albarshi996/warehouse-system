@@ -5,8 +5,19 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { createLocalDb } from '../_db/localSqlite/localDb.js';
-import { createLedgerPost } from './ledgerPostService.js';
+import { createLedgerPost, shouldPostLocalJournal } from './ledgerPostService.js';
 import { createLocalLedger } from './localLedgerStore.js';
+
+test('★★★ بوّابةُ التفعيل: تُطلق على local-sqlite عند الإنجاز لنوعٍ له أثر — لا على Firestore', () => {
+  // local-sqlite + منجَز + نوعٌ له أثر ⟵ تُطلق.
+  assert.equal(shouldPostLocalJournal('local-sqlite', 'done', 'done', true), true);
+  // Firestore (الويب الافتراضيّ) ⟵ لا تُطلق أبدًا، فلا يُكتب هناك شيء.
+  assert.equal(shouldPostLocalJournal('firestore', 'done', 'done', true), false);
+  // حالةٌ غيرُ نهائيّة ⟵ لا تُطلق.
+  assert.equal(shouldPostLocalJournal('local-sqlite', 'approved', 'done', true), false);
+  // نوعٌ بلا أثرٍ في الدفتر ⟵ لا تُطلق.
+  assert.equal(shouldPostLocalJournal('local-sqlite', 'done', 'done', false), false);
+});
 
 const NOW = () => 1_760_000_000_000;
 const D1 = '2026-10-21';

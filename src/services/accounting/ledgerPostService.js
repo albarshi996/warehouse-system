@@ -14,6 +14,16 @@
 import { createLocalLedger } from './localLedgerStore.js';
 import { POSTABLE_STATES } from './ledgerSync.js';
 
+/**
+ * بوّابةُ التفعيل (محمولٌ خالصٌ يُختبَر): يُفعَّل ترحيلُ الدفتر المحلّيّ **على بناء
+ * الجهاز `local-sqlite` وحدَه**، عند بلوغ حالةِ الترحيل (منجَز)، لنوعٍ له أثرٌ في
+ * الدفتر. على الويب (Firestore الافتراضيّة) يبقى صفرًا — فلا يُكتب هناك شيءٌ ولا
+ * يحتاج قاعدةً خادميّة. (درس [[feedback-green-locally-red-in-ci]]: المثبّت لا تحرسه القواعد.)
+ */
+export function shouldPostLocalJournal(backend, to, postingState, hasLedgerRule) {
+  return backend === 'local-sqlite' && to === postingState && !!hasLedgerRule;
+}
+
 export function createLedgerPost(db) {
   const L = createLocalLedger(db);
 
