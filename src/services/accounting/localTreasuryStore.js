@@ -84,7 +84,7 @@ function toClosePatch(close, db) {
  * ص: تَرِث `shop` من ورديّتها الأمّ وقتَ الكتابة (الحركاتُ القديمةُ بلا محلٍّ
  * تُنسَب عبر ورديّتها)، فيُرشَّح سجلُّ الحركة بالمحلّ دون لمسِ السجلات السابقة.
  */
-function toMovementDoc({ sessionId, seq, kind, method, amount, memo, at, byUid, shop }, db) {
+function toMovementDoc({ sessionId, seq, kind, method, amount, memo, at, byUid, shop, reverses }, db) {
   return {
     sessionId,
     seq,
@@ -95,6 +95,7 @@ function toMovementDoc({ sessionId, seq, kind, method, amount, memo, at, byUid, 
     at: str(at),
     byUid: str(byUid),
     shop: shop ?? null,
+    reverses: reverses ?? null, // ص/م: إن كانت حركةً مضادّةً تُلغي حركةً بتسلسلها (لا حذف)
     postedAt: db.serverTimestamp(),
   };
 }
@@ -261,6 +262,70 @@ export function createLocalTreasury(db) {
     });
   }
 
+  /**
+   * يُلغي حركةً بقيدٍ مضادٍّ ملحقٍ-فقط (لا حذفَ ولا تعديل — كحالة «ملغي» في الإكسل):
+   * يُلحق حركةً معاكسةَ الاتّجاهِ بنفس المبلغ والوسيلة تحمل `reverses = seq` المُلغى،
+   * فيتعادل أثرُها على الدرج. مُسلسَلٌ عند الباب. لا يُلغى قيدٌ مضادٌّ ولا يُلغى مرّتين.
+   * @returns {Promise<{ok:true,seq:number,posted:boolean,skipped:boolean}|{ok:false,reason:string,message?:string}>}
+   */
+  async function cancelMovement(sessionId, cancelSeq, { reason = '', at = '', byUid = '' } = {}) {
+    const sid = str(sessionId);
+    const target = Number(cancelSeq);
+    if (!sid || !Number.isFinite(target)) return { ok: false, reason: 'bad-cancel', message: 'إلغاءٌ بلا وردية أو تسلسل' };
+
+    return serialize(async () => {
+      let session;
+      let existing;
+      let targetMv;
+      try {
+        session = await sessionData(sid);
+        if (!session) return { ok: false, reason: 'not-found' };
+        existing = await movementsData(sid);
+        targetMv = existing.find((m) => Number(m.seq) === target);
+        if (!targetMv) return { ok: false, reason: 'movement-not-found' };
+        if (targetMv.reverses != null) return { ok: false, reason: 'is-contra', message: 'لا يُلغى قيدٌ مضادّ' };
+        if (existing.some((m) => Number(m.reverses) === target)) {
+          return { ok: true, seq: null, posted: false, skipped: true }; // أُلغيت سلفًا — القفزُ لا التكرار
+        }
+      } catch (e) {
+        return { ok: false, reason: 'store', message: e.message };
+      }
+
+      // الاتّجاهُ المعاكس: وارد⟵صادر عامٌّ (سحب)، وصادر⟵وارد عامٌّ (إيداع) — فيتعادل الدرج.
+      const oppositeKind = CASH_MOVEMENTS[targetMv.kind]?.dir === 'in' ? 'withdrawal' : 'deposit_in';
+      const seq = existing.reduce((mx, m) => Math.max(mx, Number(m.seq) || 0), -1) + 1;
+      try {
+        const outcome = await db.runTransaction(db.db, async (tx) => {
+          const ref = movementRef(sid, seq);
+          const snap = await tx.get(ref);
+          if (snap.exists()) return 'skip';
+          tx.set(
+            ref,
+            toMovementDoc(
+              {
+                sessionId: sid,
+                seq,
+                kind: oppositeKind,
+                method: targetMv.method,
+                amount: targetMv.amount,
+                memo: `إلغاء الحركة #${target}${reason ? ' — ' + reason : ''}`,
+                at,
+                byUid,
+                shop: session.shop ?? null,
+                reverses: target,
+              },
+              db,
+            ),
+          );
+          return 'posted';
+        });
+        return { ok: true, seq, posted: outcome === 'posted', skipped: outcome === 'skip' };
+      } catch (e) {
+        return { ok: false, reason: 'store', message: e.message };
+      }
+    });
+  }
+
   /** قراءةُ وردية (مفكوكةً) أو null — المخزنُ المحلّيُّ مصدرُ الحقيقة. */
   async function getSession(id) {
     return sessionData(str(id));
@@ -295,5 +360,5 @@ export function createLocalTreasury(db) {
     return all;
   }
 
-  return { open, addMovement, close, getSession, listMovements, summary, listSessions, CASH_MOVEMENTS };
+  return { open, addMovement, cancelMovement, close, getSession, listMovements, summary, listSessions, CASH_MOVEMENTS };
 }
