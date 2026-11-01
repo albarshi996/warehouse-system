@@ -21,6 +21,12 @@ export const CASH_EVENTS = Object.freeze({
   SPV: { party: 'supplier', sub: 'AP', cashSide: 'credit', labelAr: 'سداد مورّد' },
 });
 
+/** رمزُ محلِّ المستند (وسمُ المرحلة ص) — من الجذر أو الترويسة، أو null. */
+export const shopOfDoc = (doc) => doc?.shop ?? doc?.header?.shop ?? null;
+
+/** هل طُلب ترشيحٌ بمحلٍّ بعينه؟ (null/فارغ = كلُّ المحلّات، فلا ترشيح). */
+const shopScoped = (shop) => shop !== undefined && shop !== null && shop !== '';
+
 /**
  * قيدٌ مزدوجٌ من مستند قبضٍ/سداد، أو null إن لم يكن منهما أو بلا مبلغٍ موجب.
  * قد يرمي `postEntry` إن كان تاريخُ المستند قبل T0 (فترةٌ مقفلة) — والمُجمِّع يلتقطه.
@@ -51,13 +57,19 @@ export function deriveEntry(doc, { cashAccount = 'CASH' } = {}) {
   entry.party = spec.party;
   entry.partyCode = ple.partyCode;
   entry.docType = ple.docType;
+  entry.shop = shopOfDoc(doc); // وسمُ المحلّ (ص) — يُحمَل على القيد فيُخزَّن ويُرشَّح
   return entry;
 }
 
-/** قيودُ القبض/السداد من مجموعة مستندات — المعتمَدة وحدها، وما قبل T0 يُسقط بهدوء. */
-export function deriveEntries(documents = [], { states = ['done', 'approved'], cashAccount = 'CASH' } = {}) {
+/**
+ * قيودُ القبض/السداد من مجموعة مستندات — المعتمَدة وحدها، وما قبل T0 يُسقط بهدوء.
+ * ص: ترشيحٌ اختياريٌّ بمحلٍّ (`shop`) — الافتراضُ كلُّ المحلّات (بلا ترشيح).
+ */
+export function deriveEntries(documents = [], { states = ['done', 'approved'], cashAccount = 'CASH', shop } = {}) {
+  const scoped = shopScoped(shop);
   return (Array.isArray(documents) ? documents : [])
     .filter((d) => states.includes(d?.state) && CASH_EVENTS[d?.type])
+    .filter((d) => !scoped || shopOfDoc(d) === shop)
     .map((d) => {
       try {
         return deriveEntry(d, { cashAccount });
@@ -119,13 +131,19 @@ export function deriveLedgerEntry(doc) {
   entry.party = ple.party;
   entry.partyCode = ple.partyCode;
   entry.docType = ple.docType;
+  entry.shop = shopOfDoc(doc); // وسمُ المحلّ (ص) — يُحمَل على القيد فيُخزَّن ويُرشَّح
   return entry;
 }
 
-/** قيودُ الدورة الكاملة من مجموعة مستندات — المعتمَدة وحدها، وما قبل T0 يُسقط. */
-export function deriveLedgerEntries(documents = [], { states = ['done', 'approved'] } = {}) {
+/**
+ * قيودُ الدورة الكاملة من مجموعة مستندات — المعتمَدة وحدها، وما قبل T0 يُسقط.
+ * ص: ترشيحٌ اختياريٌّ بمحلٍّ (`shop`) — الافتراضُ كلُّ المحلّات (بلا ترشيح).
+ */
+export function deriveLedgerEntries(documents = [], { states = ['done', 'approved'], shop } = {}) {
+  const scoped = shopScoped(shop);
   return (Array.isArray(documents) ? documents : [])
     .filter((d) => states.includes(d?.state) && COUNTERPART[d?.type])
+    .filter((d) => !scoped || shopOfDoc(d) === shop)
     .map((d) => {
       try {
         return deriveLedgerEntry(d);

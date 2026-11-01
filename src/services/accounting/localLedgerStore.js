@@ -145,14 +145,18 @@ export function createLocalLedger(db) {
    * إذ المفتاحُ حتميٌّ والبابُ يتخطّى القائمَ، فالترحيلُ من متغيّرٍ يُفسد الدفترَ
    * (درسُ `ledgerSync`). وما قبل T0 أو المعطوبُ يُسقط بهدوء بلا إسقاطِ الباقي.
    */
-  function docEntries(documents = [], { states = POSTABLE_STATES } = {}) {
+  function docEntries(documents = [], { states = POSTABLE_STATES, shop } = {}) {
+    const scoped = shop !== undefined && shop !== null && shop !== '';
+    const shopOf = (d) => d?.shop ?? d?.header?.shop ?? null;
     return (Array.isArray(documents) ? documents : [])
       .filter((d) => states.includes(d?.state) && COUNTERPART[d?.type])
+      .filter((d) => !scoped || shopOf(d) === shop)
       .map((d) => {
         try {
           const e = deriveLedgerEntry(d);
           if (!e) return null;
           e.docId = d.id || d.__id || ''; // أثرٌ يُتبَّع إلى المستند المصدر
+          if (e.shop == null) e.shop = shopOf(d); // وسمُ المحلّ (إن لم يضعه المحرّك)
           return e;
         } catch {
           return null; // ④ قبل T0 (فترةٌ مقفلة) أو مستندٌ معطوب
@@ -198,12 +202,22 @@ export function createLocalLedger(db) {
     });
   }
 
-  /** كلُّ القيود المخزَّنة (مفكوكةً) — المخزنُ المحلّيُّ مصدرُ الحقيقة. */
-  async function readEntries() {
+  /**
+   * كلُّ القيود المخزَّنة (مفكوكةً) — المخزنُ المحلّيُّ مصدرُ الحقيقة.
+   *
+   * ص: يحمل `shop` معه (كان يُسقَط)، ويُرشَّح به اختياريًّا. المعاملةُ الافتراضيّة
+   * (بلا وسيط) تُعيد **كلَّ المحلّات** كما كانت — فلا تنكسر قراءةٌ قائمة. وتمرير
+   * رمزِ محلٍّ يُرجِع صفوفَه وحدَه (القيودُ بلا محلٍّ تظهر في «كلّ المحلّات» فقط).
+   */
+  async function readEntries(shopId) {
+    const scoped = shopId !== undefined && shopId !== null && shopId !== '';
     const snap = await db.getDocs(db.collection(db.db, JOURNAL_COLLECTION));
-    return snap.docs.map((s) => {
+    const out = [];
+    for (const s of snap.docs) {
       const d = s.data() || {};
-      return {
+      const shop = d.shop ?? null;
+      if (scoped && shop !== shopId) continue;
+      out.push({
         key: d.key,
         date: d.date,
         memo: d.memo,
@@ -212,16 +226,18 @@ export function createLocalLedger(db) {
         reverses: d.reverses || null,
         sourceType: d.sourceType || '',
         sourceId: d.sourceId || '',
-      };
-    });
+        shop,
+      });
+    }
+    return out;
   }
 
   /**
    * دفترٌ متراكمٌ من القيود المخزَّنة لاستعلام الأرصدة (`balanceOf`/`subBalances`)
    * — بإعادة استعمال محرّك `createLedger` الخالص، فميزانُ المراجعة يبقى صفرًا.
    */
-  async function buildLedger() {
-    return createLedger().postMany(await readEntries());
+  async function buildLedger(shopId) {
+    return createLedger().postMany(await readEntries(shopId));
   }
 
   return { postJournal, postEntries, postDocuments, docEntries, reverse, readEntries, buildLedger };

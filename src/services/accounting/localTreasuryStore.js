@@ -79,8 +79,12 @@ function toClosePatch(close, db) {
   };
 }
 
-/** حركةٌ مُتحقَّقةٌ ⟵ وثيقةُ مخزنٍ ملحقةٌ-فقط. */
-function toMovementDoc({ sessionId, seq, kind, method, amount, memo, at, byUid }, db) {
+/**
+ * حركةٌ مُتحقَّقةٌ ⟵ وثيقةُ مخزنٍ ملحقةٌ-فقط.
+ * ص: تَرِث `shop` من ورديّتها الأمّ وقتَ الكتابة (الحركاتُ القديمةُ بلا محلٍّ
+ * تُنسَب عبر ورديّتها)، فيُرشَّح سجلُّ الحركة بالمحلّ دون لمسِ السجلات السابقة.
+ */
+function toMovementDoc({ sessionId, seq, kind, method, amount, memo, at, byUid, shop }, db) {
   return {
     sessionId,
     seq,
@@ -90,6 +94,7 @@ function toMovementDoc({ sessionId, seq, kind, method, amount, memo, at, byUid }
     memo: str(memo),
     at: str(at),
     byUid: str(byUid),
+    shop: shop ?? null,
     postedAt: db.serverTimestamp(),
   };
 }
@@ -194,7 +199,7 @@ export function createLocalTreasury(db) {
           const ref = movementRef(sid, seq);
           const snap = await tx.get(ref);
           if (snap.exists()) return 'skip'; // أمانُ الملحق-فقط: لا كتابةَ فوقَ حركة
-          tx.set(ref, toMovementDoc({ sessionId: sid, seq, kind, method, amount, memo, at, byUid }, db));
+          tx.set(ref, toMovementDoc({ sessionId: sid, seq, kind, method, amount, memo, at, byUid, shop: session?.shop ?? null }, db));
           return 'posted';
         });
         return { ok: true, seq, posted: outcome === 'posted', skipped: outcome === 'skip' };
@@ -277,11 +282,17 @@ export function createLocalTreasury(db) {
     return summarize(session, movements);
   }
 
-  /** كلُّ الورديّات (مفكوكةً)، أو ذاتُ الحالة المطلوبة — نُرشّح في JS كأختها. */
-  async function listSessions({ state = null } = {}) {
+  /**
+   * كلُّ الورديّات (مفكوكةً)، أو ذاتُ الحالة/المحلّ المطلوبين — نُرشّح في JS كأختها.
+   * ص: `shop` اختياريٌّ — الافتراضُ كلُّ المحلّات (الورديّاتُ بلا محلٍّ تظهر فيه وحده).
+   */
+  async function listSessions({ state = null, shop } = {}) {
+    const scoped = shop !== undefined && shop !== null && shop !== '';
     const snap = await db.getDocs(db.collection(db.db, CASH_SESSIONS_COLLECTION));
-    const all = snap.docs.map((s) => s.data() || {});
-    return state ? all.filter((s) => s.state === state) : all;
+    let all = snap.docs.map((s) => s.data() || {});
+    if (state) all = all.filter((s) => s.state === state);
+    if (scoped) all = all.filter((s) => (s.shop ?? null) === shop);
+    return all;
   }
 
   return { open, addMovement, close, getSession, listMovements, summary, listSessions, CASH_MOVEMENTS };

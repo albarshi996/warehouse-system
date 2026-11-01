@@ -39,8 +39,8 @@ function partyRows(ledger, base) {
  * وأرصدةُ الذمم المدينة (AR) والدائنة (AP). تُبنى من القيود المخزَّنة لا من
  * المستندات — فهي مرآةُ ما كُتب فعلًا، لا إعادةُ اشتقاق.
  */
-export async function localLedgerView(db) {
-  const ledger = await createLocalLedger(db).buildLedger();
+export async function localLedgerView(db, shopId) {
+  const ledger = await createLocalLedger(db).buildLedger(shopId);
   return {
     entryCount: ledger.entries.length,
     errorCount: ledger.errors.length, // قيودٌ مخزَّنةٌ مرفوضةٌ عند الرَّوز (ينبغي صفرًا)
@@ -55,9 +55,9 @@ export async function localLedgerView(db) {
  * وسائلها، ومجاميعُ مفتوحةٍ/مُسكَّرةٍ وإجماليُّ الفروق. المتوقَّعُ من محرّك
  * `summarize` نفسِه (البطاقةُ والبنكُ خارجَ الدرج).
  */
-export async function localTreasuryView(db) {
+export async function localTreasuryView(db, shopId) {
   const T = createLocalTreasury(db);
-  const sessions = (await T.listSessions()).slice().sort((a, b) => {
+  const sessions = (await T.listSessions({ shop: shopId })).slice().sort((a, b) => {
     const at = `${a.openedAt || ''}`.localeCompare(`${b.openedAt || ''}`);
     return at !== 0 ? at : String(a.id).localeCompare(String(b.id), 'ar');
   });
@@ -103,11 +103,14 @@ export async function localTreasuryView(db) {
   };
 }
 
-/** العرضُ الكامل: دفترٌ وخزينةٌ من المخزن المحلّيّ، للقراءة فقط. */
-export async function localShadowView(db) {
+/**
+ * العرضُ الكامل: دفترٌ وخزينةٌ من المخزن المحلّيّ، للقراءة فقط.
+ * ص: `shopId` اختياريٌّ يُرشِّح العرضَ بمحلٍّ بعينه (الافتراضُ كلُّ المحلّات).
+ */
+export async function localShadowView(db, shopId) {
   return {
-    ledger: await localLedgerView(db),
-    treasury: await localTreasuryView(db),
+    ledger: await localLedgerView(db, shopId),
+    treasury: await localTreasuryView(db, shopId),
   };
 }
 

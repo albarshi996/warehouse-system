@@ -214,6 +214,33 @@ test('★★ reverse لا يرمي عند فشل قراءة المخزن — ي�
   assert.equal(r.reason, 'store', 'الفشلُ سببٌ صريحٌ لا استثناءٌ إلى الشاشة');
 });
 
+test('★★★ ص: ترشيحٌ بالمحلّ — محلّان لا تختلط قراءتُهما ولا أرصدتُهما', async () => {
+  const { L } = ledgerOn(memStore());
+  const withShop = (doc, shop) => ({ ...doc, shop });
+  await L.postDocuments([
+    withShop(inv('10', 'C-1', 5000, D1), 'S1'),
+    withShop(inv('11', 'C-2', 3000, D1), 'S2'),
+    inv('12', 'C-3', 1000, D1), // بلا محلّ — يظهر في «كلّ المحلّات» وحدها
+  ]);
+
+  // بلا وسيط = كلُّ المحلّات (توافقٌ رجعيٌّ): الثلاثةُ كما كانت.
+  assert.equal((await L.readEntries()).length, 3);
+
+  // محلٌّ بعينه: صفُّه وحدَه، والمحلُّ محمولٌ على القيد (كان يُسقَط قبل ص).
+  const s1 = await L.readEntries('S1');
+  assert.equal(s1.length, 1);
+  assert.equal(s1[0].shop, 'S1');
+
+  // الأرصدةُ معزولة: دفترُ S1 يرى C-1 ولا يرى C-2 (لا اختلاط).
+  const Lg1 = await L.buildLedger('S1');
+  assert.equal(Lg1.balanceOf('AR:C-1'), 5000000);
+  assert.equal(Lg1.balanceOf('AR:C-2'), 0, 'محلٌّ آخرُ غائبٌ عن دفتر S1');
+  assert.equal((await L.buildLedger('S2')).balanceOf('AR:C-2'), 3000000);
+  // القيدُ بلا محلٍّ لا يظهر تحت محلٍّ بعينه، لكنّه في «كلّ المحلّات».
+  assert.equal((await L.buildLedger('S1')).balanceOf('AR:C-3'), 0);
+  assert.equal((await L.buildLedger()).balanceOf('AR:C-3'), 1000000);
+});
+
 /* ═══════════════════ البيّنةُ الحيّة على SQLite حقيقيّة ═══════════════════ */
 
 let DatabaseSync = null;
