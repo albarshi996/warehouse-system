@@ -417,6 +417,9 @@ export const NAV_GROUPS = [
       // ‹الدفتر المحليّ› الشريحة الأولى (قرار المالك 2026-10-25): قيدٌ مزدوجٌ مشتقٌّ
       // من القبض/السداد يُطابَق بدفتر الذمم — عرضٌ للقراءة فقط، لا كتابةَ حيّة.
       { path: '/dashboard/ledger-shadow', label: 'مطابقة الدفتر المحليّ', icon: 'barChart3', roles: ['admin', 'warehouse_manager', 'finance_manager'] },
+      // ‹BHOME · المرحلة م› الخزينةُ اليوميّة — دفترُ نقدٍ متّصلٌ لكلّ محلّ (قبض/صرف ·
+      // رصيدٌ تراكميّ · تسكيرٌ يوميّ · ملخّصٌ شهريّ · إلغاءٌ لا حذف)، نظيرُ «النظام الموحّد».
+      { path: '/dashboard/cash-book', label: 'الخزينة اليوميّة', icon: 'notebook', roles: ['admin', 'warehouse_manager', 'finance_manager'] },
       // ‹الدفتر المحليّ §7› حاسبةُ تسكير الوردية: رصيدُ البداية وحركاتُ الخزينة ⇐
       // المتوقَّع في الدرج، ومقارنتُه بالمعدود — حاسبةٌ خالصةٌ للقراءة فقط لا تحفظ.
       { path: '/dashboard/cash-session', label: 'حاسبة تسكير الوردية', icon: 'dollarSign', roles: ['admin', 'warehouse_manager', 'finance_manager'] },

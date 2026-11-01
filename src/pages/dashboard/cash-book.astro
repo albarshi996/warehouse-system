@@ -1,0 +1,19 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import CashBook from '../../components/brandzo-erp/ledger/CashBook.jsx';
+// ⚠️ لا تُحذف: قواعد الثيم كلُّها تحت `.o_theme` — بلا `odoo.css` تُعرض الشاشة
+// نصًّا مرصوصًا بلا تنسيق (يحرسه تدقيقُ القسم ٦).
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+---
+
+<DashboardLayout title="الخزينة اليوميّة" light>
+  <div class="text-right" dir="rtl">
+    <h1 class="text-2xl font-bold text-ink mb-1">الخزينةُ اليوميّة — دفترُ النقد</h1>
+    <p class="text-sm text-ink-2 mb-5">
+      دفترُ نقدٍ متّصلٌ لكلّ محلّ كنظام خزينتك الموحّد: سجّل القبضَ والصرفَ، فيُحسب الرصيدُ
+      التراكميّ وتسكيرُ اليوم والملخّصُ الشهريّ تلقائيًّا. الإلغاءُ بقيدٍ مضادٍّ لا بحذف، ومنطوقٌ بالمحلّ الفعّال.
+    </p>
+    <CashBook client:load />
+  </div>
+</DashboardLayout>

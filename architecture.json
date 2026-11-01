@@ -9,9 +9,9 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 126,
+    "modules": 127,
     "serviceDomains": 57,
-    "serviceFiles": 776,
+    "serviceFiles": 780,
     "collections": 104,
     "roles": 20,
     "odooModels": 12,
@@ -110,6 +110,14 @@
       "title": "إدارة الكوارث واستمرارية الأعمال",
       "summary": "إدارة الكوارث واستمرارية الأعمال (BCP) — الملحق م-٦ في المرجع التشغيلي.",
       "file": "src/pages/dashboard/business-continuity.astro",
+      "usesServices": []
+    },
+    {
+      "name": "cash-book",
+      "route": "/dashboard/cash-book",
+      "title": "الخزينة اليوميّة",
+      "summary": "",
+      "file": "src/pages/dashboard/cash-book.astro",
       "usesServices": []
     },
     {
@@ -1206,10 +1214,14 @@
         "accounts.js",
         "cashSession.js",
         "cashSession.test.js",
+        "cashbookService.js",
+        "cashbookService.test.js",
         "deriveEntries.js",
         "journal.js",
         "journal.test.js",
         "ledgerCycle.test.js",
+        "ledgerPostService.js",
+        "ledgerPostService.test.js",
         "ledgerRpc.js",
         "ledgerRpc.test.js",
         "ledgerSync.js",
@@ -1228,8 +1240,8 @@
         "treasuryRpc.js",
         "treasuryRpc.test.js"
       ],
-      "fileCount": 24,
-      "testCount": 11,
+      "fileCount": 28,
+      "testCount": 13,
       "exports": [
         "ACCOUNTS",
         "CASH_EVENTS",
@@ -1252,7 +1264,9 @@
         "closeBody",
         "closeCashSession",
         "closeSession",
+        "createCashbook",
         "createLedger",
+        "createLedgerPost",
         "createLocalLedger",
         "createLocalTreasury",
         "deriveEntries",
