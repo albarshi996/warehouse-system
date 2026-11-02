@@ -9,9 +9,9 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 127,
+    "modules": 128,
     "serviceDomains": 57,
-    "serviceFiles": 789,
+    "serviceFiles": 792,
     "collections": 104,
     "roles": 20,
     "odooModels": 12,
@@ -276,6 +276,14 @@
       "title": "",
       "summary": "",
       "file": "src/pages/dashboard/executive-review.astro",
+      "usesServices": []
+    },
+    {
+      "name": "expenses",
+      "route": "/dashboard/expenses",
+      "title": "المصاريف المبوّبة",
+      "summary": "",
+      "file": "src/pages/dashboard/expenses.astro",
       "usesServices": []
     },
     {
@@ -1220,6 +1228,8 @@
         "deriveEntries.js",
         "expenseCategories.js",
         "expenseCategories.test.js",
+        "expenseSummary.js",
+        "expenseSummary.test.js",
         "journal.js",
         "journal.test.js",
         "ledgerCycle.test.js",
@@ -1243,8 +1253,8 @@
         "treasuryRpc.js",
         "treasuryRpc.test.js"
       ],
-      "fileCount": 31,
-      "testCount": 15,
+      "fileCount": 33,
+      "testCount": 16,
       "exports": [
         "ACCOUNTS",
         "CASH_EVENTS",
@@ -1287,6 +1297,7 @@
         "deriveLedgerEntry",
         "expenseAmount",
         "expenseCategoryOf",
+        "expenseSummary",
         "fromMinor",
         "isCategory",
         "isPostableType",
@@ -1981,6 +1992,7 @@
         "auditWrite.test.js",
         "backdateReport.js",
         "backdateReport.test.js",
+        "bhomeSchemas.test.js",
         "branchCycle.js",
         "branchCycle.test.js",
         "bulkActions.js",
@@ -2105,8 +2117,8 @@
         "vsi.js",
         "vsr.js"
       ],
-      "fileCount": 138,
-      "testCount": 47,
+      "fileCount": 139,
+      "testCount": 48,
       "exports": [
         "ACCEPTED_ATTACHMENT_TYPES",
         "AMEND_CLASSES",

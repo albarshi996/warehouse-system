@@ -420,6 +420,9 @@ export const NAV_GROUPS = [
       // ‹BHOME · المرحلة م› الخزينةُ اليوميّة — دفترُ نقدٍ متّصلٌ لكلّ محلّ (قبض/صرف ·
       // رصيدٌ تراكميّ · تسكيرٌ يوميّ · ملخّصٌ شهريّ · إلغاءٌ لا حذف)، نظيرُ «النظام الموحّد».
       { path: '/dashboard/cash-book', label: 'الخزينة اليوميّة', icon: 'notebook', roles: ['admin', 'warehouse_manager', 'finance_manager'] },
+      // ‹BHOME · المرحلة ذ› المصاريفُ المبوّبة والرواتبُ والسلف — تقريرٌ نظيفٌ لكلّ فئةٍ
+      // معزولٌ بالمحلّ، مُشتقٌّ من مستندات المصاريف المنجَزة (تُنشأ من «بدء مستند جديد»).
+      { path: '/dashboard/expenses', label: 'المصاريف المبوّبة', icon: 'dollarSign', roles: ['admin', 'warehouse_manager', 'finance_manager'] },
       // ‹الدفتر المحليّ §7› حاسبةُ تسكير الوردية: رصيدُ البداية وحركاتُ الخزينة ⇐
       // المتوقَّع في الدرج، ومقارنتُه بالمعدود — حاسبةٌ خالصةٌ للقراءة فقط لا تحفظ.
       { path: '/dashboard/cash-session', label: 'حاسبة تسكير الوردية', icon: 'dollarSign', roles: ['admin', 'warehouse_manager', 'finance_manager'] },

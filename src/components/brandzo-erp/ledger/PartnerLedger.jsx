@@ -12,7 +12,7 @@ import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authServ
 import { listenPartnerLedger } from '../../../services/ledger/partnerLedgerService.js';
 import { subscribePartners } from '../../../services/partners/partnerService.js';
 import { listenSettings } from '../../../services/settings/settingsService.js';
-import { statement, balances, aging, AGING_BUCKETS, PARTIES, invoiceOutstanding } from '../../../services/ledger/partnerLedger.js';
+import { statement, balances, aging, reminders, AGING_BUCKETS, PARTIES, invoiceOutstanding } from '../../../services/ledger/partnerLedger.js';
 import { customerExposure } from '../../../services/ledger/creditGuard.js';
 
 // المندوب محصِّلٌ — من يُحاسَب على ذمم عملائه يجب أن يراها قبل أن يبيع.
@@ -95,6 +95,8 @@ export default function PartnerLedger() {
   const scoped = useMemo(() => entries.filter((e) => e.party === party), [entries, party]);
   const rows = useMemo(() => balances(scoped), [scoped]);
   const ageRows = useMemo(() => aging(scoped, today), [scoped, today]);
+  // ذ — تذكيرُ السداد: المتأخّرُ والمقترب (خلال أسبوع) بمقاصّةِ الأقدم أوّلًا.
+  const due = useMemo(() => reminders(scoped, today, { soonDays: 7 }), [scoped, today]);
   const master = party === 'customer' ? partners : suppliers;
   const partner = useMemo(
     () => master.find((p) => String(p.code || '').toUpperCase() === selected) || null,
@@ -117,27 +119,47 @@ export default function PartnerLedger() {
     return <p className="text-sm text-ink-2">كشوف الحساب محصورةٌ بالمديرَين والمالي والخزينة.</p>;
   }
 
-  const overdue = ageRows.filter((r) => r.buckets.over90 > 0);
+  const overdueDue = due.filter((r) => r.overdue > 0);
+  const soonDue = due.filter((r) => r.soon > 0);
 
   return (
     <div className="space-y-5">
-      {/* ═══ الطبقة ١: من يستحقّ الانتباه ═══ */}
+      {/* ═══ الطبقة ١: تذكيرُ السداد — من استحقّ ومن يقترب ═══ */}
       <section className={card}>
-        <h2 className="text-base font-bold text-ink mb-3">تدخّل الآن</h2>
+        <h2 className="text-base font-bold text-ink mb-3">تذكيرُ السداد</h2>
         {entries.length === 0 ? (
           <p className="text-sm text-ink-2">
             الدفتر فارغ — يُقيَّد تلقائيًّا عند إنجاز أوّل فاتورةٍ أو استلامٍ أو سند.
           </p>
-        ) : overdue.length === 0 ? (
-          <p className="text-sm text-ink">لا دَين تجاوز تسعين يومًا.</p>
+        ) : overdueDue.length === 0 && soonDue.length === 0 ? (
+          <p className="text-sm text-ink">لا استحقاقَ متأخّرٌ ولا قريب — الذممُ منضبطة.</p>
         ) : (
-          <ul className="space-y-2">
-            {overdue.slice(0, 5).map((r) => (
-              <li key={r.partyCode} className="text-sm text-brand-red">
-                {r.partyName}: {r.buckets.over90} د.ل متأخّرةٌ أكثر من ٩٠ يومًا (من أصل {r.total})
-              </li>
-            ))}
-          </ul>
+          <div className="space-y-3">
+            {overdueDue.length > 0 && (
+              <div>
+                <div className="text-xs text-ink-2 mb-1">متأخّرٌ عن الاستحقاق</div>
+                <ul className="space-y-1">
+                  {overdueDue.slice(0, 6).map((r) => (
+                    <li key={r.partyCode} className="text-sm text-brand-red">
+                      {r.partyName}: {r.overdue} د.ل متأخّرة (أقدمُ استحقاقٍ {r.nextDue})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {soonDue.length > 0 && (
+              <div>
+                <div className="text-xs text-ink-2 mb-1">يستحقّ خلال أسبوع</div>
+                <ul className="space-y-1">
+                  {soonDue.slice(0, 6).map((r) => (
+                    <li key={r.partyCode} className="text-sm text-ink">
+                      {r.partyName}: {r.soon} د.ل تستحقّ قريبًا (في {r.nextDue})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         )}
       </section>
 
