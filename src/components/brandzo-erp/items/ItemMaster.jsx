@@ -187,6 +187,16 @@ export default function ItemMaster() {
     );
   }, [items, search, sector]);
 
+  // ق — لا يبقى ترشيحُ قطاعٍ عالقًا إن اختفى من الخيارات (أُرشف آخرُ أصنافه، أو
+  //     أُخفيت المؤرشفةُ التي كانت تحمله): يُعاد إلى «كلّ القطاعات» فلا تفرغ القائمةُ
+  //     بترشيحٍ غيرِ مرئيّ. كشفته مراجعةٌ عدائيّةٌ 2026-11-02.
+  useEffect(() => {
+    const stillValid =
+      sector === '' ||
+      (sector === UNCLASSIFIED ? sectorList.unclassified > 0 : sectorList.sectors.includes(sector));
+    if (!stillValid) setSector('');
+  }, [sector, sectorList]);
+
   // ترقيم من طرف العميل فوق القائمة المحمّلة — يكشف الذيل بدل قصّه صامتًا (المحور ٧).
   const [page, setPage] = useState(0);
   useEffect(() => setPage(0), [search, showArchived, sector]);
