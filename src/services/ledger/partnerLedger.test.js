@@ -19,9 +19,12 @@ import {
   balances,
   bucketOf,
   aging,
+  reminders,
+  addDays,
   closeoutEntry,
   invoiceOutstanding,
   overCollectionProblems,
+  PARTIES,
 } from './partnerLedger.js';
 import SCHEMAS from '../documents/schemas/index.js';
 
@@ -291,4 +294,46 @@ test('★★ حارس التجاوز يمسك تحصيلًا فوق المفتو
   assert.match(problems[1], /لا مدينَ مفتوحًا/);
   // تحصيلٌ داخل المفتوح يمرّ بلا كلمة.
   assert.deepEqual(overCollectionProblems({ lines: [{ invoiceRef: 'INV-7', amount: 100 }] }, outstanding), []);
+});
+
+// ═══ ذ — الطرفُ الثالث (العامل) وتذكيرُ السداد ═══
+
+test('★ العاملُ طرفٌ ثالثٌ إلى جانب العميل والمورّد', () => {
+  assert.equal(PARTIES.worker.id, 'worker');
+  assert.equal(PARTIES.worker.sign, +1, 'سلفتُه دَينٌ عليه كالعميل');
+  assert.equal(partyCodeOf({ header: { workerCode: 'w-9' } }, 'worker'), 'W-9');
+  assert.equal(partyCodeOf({ header: { worker: 'سالم' } }, 'worker'), 'سالم');
+});
+
+test('addDays يحسب تقويميًّا من يومٍ مُمرَّر لا من ساعة النظام', () => {
+  assert.equal(addDays('2026-08-01', 7), '2026-08-08');
+  assert.equal(addDays('2026-08-28', 7), '2026-09-04', 'يعبر الشهر');
+  assert.equal(addDays('سيّئ', 7), '', 'تاريخٌ معطوبٌ لا يرمي');
+});
+
+test('★★ التذكير: المتأخّرُ ما مضى استحقاقُه، والقريبُ ما يستحقّ خلال المدى', () => {
+  const entries = entriesFrom([
+    inv('1', 'C-1', 100, '2026-07-01', '2026-07-10'), // تأخّر
+    inv('2', 'C-1', 200, '2026-08-12', '2026-08-13'), // يقترب (خلال ٧ أيّام من 2026-08-11)
+    inv('3', 'C-1', 300, '2026-09-01', '2026-09-30'), // بعيد
+  ]);
+  const [r] = reminders(entries, '2026-08-11', { soonDays: 7 });
+  assert.equal(r.partyCode, 'C-1');
+  assert.equal(r.overdue, 100);
+  assert.equal(r.soon, 200);
+  assert.equal(r.items.length, 2, 'البعيدُ لا يُدرَج');
+  assert.equal(r.nextDue, '2026-07-10', 'الأقربُ استحقاقًا أوّلًا');
+});
+
+test('★★ التذكير يقاصّ الأقدم أوّلًا — فلا يُذكَّر بدَينٍ سُدّد', () => {
+  const entries = entriesFrom([
+    inv('1', 'C-1', 100, '2026-07-01', '2026-07-10'), // قديمةٌ متأخّرة
+    rcp('2', 'C-1', 100, '2026-08-01', 'INV-1'),      // سُدّدت
+  ]);
+  assert.deepEqual(reminders(entries, '2026-08-11'), [], 'لا متأخّرَ بعد السداد');
+});
+
+test('★ بلا يومٍ لا تذكير — لا ساعةَ نظام', () => {
+  const entries = entriesFrom([inv('1', 'C-1', 100, '2026-05-01', '2026-05-01')]);
+  assert.deepEqual(reminders(entries, ''), []);
 });

@@ -22,6 +22,14 @@ export const ACCOUNTS = Object.freeze({
   SALES_RETURNS: { code: 'SALES_RETURNS', nameAr: 'مرتجعات المبيعات', type: 'contra_income', normal: 'debit' },
   INVENTORY: { code: 'INVENTORY', nameAr: 'المخزون', type: 'asset', normal: 'debit' },
   CASH_IN_TRANSIT: { code: 'CASH_IN_TRANSIT', nameAr: 'نقدٌ في عهدة المندوب', type: 'asset', normal: 'debit' },
+  // ذ — توسيعُ الدليل بواقعته (المحلّات كشركاتٍ مستقلّة): مشترياتُ فاتورةِ
+  // «القيمة فقط»، ورواتبُ العمّال، وسلفُهم أصلٌ عليهم (يُسترَدّ فيُقيَّد دائنًا)،
+  // والمصروفاتُ التشغيليّة مبوّبةٌ بفئتها الفرعيّة (`EXPENSE:<فئة>`) — فلا حسابَ
+  // يُضاف بلا قيدٍ يفرضه.
+  PURCHASES: { code: 'PURCHASES', nameAr: 'المشتريات', type: 'expense', normal: 'debit' },
+  SALARIES: { code: 'SALARIES', nameAr: 'الرواتب والأجور', type: 'expense', normal: 'debit' },
+  WORKER_ADV: { code: 'WORKER_ADV', nameAr: 'سلف العمّال', type: 'asset', normal: 'debit', subledger: 'worker' },
+  EXPENSE: { code: 'EXPENSE', nameAr: 'مصروفات تشغيليّة', type: 'expense', normal: 'debit', subledger: 'category' },
 });
 
 const up = (v) => String(v ?? '').trim().toUpperCase();

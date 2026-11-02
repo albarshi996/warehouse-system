@@ -26,10 +26,15 @@ const money = (n) => Math.round((Number(n) || 0) * 100) / 100;
 const str = (v) => String(v ?? '').trim();
 const up = (v) => str(v).toUpperCase();
 
-/** طرفا الدفتر. */
+/**
+ * أطرافُ الدفتر. العميلُ والمورّدُ طرفا الدورة، وأُضيف **العامل** (ذ): سلفتُه
+ * دَينٌ عليه (كالعميل، أصلٌ مدين) يُسترَدُّ أو يُحسَم من راتبه — فرصيدُه يظهر
+ * في كشف الحساب نفسِه (معيارُ إتمام المرحلة ذ).
+ */
 export const PARTIES = Object.freeze({
   customer: { id: 'customer', label: 'عميل', debitLabel: 'مدين علينا له', sign: +1 },
   supplier: { id: 'supplier', label: 'مورّد', debitLabel: 'دائن له علينا', sign: -1 },
+  worker: { id: 'worker', label: 'عامل', debitLabel: 'سلفةٌ على العامل', sign: +1 },
 });
 
 /**
@@ -108,10 +113,11 @@ export function ledgerRuleFor(type) {
   return LEDGER_RULES[type] || null;
 }
 
-/** رمز الطرف من رأس المستند — العميل برمزه والمورّد برمزه أو باسمه. */
+/** رمز الطرف من رأس المستند — لكلّ طرفٍ حقولُه، والرمزُ قبل الاسم. */
 export function partyCodeOf(doc, party) {
   const h = doc?.header || {};
   if (party === 'customer') return up(h.customerCode || h.payer || h.customer);
+  if (party === 'worker') return up(h.workerCode || h.worker);
   return up(h.supplierCode || h.supplier);
 }
 
@@ -134,13 +140,14 @@ export function entryFor(doc) {
     id: `${doc.type}__${str(doc.id)}`,
     party: rule.party,
     partyCode: code,
-    partyName: str(doc.header?.customer || doc.header?.payer || doc.header?.supplier) || code,
+    partyName: str(doc.header?.customer || doc.header?.payer || doc.header?.supplier || doc.header?.worker) || code,
     docType: doc.type,
     docId: str(doc.id),
     docNumber: str(doc.number),
     // `collectionDate` تاريخ التحصيل الميدانيّ (RCV) — غيابه هنا كان يكتب قيد
     // التحصيل بتاريخٍ فارغ فيتقدّم كلُّ سدادٍ على فاتورته في ترتيب الكشف.
-    date: str(doc.header?.invoiceDate || doc.header?.receiptDate || doc.header?.paymentDate || doc.header?.collectionDate || doc.header?.saleDate || doc.header?.receivedAt || doc.header?.returnDate || doc.header?.issueDate).slice(0, 10),
+    // `advanceDate`/`repayDate` واقعتا سلفة العامل وسدادها (ذ).
+    date: str(doc.header?.invoiceDate || doc.header?.receiptDate || doc.header?.paymentDate || doc.header?.collectionDate || doc.header?.saleDate || doc.header?.receivedAt || doc.header?.returnDate || doc.header?.issueDate || doc.header?.advanceDate || doc.header?.repayDate).slice(0, 10),
     dueDate: str(doc.header?.dueDate).slice(0, 10),
     direction: rule.direction,
     labelAr: rule.labelAr,
@@ -270,6 +277,89 @@ export function aging(entries = [], today = '') {
     out.push({ ...bag, buckets, total, advance: money(credit), open: undefined });
   }
   return out.sort((a, b) => b.total - a.total);
+}
+
+/** يومٌ + عددُ أيّام (تقويميًّا، من يومٍ مُمرَّر لا من ساعة النظام) → YYYY-MM-DD. */
+export function addDays(day, n) {
+  const d = str(day).slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return '';
+  return new Date(Date.parse(`${d}T00:00:00Z`) + Number(n || 0) * 86400000).toISOString().slice(0, 10);
+}
+
+/**
+ * تذكيرُ مواعيد السداد (ذ · يسدّ نقطةَ الرؤية «تذكيرٌ بمواعيد السداد»): لكلّ
+ * طرفٍ ما **تأخّر** استحقاقُه وما **يقترب** خلال `soonDays` يومًا.
+ *
+ * يبني على مقاصّةِ الأقدم أوّلًا (عينُ منطق `aging`) فلا يُذكَّر بدَينٍ سُدّد،
+ * ويقرأ استحقاقَ كلّ فاتورةٍ مفتوحةٍ على حدة. اليومُ يُمرَّر صراحةً — لا ساعةَ
+ * نظام — فالدالّةُ خالصةٌ تُعطي نفسَ الخرج لنفس الدخل.
+ *
+ * @returns [{ partyCode, partyName, party, overdue, soon, nextDue, items }]
+ *          لمن له متأخّرٌ أو مقتربٌ فقط — الأكثرُ تأخّرًا أوّلًا.
+ */
+export function reminders(entries = [], today = '', { soonDays = 7 } = {}) {
+  const day = str(today).slice(0, 10);
+  const horizon = day ? addDays(day, Math.max(0, Number(soonDays) || 0)) : '';
+  const byParty = new Map();
+
+  for (const e of entries) {
+    const bag =
+      byParty.get(e.partyCode) ||
+      { partyCode: e.partyCode, partyName: e.partyName, party: e.party, open: [], credit: 0 };
+    if (e.direction === 'debit') {
+      bag.open.push({
+        ref: str(e.docNumber) || str(e.docId),
+        date: str(e.date).slice(0, 10),
+        dueDate: str(e.dueDate || e.date).slice(0, 10),
+        remaining: e.amount,
+      });
+    } else {
+      bag.credit = money(bag.credit + e.amount);
+    }
+    byParty.set(e.partyCode, bag);
+  }
+
+  const out = [];
+  for (const bag of byParty.values()) {
+    bag.open.sort((a, b) => a.date.localeCompare(b.date)); // الأقدم أوّلًا — كالأعمار
+    let credit = bag.credit;
+    for (const row of bag.open) {
+      if (credit <= 0) break;
+      const applied = Math.min(credit, row.remaining);
+      row.remaining = money(row.remaining - applied);
+      credit = money(credit - applied);
+    }
+
+    let overdue = 0;
+    let soon = 0;
+    const items = [];
+    for (const row of bag.open) {
+      if (row.remaining <= 0) continue;
+      const due = row.dueDate || row.date;
+      let status = 'later';
+      if (day && due && due < day) {
+        status = 'overdue';
+        overdue = money(overdue + row.remaining);
+      } else if (day && due && due <= horizon) {
+        status = 'soon';
+        soon = money(soon + row.remaining);
+      }
+      if (status !== 'later') items.push({ ref: row.ref, dueDate: due, remaining: row.remaining, status });
+    }
+
+    if (overdue > 0 || soon > 0) {
+      out.push({
+        partyCode: bag.partyCode,
+        partyName: bag.partyName,
+        party: bag.party,
+        overdue,
+        soon,
+        nextDue: items.map((r) => r.dueDate).filter(Boolean).sort()[0] || '',
+        items,
+      });
+    }
+  }
+  return out.sort((a, b) => b.overdue - a.overdue || b.soon - a.soon);
 }
 
 /**
