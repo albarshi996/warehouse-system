@@ -9,9 +9,9 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 128,
+    "modules": 129,
     "serviceDomains": 57,
-    "serviceFiles": 798,
+    "serviceFiles": 800,
     "collections": 104,
     "roles": 20,
     "odooModels": 12,
@@ -212,6 +212,14 @@
       "title": "",
       "summary": "",
       "file": "src/pages/dashboard/executive-review/decisions.astro",
+      "usesServices": []
+    },
+    {
+      "name": "device-transfer",
+      "route": "/dashboard/device-transfer",
+      "title": "النقل بين الأجهزة",
+      "summary": "",
+      "file": "src/pages/dashboard/device-transfer.astro",
       "usesServices": []
     },
     {
@@ -4794,16 +4802,26 @@
       "domain": "migrate",
       "dir": "src/services/migrate",
       "files": [
+        "deviceTransfer.js",
+        "deviceTransfer.test.js",
         "importDump.js",
         "importDump.test.js"
       ],
-      "fileCount": 2,
-      "testCount": 1,
+      "fileCount": 4,
+      "testCount": 2,
       "exports": [
+        "APPEND_ONLY",
+        "BUNDLE_VERSION",
+        "TRANSFER_COLLECTIONS",
+        "applyTransferPlan",
+        "buildTransferBundle",
+        "contentFingerprint",
+        "docUpdatedMillis",
         "expandCounts",
         "fromExportValue",
         "importDocuments",
         "parseDumpEntry",
+        "planTransferImport",
         "reconcileCounts"
       ],
       "collections": []

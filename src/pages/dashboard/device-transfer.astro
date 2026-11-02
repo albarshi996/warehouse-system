@@ -1,0 +1,15 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import DeviceTransfer from '../../components/brandzo-erp/migrate/DeviceTransfer.jsx';
+---
+
+<DashboardLayout title="النقل بين الأجهزة" light>
+  <div class="text-right" dir="rtl">
+    <h1 class="text-2xl font-bold text-ink mb-1">النقل بين الأجهزة</h1>
+    <p class="text-sm text-ink-2 mb-5">
+      انقل بياناتِ المحلّ بين جهازَين بملفٍّ واحد — بمعاينةٍ تُصنّف الجديدَ والمحدَّثَ والتعارضَ
+      قبل أيّ كتابة، فلا تمحو نسخةٌ نسخةً بصمت، وتُحفظ الروابطُ كاملةً.
+    </p>
+    <DeviceTransfer client:load />
+  </div>
+</DashboardLayout>
