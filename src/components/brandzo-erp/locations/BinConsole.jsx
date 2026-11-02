@@ -765,7 +765,7 @@ export default function BinConsole() {
     }
 
     const line = draftLineFor(mode, { bin, item: source, qty, bookQty: item?.qty ?? 0, uom: entryUom, pack });
-    const problems = entryProblems(mode, { line, contents, scanned });
+    const problems = entryProblems(mode, { line, contents, scanned, indexes });
     if (problems.length) { setMsg({ type: 'error', text: problems[0] }); return; }
     setEntries((prev) => [...prev, line]);
     setScanned('');

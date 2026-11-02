@@ -11,7 +11,7 @@
   "counts": {
     "modules": 129,
     "serviceDomains": 57,
-    "serviceFiles": 800,
+    "serviceFiles": 802,
     "collections": 104,
     "roles": 20,
     "odooModels": 12,
@@ -2075,6 +2075,7 @@
         "partyFields.test.js",
         "pick.js",
         "po.js",
+        "po.test.js",
         "pod.js",
         "pr.js",
         "prc.js",
@@ -2129,8 +2130,8 @@
         "vsi.js",
         "vsr.js"
       ],
-      "fileCount": 143,
-      "testCount": 49,
+      "fileCount": 144,
+      "testCount": 50,
       "exports": [
         "ACCEPTED_ATTACHMENT_TYPES",
         "AMEND_CLASSES",
@@ -2494,6 +2495,7 @@
         "planPaste",
         "planSummary",
         "plannedTypes",
+        "poSubmitProblems",
         "poWarnings",
         "podWarnings",
         "pointsForDoc",
@@ -5409,11 +5411,12 @@
         "reportEngine.js",
         "reportEngine.test.js",
         "stockReports.js",
+        "stockReports.test.js",
         "traceReports.js",
         "traceReports.test.js"
       ],
-      "fileCount": 15,
-      "testCount": 6,
+      "fileCount": 16,
+      "testCount": 7,
       "exports": [
         "ACCOUNT_REPORTS",
         "COLUMNS",

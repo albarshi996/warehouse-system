@@ -256,7 +256,7 @@ const isStorageName = (f) =>
  * كلّ ما زاد عنهما خرقٌ جديد يُوقف التدقيق.
  */
 const IMPURE_NAME_BASELINE = 0; // سُدّ في EXE-002: numbering.js ⇐ numberingService.js
-const UNTESTED_PURE_BASELINE = 21; // 23 ← 21 بالإغلاق المتعدّي (LPN-214)
+const UNTESTED_PURE_BASELINE = 20; // 23 ← 21 (LPN-214) ← 20 (المرحلة ر: اختباراتٌ مجاورة لـstockReports/po)
 
 const logicFiles = walk(SERVICES_DIR, ['.js']).filter((f) => !f.endsWith('.test.js'));
 

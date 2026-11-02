@@ -589,3 +589,17 @@ test('★★★ ومسحُ الطبليّة في وضع التخزين يُنف�
     assert.ok(!SCREEN.includes(forbidden), `الشاشةُ لا تستدعي ${forbidden}`);
   }
 });
+
+test('★★★ ZH-02: لا رصيدَ لصنفٍ غير مسجّل — يُرفض المجهولُ حين يُمرَّر فهرسُ الماستر', () => {
+  const c = binContents(BIN, { balances: BALANCES, units: UNITS, indexes: INDEXES });
+  // مسجّلٌ (WNW-001) يمرّ.
+  assert.deepEqual(
+    entryProblems('putaway', { line: { bin: BIN, sku: 'WNW-001', barcode: '6281006521', qty: 3 }, contents: c, indexes: INDEXES }),
+    []
+  );
+  // غيرُ مسجّلٍ يُرفض برسالةٍ تسمّي الكود.
+  const problems = entryProblems('putaway', { line: { bin: BIN, sku: 'GHOST-999', qty: 3 }, contents: c, indexes: INDEXES });
+  assert.ok(problems.some((p) => /غيرُ مسجّل/.test(p) && /GHOST-999/.test(p)), problems.join(' | '));
+  // بلا فهرسٍ: توافقٌ رجعيّ — لا يُحرَس (كما كان قبل ZH-02).
+  assert.deepEqual(entryProblems('putaway', { line: { bin: BIN, sku: 'GHOST-999', qty: 3 }, contents: c }), []);
+});

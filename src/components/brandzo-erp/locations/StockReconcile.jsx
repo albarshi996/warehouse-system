@@ -6,7 +6,7 @@ import { fetchBalancesOnce } from '../../../services/balances/balancesService.js
 import { fetchLocationsByCodes, fetchLocationsOnce } from '../../../services/locations/locationsService.js';
 import { LOCATION_SCREENS, withWitness } from '../../../services/locations/locationReads.js';
 import { loadLocationWitness, useFullLocationReads } from './useLocationReads.js';
-import { createDraft } from '../../../services/documents/documentsService.js';
+import { createDraft, newDocumentId } from '../../../services/documents/documentsService.js';
 import {
   STATUS_LABELS,
   locationMismatch,
@@ -54,6 +54,7 @@ export default function StockReconcile() {
   const [locWarning, setLocWarning] = useState('');
   const [filter, setFilter] = useState('all');
   const [created, setCreated] = useState(null);
+  const [draftId, setDraftId] = useState(null); // ‹AQ-06› معرّفٌ محجوزٌ يُعاد استعمالُه فلا يتكرّر المحضر
 
   useEffect(() => {
     const unsub = subscribeAuth(async (user) => {
@@ -74,7 +75,7 @@ export default function StockReconcile() {
   async function onFile(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setError(''); setCreated(null); setReport(null); setImportErrors([]); setLocWarning('');
+    setError(''); setCreated(null); setDraftId(null); setReport(null); setImportErrors([]); setLocWarning('');
     setBusy('يقرأ لقطة النظام…');
     try {
       const result = await importSheet(file, 'stockSnapshot');
@@ -108,11 +109,16 @@ export default function StockReconcile() {
   }
 
   async function makeCountDraft() {
-    if (!report || !coverage?.ready) return;
+    // ‹AQ-06› لا محضرَ ثانٍ بعد النجاح: الحارسُ `created`، ومعرّفٌ محجوزٌ يُعاد
+    // استعمالُه فـ`createDraft({id})` يرفض الكتابةَ فوق القائم — فحتّى تنادٍ مزدوجٍ
+    // في نافذة ما قبل `created` لا يُنشئ نسختين (يُرفَض الثاني بمعرّفٍ مأخوذ).
+    if (!report || !coverage?.ready || created) return;
     setBusy('ينشئ محضر الجرد…'); setError('');
+    const id = draftId || newDocumentId();
+    setDraftId(id);
     try {
       const draft = toCountDraft(report);
-      const id = await createDraft({ type: 'CC', profile: me, header: draft.header, lines: draft.lines });
+      await createDraft({ type: 'CC', id, profile: me, header: draft.header, lines: draft.lines });
       setCreated({ id, lines: draft.lines.length });
     } catch (err) {
       setError(err?.message || 'تعذّر إنشاء المحضر.');
@@ -228,7 +234,7 @@ export default function StockReconcile() {
             <button
               type="button"
               className="btn btn-primary btn-sm"
-              disabled={!!busy || !diffs.length || !coverage.ready}
+              disabled={!!busy || !diffs.length || !coverage.ready || !!created}
               onClick={makeCountDraft}
               title={coverage.ready ? '' : 'مقفلٌ حتى تجهز الأرصدة — قرار المالك ق-٦'}
             >

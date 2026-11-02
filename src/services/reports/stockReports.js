@@ -113,12 +113,19 @@ const locationBalances = {
   ],
   rows: (data) =>
     (data?.balances || [])
-      .filter((b) => num(b.qty) !== 0 || num(b.reserved) !== 0)
-      .map((b) => ({
-        ...b,
-        available: Math.round((num(b.qty) - num(b.reserved)) * 1e6) / 1e6,
-        value: money(num(b.qty) * num(b.unitCost)),
-      })),
+      // ‹AQ-12› المحجوزُ حقلُه `qtyReserved` (يكتبه ledgerService/salesService ويقرؤه
+      // بقيّةُ النظام)، لا `reserved` — فقراءتُه السابقةُ كانت صفرًا دائمًا فيظهر المتاحُ
+      // = الكمّيّةَ كلَّها متجاهلًا الحجز. الرجوعُ إلى `reserved` توافقٌ لا أكثر.
+      .map((b) => {
+        const reserved = num(b.qtyReserved ?? b.reserved);
+        return {
+          ...b,
+          reserved,
+          available: Math.round((num(b.qty) - reserved) * 1e6) / 1e6,
+          value: money(num(b.qty) * num(b.unitCost)),
+        };
+      })
+      .filter((b) => num(b.qty) !== 0 || b.reserved !== 0),
 };
 
 /* ═══════════ ٣. الجرد والفروقات ═══════════ */
@@ -128,15 +135,20 @@ const countVariance = {
   titleAr: 'الجرد والفروقات',
   group: 'المخزون',
   roles: STOCK_ROLES,
-  note: 'الفرق = العدّ − الدفتريّ. والموجب زيادةٌ والسالب عجز.',
+  // ‹AQ-14› CC محضرُ العدّ وADJ تسويتُه لنفس الواقعة (سلسلة CC>ADJ) — فجمعُ فرقَيهما
+  // في الإجماليّ يُضاعفه. عمودُ «النوع» ومرشّحُه يفصلانهما، فيُرشَّح النوعُ الواحد
+  // (ADJ المعتمَدة مثلًا) كي لا يُحسَب الفرقُ مرّتين.
+  note: 'الفرق = العدّ − الدفتريّ. CC محضرُ العدّ وADJ تسويتُه لنفس الواقعة — رشّح بالنوع كي لا يُجمَع الفرقُ مرّتين.',
   filters: [
     { key: 'sku', label: 'الصنف', kind: 'text' },
     { key: 'docNumber', label: 'المحضر', kind: 'text' },
+    { key: 'docType', label: 'النوع (CC/ADJ)', kind: 'text' },
     { key: 'period', label: 'المدّة', kind: 'dateRange', field: 'date' },
   ],
   columns: [
     { key: 'date', label: 'التاريخ', kind: 'date' },
     { key: 'docNumber', label: 'المحضر', kind: 'text' },
+    { key: 'docType', label: 'النوع', kind: 'text' },
     { key: 'sku', label: 'الصنف', kind: 'text' },
     { key: 'bookQty', label: 'الدفتريّ', kind: 'qty', sum: true },
     { key: 'countedQty', label: 'العدّ', kind: 'qty', sum: true },
@@ -148,16 +160,25 @@ const countVariance = {
     (data?.documents || [])
       .filter((d) => d.type === 'CC' || d.type === 'ADJ')
       .flatMap((d) =>
-        (d.lines || []).map((l) => ({
-          date: day(d.header?.countDate || d.header?.adjustmentDate),
-          docNumber: str(d.number),
-          sku: str(l.sku),
-          bookQty: num(l.bookQty ?? l.systemQty ?? l.qtyBook),
-          countedQty: num(l.countedQty ?? l.counted ?? l.qtyCounted),
-          variance: Math.round((num(l.countedQty ?? l.counted ?? l.qtyCounted) - num(l.bookQty ?? l.systemQty ?? l.qtyBook)) * 1e6) / 1e6,
-          state: str(d.state),
-          approvedBy: str(d.approvedByName),
-        }))
+        (d.lines || []).map((l) => {
+          const bookQty = num(l.bookQty ?? l.systemQty ?? l.qtyBook);
+          // ‹AQ-11› العدُّ يُخزَّن بحقلٍ مختلفٍ لكلّ نوع: CC في count2/count1، وADJ في
+          // actualQty — لا `countedQty` (فكان صفرًا دائمًا والفرقُ = −الدفتريّ كاذبًا).
+          const countedQty = d.type === 'ADJ'
+            ? num(l.actualQty ?? l.qty ?? l.countedQty)
+            : num(l.count2 ?? l.count1 ?? l.countedQty ?? l.counted ?? l.qtyCounted);
+          return {
+            date: day(d.header?.countDate || d.header?.adjustmentDate),
+            docNumber: str(d.number),
+            docType: d.type,
+            sku: str(l.sku),
+            bookQty,
+            countedQty,
+            variance: Math.round((countedQty - bookQty) * 1e6) / 1e6,
+            state: str(d.state),
+            approvedBy: str(d.approvedByName),
+          };
+        })
       )
       .filter((r) => r.variance !== 0),
 };

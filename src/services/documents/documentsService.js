@@ -20,6 +20,7 @@ import { reserveNumber } from './numberingService.js';
 import { INITIAL_STATE, isEditable, isLegalTransition, canDo, TRANSITIONS } from './states.js';
 import { derivationTargets, derivationLinkType, parentApprovalProblem, vanIdentityProblem, VAN_CHAIN } from './chain.js';
 import { getSchema } from './schemas/index.js';
+import { poSubmitProblems } from './schemas/po.js';
 import { primaryParentType } from './schemaUtils.js';
 import { dateSaveVerdict, defaultValueFor, eventFieldsOf } from './datingGuard.js';
 import { movesStock, POSTING_STATE } from '../ledger/postingRules.js';
@@ -255,6 +256,13 @@ export async function transitionDocument(docId, to, { note = '', profile, schema
   }
   if (transition.needsNote && !String(note).trim()) {
     throw new Error('اكتب السبب أولًا — الرفض بلا سبب لا يُوثَّق.');
+  }
+
+  // ‹MG-07› حارسُ إرسال أمر الشراء: يرفض الكمّيّةَ السالبة/الصفريّة والكمّيّةَ بلا
+  // وحدةٍ والتاريخَ المقلوب — في المنطق لا الواجهة، فيسري على كلّ الخلفيّات.
+  if (to === 'submitted' && data.type === 'PO') {
+    const poProblems = poSubmitProblems(data);
+    if (poProblems.length) throw new Error(`لا يُرسَل أمرُ الشراء: ${poProblems.join(' · ')}`);
   }
 
   // 🥇 حارس الأثر المخزني: لا يُنجَز مستندٌ يستحيل قيده.

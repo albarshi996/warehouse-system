@@ -355,7 +355,7 @@ export function draftLineFor(mode, { bin, item = {}, qty, bookQty = 0, uom = '',
  * والسحبُ وحدَه يُحرَس بالرصيد: من يسحب أكثر ممّا في الخانة يُنتج قيدًا
  * سالبًا يرفضه حارسُ الرصيد **بعد** أن يكون العاملُ قد حمل البضاعة.
  */
-export function entryProblems(mode, { line, contents, scanned } = {}) {
+export function entryProblems(mode, { line, contents, scanned, indexes = null } = {}) {
   const m = modeOf(mode);
   if (!m.docType) return ['وضعُ الاستعلام لا يكتب شيئًا — بدّل الوضع أوّلًا.'];
 
@@ -363,6 +363,10 @@ export function entryProblems(mode, { line, contents, scanned } = {}) {
   if (!line?.bin) problems.push('لا خانةَ مفتوحة — امسح ملصقَ الخانة أوّلًا.');
   if (!line?.sku && !line?.barcode) {
     problems.push('لم يُعرَف الصنفُ الممسوح — امسح ملصقًا سليمًا أو اخترْ من محتوى الخانة.');
+  } else if (indexes && !itemForLine({ sku: line?.sku, barcode: line?.barcode }, indexes)) {
+    // ‹ZH-02› لا رصيدَ لصنفٍ غير مسجّل: يُتحقّق من ماستر الأصناف إن مُرّر فهرسُه —
+    // فلا يُكتب رصيدُ خانةٍ لكودٍ لا بطاقةَ له (كان يُقبل أيُّ sku/barcode).
+    problems.push(`الصنفُ «${str(line?.sku) || str(line?.barcode)}» غيرُ مسجّلٍ في ماستر الأصناف — سجّله أوّلًا، فلا رصيدَ لمجهول.`);
   }
 
   const qty = m.id === 'count' ? num(line?.count1) : num(line?.[m.qtyField]);

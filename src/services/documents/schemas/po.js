@@ -46,6 +46,28 @@ export function poWarnings(doc) {
   return out;
 }
 
+/**
+ * ‹MG-07› حارسُ الإرسال الصلب (يُرفض لا يُحذَّر): الكمّيّةُ السالبة/الصفريّة على بندٍ
+ * مملوء، والكمّيّةُ بلا وحدة، والتسليمُ قبل تاريخ الأمر، وأمرٌ بلا بندٍ موجبٍ أصلًا.
+ * يُستدعى في `transitionDocument` عند «إرسال» لكلّ الخلفيّات — لا في الواجهة وحدها
+ * (فالمنطقُ هو الحارس، والشرطُ لم يكن محميًّا في المخطّط ولا القواعد). منطق خالص.
+ */
+export function poSubmitProblems(doc) {
+  const out = [];
+  const lines = Array.isArray(doc?.lines) ? doc.lines : [];
+  lines.forEach((l, i) => {
+    const qty = Number(l?.qty) || 0;
+    const hasContent = String(l?.sku ?? l?.barcode ?? l?.description ?? '').trim();
+    if (hasContent && qty <= 0) out.push(`البند ${i + 1}: صنفٌ بكمّيّةٍ غير موجبة (${qty}) — الأمرُ لا يَطلب دون الصفر`);
+    if (qty > 0 && !String(l?.uom ?? l?.unit ?? '').trim()) out.push(`البند ${i + 1}: كمّيّةٌ بلا وحدة — حدِّد وحدةَ الطلب`);
+  });
+  if (!lines.some((l) => (Number(l?.qty) || 0) > 0)) out.push('لا بندَ بكمّيّةٍ موجبة — أمرٌ بلا طلب لا يُرسَل');
+  const issue = String(doc?.header?.issueDate || '').slice(0, 10);
+  const req = String(doc?.header?.requiredDelivery || '').slice(0, 10);
+  if (issue && req && req < issue) out.push(`موعدُ التسليم (${req}) قبل تاريخ الأمر (${issue}) — تاريخٌ مقلوب`);
+  return out;
+}
+
 const schema = {
   type: 'PO',
   stage: 2,
