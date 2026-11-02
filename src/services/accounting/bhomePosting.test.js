@@ -109,6 +109,20 @@ test('★ السلفة: Dr سلف العمّال / Cr نقد — والسداد 
   assert.equal(bal(r, 'CASH'), 120);
 });
 
+test('★★ السلفةُ تحترم طريقةَ الدفع: التحويلُ المصرفيّ يصيب البنكَ لا الصندوق', () => {
+  const advBank = { ...adv('a', 'W-1', 300), header: { worker: 'سالم', workerCode: 'W-1', advanceDate: D, amount: 300, paymentMethod: 'تحويل مصرفي' } };
+  const a = createLedger().postMany([deriveLedgerEntry(advBank)]);
+  assert.equal(bal(a, 'WORKER_ADV:W-1'), 300);
+  assert.equal(bal(a, 'BANK'), -300, 'المالُ خرج من البنك');
+  assert.equal(bal(a, 'CASH'), 0, 'والصندوقُ لم يُمسّ');
+
+  const advrBank = { ...advr('b', 'W-1', 120), header: { worker: 'سالم', workerCode: 'W-1', repayDate: '2026-10-25', amount: 120, method: 'تحويل مصرفي' } };
+  const r = createLedger().postMany([deriveLedgerEntry(advrBank)]);
+  assert.equal(bal(r, 'WORKER_ADV:W-1'), -120);
+  assert.equal(bal(r, 'BANK'), 120, 'العائدُ إلى البنك');
+  assert.equal(bal(r, 'CASH'), 0);
+});
+
 /* ═══════════ ٣. الراتبُ والمصروفُ المبوّب (مسارٌ مستقلّ عن الذمم) ═══════════ */
 
 test('★★ الراتبُ مصروفٌ لا ذمّة: Dr رواتب / Cr نقد، ولا سطرَ في دفتر الذمم', () => {

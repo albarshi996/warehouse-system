@@ -30,6 +30,7 @@ import { ledgerRuleFor, partyCodeOf, invoiceOutstanding, overCollectionProblems 
 import { postToPartnerLedger, fetchPartnerLedger } from '../ledger/partnerLedgerService.js';
 import { createLedgerPost, shouldPostLocalJournal } from '../accounting/ledgerPostService.js';
 import { isPostableType } from '../accounting/deriveEntries.js';
+import { getActiveShop } from '../shops/shopStore.js';
 import * as dbDoor from '../_db/index.js';
 import { CASH_RULES } from '../field/repAccount.js';
 import { postToRepCash } from '../field/repAccountService.js';
@@ -124,6 +125,10 @@ export async function createDraft({ type, stage = null, profile, header = {}, li
     state: INITIAL_STATE,
     header: stamped,
     lines,
+    // ★ وسمُ المحلّ (ذ/س): المستندُ يُولَد موسومًا بالمحلّ الفعّال وقتَ إنشائه،
+    //   فيُرشَّح عليه قيدُه وتقريرُ مصاريفه. null = «كلّ المحلّات» (لا محلَّ مختارًا)،
+    //   فالسلوكُ الافتراضيُّ كما كان. يُقبل من الخادم (لا حصرَ حقولٍ على الإنشاء).
+    shop: stamped.shop ?? getActiveShop() ?? null,
     links: {},
     createdByUid: currentUid(),
     createdByName: currentName(profile),
@@ -406,7 +411,11 @@ export async function transitionDocument(docId, to, { note = '', profile, schema
   // إطلاقًا (البوّابةُ تمنعه)، فالخلفيّةُ الحيّةُ لا تتأثّر ولا يلزم تغييرُ القواعد الخادميّة.
   if (shouldPostLocalJournal(dbDoor.BACKEND, to, POSTING_STATE, isPostableType(data.type))) {
     try {
-      const r = await createLedgerPost(dbDoor).postDone({ ...data, id: docId });
+      // ★ `state: to` إلزاميّ: `data` قُرئ قبل النقلة فحالتُه ما زالت السابقة
+      //   (approved)، و`postDocuments` يرشّح بـPOSTABLE_STATES (done/closed) —
+      //   فبدونه يُسقَط المستندُ ولا يُكتب قيدٌ قطّ (نظيرُ `postToRepCash` أدناه).
+      //   كشفته مراجعةٌ عدائيّةٌ 2026-11-02.
+      const r = await createLedgerPost(dbDoor).postDone({ ...data, id: docId, state: to });
       if (r?.posted) {
         await appendAudit(docId, { action: 'journal', note: `قُيّد في الدفتر المحلّيّ: ${r.posted} قيد`, profile });
       }
@@ -771,6 +780,9 @@ export async function createCombinedInChain(
       state: INITIAL_STATE,
       header: draft.header,
       lines: draft.lines,
+      // ★ الابنُ يرث محلَّ أبيه (ذ/س): المستندُ المشتقُّ يبقى في محلّ مصدره،
+      //   وإلّا فالمحلُّ الفعّالُ وقتَ الاشتقاق — نفسُ شكل `createDraft` (حارسُ الكاتبَين).
+      shop: draft.header?.shop ?? prepared[0]?.live?.shop ?? prepared[0]?.live?.header?.shop ?? getActiveShop() ?? null,
       links: draft.links,
       createdByUid: uid,
       createdByName: actor.name,

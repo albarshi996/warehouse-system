@@ -100,11 +100,18 @@ export function reconcileLedger(documents = [], { states = ['done', 'approved'],
   // ── القيد المزدوج: رصيدُ الطرف من حسابه الفرعيّ ──
   // AR أصلٌ: الرصيدُ = مدين − دائن.  AP التزامٌ: ما علينا = دائن − مدين.
   const L = createLedger().postMany(deriveLedgerEntries(docs, { states }));
+  // ★ يُجمَع لا يُدهَس: جانبُ الذمم (ledgerByParty) يجمع deltas كلِّ الأطراف تحت
+  //   الرمز الواحد، فلو تصادم رمزُ عاملٍ مع عميلٍ/مورّدٍ وجب جمعُ حسابَيهما هنا
+  //   أيضًا وإلّا ظهر فرقٌ وهميّ (كشفته مراجعةٌ عدائيّةٌ 2026-11-02).
   const journalByParty = new Map();
-  for (const [code, bal] of L.subBalances('AR')) journalByParty.set(up(code), money2(fromMinor(bal)));
-  for (const [code, bal] of L.subBalances('AP')) journalByParty.set(up(code), money2(fromMinor(-bal)));
+  const addJournal = (code, val) => {
+    const k = up(code);
+    journalByParty.set(k, money2((journalByParty.get(k) || 0) + val));
+  };
+  for (const [code, bal] of L.subBalances('AR')) addJournal(code, fromMinor(bal));
+  for (const [code, bal] of L.subBalances('AP')) addJournal(code, fromMinor(-bal));
   // ذ — العاملُ طرفٌ ثالث: سلفتُه أصلٌ عليه كالعميل (مدين − دائن) فيُطابَق قيدُه ذمّته.
-  for (const [code, bal] of L.subBalances('WORKER_ADV')) journalByParty.set(up(code), money2(fromMinor(bal)));
+  for (const [code, bal] of L.subBalances('WORKER_ADV')) addJournal(code, fromMinor(bal));
 
   const codes = new Set([...ledgerByParty.keys(), ...journalByParty.keys()]);
   const rows = [...codes]

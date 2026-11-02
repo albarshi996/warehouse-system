@@ -112,3 +112,17 @@ test('★★★ ص: مطابقةٌ بالمحلّ — محلّان لا تختل
   assert.equal(s1.rows.find((r) => r.partyCode === 'C-1').ledger, 4600, 'فاتورة 5000 − قبض 400');
   assert.equal(s1.rows.find((r) => r.partyCode === 'C-2'), undefined, 'محلٌّ آخرُ غائبٌ عن مطابقة S1');
 });
+
+/* ═══════════ ذ — العامل، وتصادمُ الرموز ═══════════ */
+
+test('★★ رمزٌ مشتركٌ بين عاملٍ وعميل: القيدُ يُجمَع لا يُدهَس فتبقى المطابقةُ صفرَ فرق', () => {
+  // «سالم» عميلٌ وعاملٌ بلا رمزٍ صريح (فيصير partyCode='سالم' للطرفين):
+  // جانبُ الذمم يجمع (٥٠٠+٣٠٠)، وجانبُ القيد يجب أن يجمع AR+WORKER_ADV كذلك.
+  const invSalem = { id: 'i1', type: 'INV', number: 'INV-i1', state: 'done', header: { customer: 'سالم', invoiceDate: D1 }, lines: [{ qty: 1, unitPrice: 500 }] };
+  const advSalem = { id: 'a1', type: 'ADV', number: 'ADV-a1', state: 'done', header: { worker: 'سالم', advanceDate: D1, amount: 300 } };
+  const r = reconcileLedger([invSalem, advSalem]);
+  assert.equal(r.allMatch, true, 'لا فرقَ وهميًّا من تصادم الرمز: ' + JSON.stringify(r.rows));
+  const row = r.rows.find((x) => r.rows.length === 1 || x.partyCode === 'سالم');
+  assert.equal(row.ledger, 800, '٥٠٠ ذمّةُ عميل + ٣٠٠ سلفةُ عامل');
+  assert.equal(row.journal, 800, 'القيدُ يجمع AR وWORKER_ADV تحت الرمز لا يدهس أحدَهما');
+});

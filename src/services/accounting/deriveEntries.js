@@ -97,7 +97,9 @@ export const COUNTERPART = Object.freeze({
   GRN: 'INVENTORY', SPV: 'CASH', SRN: 'INVENTORY',
   // ذ — فاتورةُ المورّد: «القيمة» مشترياتٌ (لا مخزون)، و«الأصناف» مخزون.
   SINV: 'PURCHASES', SINVI: 'INVENTORY',
-  // ذ — سلفُ العامل: نقدٌ يخرج ثمّ يعود (الطرفُ المقابلُ النقد في الحالين).
+  // ذ — سلفُ العامل: نقدٌ يخرج ثمّ يعود. الطرفُ المقابلُ نقديٌّ، **ويُحَلّ بطريقة
+  // الدفع** (نقدًا من الصندوق، تحويلًا من البنك) في `deriveLedgerEntry` — فلا
+  // يُثبَّت على الصندوق كما كان (راجعته مراجعةٌ عدائيّةٌ 2026-11-02).
   ADV: 'CASH', ADVR: 'CASH',
 });
 
@@ -125,8 +127,11 @@ export const LEDGER_DOC_TYPES = Object.freeze(Object.keys(COUNTERPART));
 export function deriveLedgerEntry(doc) {
   const ple = entryFor(doc); // المصدرُ الواحد: المبلغ · الطرف · الاتّجاه · التاريخ · المعرّف
   if (!ple) return null;
-  const counterpart = COUNTERPART[ple.docType];
+  let counterpart = COUNTERPART[ple.docType];
   if (!counterpart) return null;
+  // ذ — سلفُ العامل (ADV/ADVR) تحترم طريقةَ الدفع كمسار المصروف: التحويلُ المصرفيّ
+  // يصيب البنكَ لا الصندوق. محصورٌ بطرف العامل فلا يمسّ RCP/SPV القائمة.
+  if (ple.party === 'worker' && counterpart === 'CASH') counterpart = cashSideOf(doc);
   const units = toMinor(ple.amount);
   if (units <= 0) return null;
 
