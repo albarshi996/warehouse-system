@@ -602,4 +602,7 @@ test('★★★ ZH-02: لا رصيدَ لصنفٍ غير مسجّل — يُرف
   assert.ok(problems.some((p) => /غيرُ مسجّل/.test(p) && /GHOST-999/.test(p)), problems.join(' | '));
   // بلا فهرسٍ: توافقٌ رجعيّ — لا يُحرَس (كما كان قبل ZH-02).
   assert.deepEqual(entryProblems('putaway', { line: { bin: BIN, sku: 'GHOST-999', qty: 3 }, contents: c }), []);
+  // ★ فهرسٌ فارغٌ (لم يُحمَّل بعد) لا يُحكم به بالجهل — فلا يُرفض المجهولُ أثناء التحميل.
+  const empty = buildItemIndexes([]);
+  assert.deepEqual(entryProblems('putaway', { line: { bin: BIN, sku: 'GHOST-999', qty: 3 }, contents: c, indexes: empty }), []);
 });

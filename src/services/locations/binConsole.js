@@ -363,9 +363,10 @@ export function entryProblems(mode, { line, contents, scanned, indexes = null } 
   if (!line?.bin) problems.push('لا خانةَ مفتوحة — امسح ملصقَ الخانة أوّلًا.');
   if (!line?.sku && !line?.barcode) {
     problems.push('لم يُعرَف الصنفُ الممسوح — امسح ملصقًا سليمًا أو اخترْ من محتوى الخانة.');
-  } else if (indexes && !itemForLine({ sku: line?.sku, barcode: line?.barcode }, indexes)) {
-    // ‹ZH-02› لا رصيدَ لصنفٍ غير مسجّل: يُتحقّق من ماستر الأصناف إن مُرّر فهرسُه —
-    // فلا يُكتب رصيدُ خانةٍ لكودٍ لا بطاقةَ له (كان يُقبل أيُّ sku/barcode).
+  } else if (indexes?.bySku?.size > 0 && !itemForLine({ sku: line?.sku, barcode: line?.barcode }, indexes)) {
+    // ‹ZH-02› لا رصيدَ لصنفٍ غير مسجّل: يُتحقّق من ماستر الأصناف **متى جهز فهرسُه**
+    // (`size>0`) — ففهرسٌ فارغٌ يعني «لم يُحمَّل بعد» فلا يُحكم بالجهل على كلّ مسحة
+    // (عرفُ `binProblem`: `size ? ... : true`). فلا يُكتب رصيدُ خانةٍ لكودٍ لا بطاقةَ له.
     problems.push(`الصنفُ «${str(line?.sku) || str(line?.barcode)}» غيرُ مسجّلٍ في ماستر الأصناف — سجّله أوّلًا، فلا رصيدَ لمجهول.`);
   }
 
