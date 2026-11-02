@@ -22,6 +22,7 @@ import { expiryStatus } from '../balances/balanceKey.js';
 import { AUTO_PULL_MS, PULL_SCOPE_IDS, lastPullLabel, scopeOf } from '../odoo/pullRegistry.js';
 import { TERMINAL_STATES } from '../documents/states.js';
 import { ODOO_TYPES, libyaDayOf, ordersReport, selectDocs } from '../reports/odooReports.js';
+import { confirmedCount, hasCount } from '../documents/schemas/cc.js';
 
 const DAY = 86400000;
 
@@ -113,8 +114,13 @@ export function computeKpis(docs, opts = {}) {
   let anyCount = false;
   for (const cc of ofType(scoped, 'CC').filter((d) => d.state === 'done')) {
     for (const l of cc.lines || []) {
+      // ‹AQ-11ب› العدُّ المؤكَّد بدلالة cc.js (المصدرُ الواحد): `count2:''` تعني «لا
+      // عدّ ثانٍ» فيُرجَع للأوّل، وبندٌ لم يُعدّ أصلًا لا يُثبت دقّةً ولا ينفيها. وكان
+      // `count2 ?? actualQty` يقرأ `''` صفرًا فيختلق فرقًا بكامل الدفتريّ لكلّ جردٍ
+      // مفردِ العدّ (الشكلُ الغالب في محاضر الخانة) فيُسقط دقّةَ المخزون كاذبًا.
+      if (!hasCount(l)) continue;
       const b = Number(l?.bookQty) || 0;
-      const c = Number(l?.count2 ?? l?.actualQty) || 0;
+      const c = confirmedCount(l);
       if (b === 0 && c === 0) continue;
       book += b;
       absVar += Math.abs(c - b);

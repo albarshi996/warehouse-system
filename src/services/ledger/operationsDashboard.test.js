@@ -53,6 +53,23 @@ test('دقّة المخزون من محاضر الجرد المصادَقة', ()
   assert.equal(k.inventoryAccuracy, 0.99);
 });
 
+test('★★ AQ-11ب: الجردُ المفردُ (count2 فارغة) يُقرأ من count1 — فلا فرقٌ وهميٌّ يُسقط دقّةَ المخزون', () => {
+  // كان `count2 ?? actualQty` يقرأ `''` صفرًا: لهذه المحاضرِ نفسِها كان يُحسب 0% بدل 95%.
+  const docs = [
+    {
+      id: 'c2', type: 'CC', state: 'done',
+      lines: [
+        { bookQty: 100, count1: 100, count2: '' }, // مطابقٌ مفرد — لا فرق
+        { bookQty: 100, count1: 90, count2: '' },   // عجزٌ ١٠ حقيقيّ
+        { bookQty: 50, count1: '', count2: '' },     // لم يُعدّ — يُتجاهَل لا يُحسب فرقًا
+      ],
+    },
+  ];
+  const k = computeKpis(docs);
+  // الدفتريُّ المعدود 200 (غيرُ المعدودِ مُستبعَد)، الفرقُ المطلق 10 ⇒ 95%
+  assert.equal(k.inventoryAccuracy, 0.95);
+});
+
 test('دقّة التسليم = المستلَم ÷ المشحون عبر استلامات النقل', () => {
   const docs = [
     { id: 't1', type: 'TRC', state: 'done', lines: [{ qtyShipped: 50, qtyReceived: 48 }] },
