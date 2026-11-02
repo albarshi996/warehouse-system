@@ -132,10 +132,29 @@ test('★★ المصروفُ المبوّب: Dr مصروف:الفئة / Cr نق
   assert.equal(bal(B, 'BANK'), -90, 'التحويلُ المصرفيُّ من البنك لا النقد');
 });
 
+/* ═══════════ ٣-ب. مستنداتُ التشغيل (س): فئةٌ ثابتةٌ لكلّ نوع ═══════════ */
+
+test('★★ التشغيل: نقلٌ Dr مصروف:النقل، عمالةٌ Dr مصروف:المناولة، نظافةٌ Dr مصروف:النظافة', () => {
+  const taxi = { id: 't1', type: 'TAXI', number: 'TAXI-1', state: 'done', header: { vendor: 'سائق', purpose: 'توريد', tripDate: D, amount: 60, paymentMethod: 'نقدًا' } };
+  const labor = { id: 'l1', type: 'LABOR', number: 'LABOR-1', state: 'done', header: { crew: 'طاقم', task: 'تحميل', workDate: D, amount: 150, paymentMethod: 'نقدًا' } };
+  const clean = { id: 'c1', type: 'CLEAN', number: 'CLEAN-1', state: 'done', header: { provider: 'شركة', area: 'المخزن', serviceDate: D, amount: 90, paymentMethod: 'تحويل مصرفي' } };
+
+  assert.equal(expenseCategoryOf(taxi), 'transport');
+  assert.equal(expenseCategoryOf(labor), 'handling');
+  assert.equal(expenseCategoryOf(clean), 'cleaning');
+
+  const G = createLedger().postMany([taxi, labor, clean].map(deriveExpenseEntry));
+  assert.equal(bal(G, 'EXPENSE:TRANSPORT'), 60);
+  assert.equal(bal(G, 'EXPENSE:HANDLING'), 150);
+  assert.equal(bal(G, 'EXPENSE:CLEANING'), 90);
+  assert.equal(bal(G, 'CASH'), -210, 'النقدُ: ٦٠ نقل + ١٥٠ عمالة (النظافةُ بتحويلٍ مصرفيّ)');
+  assert.equal(bal(G, 'BANK'), -90, 'النظافةُ من البنك');
+});
+
 /* ═══════════ ٤. بوّابةُ القابليّة والترحيلُ الفعليّ على المخزن ═══════════ */
 
 test('★ isPostableType: ذممٌ ومصروفاتٌ تُقيَّد، وما لا أثرَ له لا', () => {
-  for (const t of ['SINV', 'SINVI', 'ADV', 'ADVR', 'SAL', 'EXP', 'INV', 'GRN']) {
+  for (const t of ['SINV', 'SINVI', 'ADV', 'ADVR', 'SAL', 'EXP', 'TAXI', 'LABOR', 'CLEAN', 'INV', 'GRN']) {
     assert.equal(isPostableType(t), true, t);
   }
   assert.equal(isPostableType('PICK'), false);

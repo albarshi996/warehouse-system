@@ -15,16 +15,23 @@ import { categoryLabel } from '../../../services/accounting/expenseCategories.js
 import ShopSwitcher from '../shops/ShopSwitcher.jsx';
 
 const VIEWER_ROLES = ['admin', 'warehouse_manager', 'finance_manager'];
-const EXPENSE_TYPES = ['EXP', 'SAL', 'ADV', 'ADVR'];
-const TYPE_LABEL = { EXP: 'مصروف', SAL: 'راتب', ADV: 'سلفة', ADVR: 'سداد سلفة' };
+const EXPENSE_TYPES = ['EXP', 'SAL', 'ADV', 'ADVR', 'TAXI', 'LABOR', 'CLEAN'];
+const TYPE_LABEL = { EXP: 'مصروف', SAL: 'راتب', ADV: 'سلفة', ADVR: 'سداد سلفة', TAXI: 'نقل/تاكسي', LABOR: 'عمالة', CLEAN: 'نظافة' };
 
 const card = 'rounded-xl border border-line bg-surface p-4';
 
 const fmt = (n) => (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const amountOf = (d) => Number(d?.header?.amount ?? d?.header?.total ?? d?.header?.amountPaid) || 0;
-const dateOf = (d) => String(d?.header?.expenseDate || d?.header?.payDate || d?.header?.advanceDate || d?.header?.repayDate || '').slice(0, 10);
+const dateOf = (d) => String(d?.header?.expenseDate || d?.header?.payDate || d?.header?.advanceDate || d?.header?.repayDate || d?.header?.tripDate || d?.header?.workDate || d?.header?.serviceDate || '').slice(0, 10);
 const shopOf = (d) => d?.shop ?? d?.header?.shop ?? null;
-const partyOf = (d) => d?.header?.worker || d?.header?.beneficiary || (d?.type === 'EXP' ? categoryLabel(d?.header?.category) : '') || '';
+const partyOf = (d) =>
+  d?.header?.worker ||
+  d?.header?.beneficiary ||
+  d?.header?.vendor ||
+  d?.header?.crew ||
+  d?.header?.provider ||
+  (d?.type === 'EXP' ? categoryLabel(d?.header?.category) : '') ||
+  '';
 
 export default function ExpensesBoard() {
   const [me, setMe] = useState(null);

@@ -67,6 +67,10 @@ import sal from './sal.js';
 import adv from './adv.js';
 import advr from './advr.js';
 import exp from './exp.js';
+// س — مستنداتُ التشغيل: نقل/تاكسي · عمالة · نظافة (مصاريفُ تشغيلٍ مبوّبة).
+import taxi from './taxi.js';
+import labor from './labor.js';
+import clean from './clean.js';
 
 /** المخطّطات الجاهزة. */
 const SCHEMAS = {
@@ -130,6 +134,10 @@ const SCHEMAS = {
   ADV: adv,
   ADVR: advr,
   EXP: exp,
+  // س — مستنداتُ التشغيل.
+  TAXI: taxi,
+  LABOR: labor,
+  CLEAN: clean,
 };
 
 /**
@@ -200,6 +208,10 @@ export const GOVERNED_FORMS = [
   { type: 'ADV', stage: 7, titleAr: 'سلفة عامل', file: '', phase: 'BH' },
   { type: 'ADVR', stage: 7, titleAr: 'سداد سلفة عامل', file: '', phase: 'BH' },
   { type: 'EXP', stage: 7, titleAr: 'مصروف مبوّب', file: '', phase: 'BH' },
+  // س — مستنداتُ التشغيل (نقل/عمالة/نظافة).
+  { type: 'TAXI', stage: 7, titleAr: 'نقل / تاكسي', file: '', phase: 'BH' },
+  { type: 'LABOR', stage: 7, titleAr: 'أجرة عمالة', file: '', phase: 'BH' },
+  { type: 'CLEAN', stage: 7, titleAr: 'نظافة', file: '', phase: 'BH' },
 ].map((f) => ({ ...f, ready: Boolean(SCHEMAS[f.type]) }));
 
 /** يُعيد مخطّط النوع، أو null إن لم يُبنَ بعد. */

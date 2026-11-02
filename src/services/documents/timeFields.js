@@ -171,6 +171,11 @@ export const TIME_FIELD_MAP = Object.freeze({
   ADV: { advanceDate: E, dueDate: P },
   ADVR: { repayDate: E },
   EXP: { expenseDate: E },
+
+  /* ═══ س — مستنداتُ التشغيل (نقل/عمالة/نظافة) ═══ */
+  TAXI: { tripDate: E },
+  LABOR: { workDate: E },
+  CLEAN: { serviceDate: E },
 });
 
 /**

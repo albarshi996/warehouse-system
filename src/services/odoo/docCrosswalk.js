@@ -112,6 +112,10 @@ export const DOC_ODOO_MAP = {
   ADV: { model: 'x_bhome.worker_advance', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
   ADVR: { model: 'x_bhome.worker_advance', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
   EXP: { model: 'x_bhome.expense', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
+  // س — مستنداتُ التشغيل: محلّيّةٌ لا تُدفَع إلى أودو (الصفُّ للشمول لا للمزامنة).
+  TAXI: { model: 'x_bhome.transport', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
+  LABOR: { model: 'x_bhome.labor', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
+  CLEAN: { model: 'x_bhome.cleaning', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
 };
 
 /** صفّ العبور لنوعٍ ما، أو null إن كان النوع خارج الدورة المحكومة. */

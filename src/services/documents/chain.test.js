@@ -674,8 +674,9 @@ test('مخطّطات F4 الخمسة مسجّلة — والمجموعة صار�
   }
   // ‹SRC-POST› +4: مستنداتُ المصدر المُنجَزة (SRI · SRO · SXO · SXI).
   // ‹BHOME ذ› +6: فاتورتا المورّد (SINV · SINVI) والرواتبُ والسلفُ والمصروف (SAL · ADV · ADVR · EXP).
-  assert.equal(readyTypes().length, 55, 'خمسةٌ وخمسون: +٦ ماليّاتِ المحلّ المستقلّ (ذ)');
-  assert.equal(GOVERNED_FORMS.filter((f) => f.ready).length, 55);
+  // ‹BHOME س› +3: مستنداتُ التشغيل (TAXI · LABOR · CLEAN).
+  assert.equal(readyTypes().length, 58, 'ثمانيةٌ وخمسون: +٦ ماليّاتِ المحلّ (ذ) +٣ مستنداتِ التشغيل (س)');
+  assert.equal(GOVERNED_FORMS.filter((f) => f.ready).length, 58);
 });
 
 test('البضاعة المحميّة: المخطّطات الثلاثة مسجّلة وكاملة البنية', () => {

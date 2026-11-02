@@ -48,3 +48,15 @@ test('الفئةُ المجهولةُ تسقط إلى «أخرى» ولا تضي
   const s = expenseSummary([exp('1', 'فئةٌ غريبة', 70)]);
   assert.equal(s.rows.find((r) => r.key === 'other').total, 70);
 });
+
+test('★★ مستنداتُ التشغيل (س) تُبوَّب بفئتها الثابتة وتدخل إجماليَّ المصروف', () => {
+  const taxi = { id: 't1', type: 'TAXI', state: 'done', header: { vendor: 'سائق', tripDate: '2026-10-21', amount: 60 } };
+  const labor = { id: 'l1', type: 'LABOR', state: 'done', header: { crew: 'طاقم', workDate: '2026-10-21', amount: 150 } };
+  const clean = { id: 'c1', type: 'CLEAN', state: 'done', header: { provider: 'شركة', serviceDate: '2026-10-21', amount: 90 } };
+  const s = expenseSummary([taxi, labor, clean]);
+  assert.equal(s.rows.find((r) => r.key === 'transport').total, 60);
+  assert.equal(s.rows.find((r) => r.key === 'handling').total, 150);
+  assert.equal(s.rows.find((r) => r.key === 'cleaning').total, 90);
+  assert.equal(s.expenseTotal, 300, 'التشغيلُ مصروفٌ يدخل الإجماليّ');
+  assert.equal(s.advancesOut, 0);
+});

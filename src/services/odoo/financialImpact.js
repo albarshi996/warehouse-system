@@ -101,6 +101,10 @@ export const FINANCIAL_IMPACT = Object.freeze({
   ADV: { financial: false, stockEffect: false, odooDoc: null, note: 'سلفة عامل: دَينٌ على العامل يُقيَّد في الدفتر المحلّيّ (BHOME) لا في أودو — لا قيدَ مرآةٍ له.' },
   ADVR: { financial: false, stockEffect: false, odooDoc: null, note: 'سداد سلفة: يُنقص دَينَ العامل في الدفتر المحلّيّ (BHOME) لا في أودو — لا قيدَ مرآةٍ له.' },
   EXP: { financial: false, stockEffect: false, odooDoc: null, note: 'مصروف مبوّب: يُقيَّد في الدفتر المحلّيّ (BHOME) بفئته لا في أودو — لا قيدَ مرآةٍ يُعرض.' },
+  // س — مستنداتُ التشغيل: مصروفاتٌ تشغيليّةٌ يملكها الدفترُ المحلّيّ (BHOME) لا أودو.
+  TAXI: { financial: false, stockEffect: false, odooDoc: null, note: 'نقل/تاكسي: مصروفُ نقلٍ يُقيَّد في الدفتر المحلّيّ (BHOME) تحت فئة النقل لا في أودو — لا قيدَ مرآةٍ له.' },
+  LABOR: { financial: false, stockEffect: false, odooDoc: null, note: 'أجرة عمالة: مصروفُ مناولةٍ يُقيَّد في الدفتر المحلّيّ (BHOME) لا في أودو — لا قيدَ مرآةٍ له.' },
+  CLEAN: { financial: false, stockEffect: false, odooDoc: null, note: 'نظافة: مصروفُ خدمةٍ يُقيَّد في الدفتر المحلّيّ (BHOME) تحت فئة النظافة لا في أودو — لا قيدَ مرآةٍ له.' },
 });
 
 /** الأثر الماليّ لنوعٍ ما، أو null لغير المعروف. */

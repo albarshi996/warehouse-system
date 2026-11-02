@@ -177,10 +177,20 @@ export function deriveLedgerEntries(documents = [], { states = ['done', 'approve
  * مستقلٌّ عن `entryFor`/`COUNTERPART` — لكنّه يُقيَّد في الدفتر المزدوج نفسِه.
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-/** وقائعُ المصروف النقديّ وحسابُها المدين. EXP يُبوَّب بفئته الفرعيّة. */
+/**
+ * وقائعُ المصروف النقديّ وحسابُها المدين:
+ *   `categorized` — الفئةُ من رأس المستند (EXP: التبويبُ الهجين).
+ *   `fixedCategory` — فئةٌ ثابتةٌ للنوع (مستنداتُ التشغيل س: نقلٌ/عمالةٌ/نظافة).
+ *   وإلّا `debit` حسابٌ صريح (SAL: الرواتب).
+ * و`reportCategory` فئةُ التقرير لغير المبوّب (الراتبُ يُجمع تحت «رواتب»).
+ */
 export const EXPENSE_EVENTS = Object.freeze({
-  SAL: { debit: 'SALARIES', labelAr: 'صرف راتب' },
+  SAL: { debit: 'SALARIES', reportCategory: 'salaries', labelAr: 'صرف راتب' },
   EXP: { debit: 'EXPENSE', categorized: true, labelAr: 'مصروف' },
+  // س — مستنداتُ التشغيل: لكلّ نوعٍ فئتُه الثابتة في حساب المصروفات المبوّب.
+  TAXI: { debit: 'EXPENSE', fixedCategory: 'transport', labelAr: 'نقل/تاكسي' },
+  LABOR: { debit: 'EXPENSE', fixedCategory: 'handling', labelAr: 'أجرة عمالة' },
+  CLEAN: { debit: 'EXPENSE', fixedCategory: 'cleaning', labelAr: 'نظافة' },
 });
 
 /** مبلغُ مستند المصروف — من رأسه (قيمةٌ مفردةٌ لا بنود). */
@@ -189,9 +199,21 @@ export function expenseAmount(doc) {
   return Number(h.amount ?? h.total ?? h.amountPaid) || 0;
 }
 
-/** فئةُ المصروف مُطبّعةً (EXP وحدَه)، أو '' لغير المبوّب. */
+/** حسابُ المصروف المدين لمستندٍ (مبوّبًا بفئته الثابتة أو المختارة، أو حسابُه الصريح). */
+function expenseDebitAccount(doc) {
+  const spec = EXPENSE_EVENTS[doc?.type];
+  if (!spec) return '';
+  const catKey = spec.fixedCategory || (spec.categorized ? normalizeCategory(doc?.header?.category) : '');
+  return catKey ? subAccount(categoryAccount(catKey), catKey.toUpperCase()) : spec.debit;
+}
+
+/** فئةُ المصروف للتقرير (مُطبّعةً) — للتجميع في لوحة المصاريف، أو '' لغير المعروف. */
 export function expenseCategoryOf(doc) {
-  return doc?.type === 'EXP' ? normalizeCategory(doc?.header?.category) : '';
+  const spec = EXPENSE_EVENTS[doc?.type];
+  if (!spec) return '';
+  if (spec.fixedCategory) return spec.fixedCategory;
+  if (spec.categorized) return normalizeCategory(doc?.header?.category);
+  return spec.reportCategory || '';
 }
 
 /** حسابُ النقد بحسب طريقة الدفع — التحويلُ المصرفيّ بنكٌ، وما عداه نقد. */
@@ -216,12 +238,11 @@ export function deriveExpenseEntry(doc) {
   if (units <= 0) return null;
 
   const h = doc?.header || {};
-  const catKey = expenseCategoryOf(doc);
-  const debitAccount = spec.categorized
-    ? subAccount(categoryAccount(catKey), catKey.toUpperCase())
-    : spec.debit;
+  const debitAccount = expenseDebitAccount(doc);
   const worker = String(h.workerCode || h.worker || '').trim();
-  const date = String(h.payDate || h.expenseDate || h.date || h.paymentDate || '').slice(0, 10);
+  const date = String(
+    h.payDate || h.expenseDate || h.tripDate || h.workDate || h.serviceDate || h.date || h.paymentDate || ''
+  ).slice(0, 10);
 
   const entry = postEntry({
     key: `${doc.type}__${String(doc.id ?? '')}`,

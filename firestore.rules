@@ -299,6 +299,10 @@ service cloud.firestore {
            : docType == 'ADV'     ? ['finance_manager', 'warehouse_manager']
            : docType == 'ADVR'    ? ['finance_manager', 'warehouse_manager']
            : docType == 'EXP'     ? ['finance_manager', 'warehouse_manager']
+           // س — مستنداتُ التشغيل (نقل/عمالة/نظافة): كالمصروف المبوّب.
+           : docType == 'TAXI'    ? ['finance_manager', 'warehouse_manager']
+           : docType == 'LABOR'   ? ['finance_manager', 'warehouse_manager']
+           : docType == 'CLEAN'   ? ['finance_manager', 'warehouse_manager']
            : [];
     }
     function completeRoles(docType) {
@@ -367,6 +371,10 @@ service cloud.firestore {
            : docType == 'ADV'     ? ['treasury', 'finance_manager', 'warehouse_manager']
            : docType == 'ADVR'    ? ['treasury', 'finance_manager', 'warehouse_manager']
            : docType == 'EXP'     ? ['treasury', 'finance_manager', 'warehouse_manager']
+           // س — مستنداتُ التشغيل: الخزينةُ تُنفّذ الصرف، والمالية فوقها.
+           : docType == 'TAXI'    ? ['treasury', 'finance_manager', 'warehouse_manager']
+           : docType == 'LABOR'   ? ['treasury', 'finance_manager', 'warehouse_manager']
+           : docType == 'CLEAN'   ? ['treasury', 'finance_manager', 'warehouse_manager']
            : [];
     }
 

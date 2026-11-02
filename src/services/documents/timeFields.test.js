@@ -77,20 +77,21 @@ test('كلّ المستندات ممثَّلة — لا نوع بلا زمن', (
   const stats = timeFieldStats();
   // الأعداد تُحدَّث **بقصد** عند إضافة نوعٍ جديد — فتغيّرها إعلانٌ لا مفاجأة.
   assert.equal(stats.types, Object.keys(SCHEMAS).length, 'كلّ نوعٍ ممثَّل');
-  assert.equal(stats.types, 55, '٤٩ + ٦ ماليّاتِ المحلّ المستقلّ ‹BHOME ذ›: SINV·SINVI·SAL·ADV·ADVR·EXP');
+  assert.equal(stats.types, 58, '٤٩ + ٦ ماليّاتِ المحلّ ‹ذ› + ٣ مستنداتِ التشغيل ‹س›: TAXI·LABOR·CLEAN');
   // ‹EXE-301› +2: `mustShipBy` في SO وPICK — مهلة الشحن التشغيليّة.
   // ‹FNB-405› +3: `mfgDate` في GRN وQC وPUTAWAY — سمةُ دفعةٍ تعبر السلسلة.
   // ‹FNB-502› +7: دورة الإنتاج الثلاثة بحقولها.
   // ‹LPN-405› +2: محضر فرق النقل — تاريخُ المحضر ووقتُ الوصول.
   // ‹SRC-POST› +10: لكلٍّ من SRI/SRO/SXO/SXI/SRA يومُ الإنجاز في المصدر (واقعة) والصلاحيّة (سمة).
   // ‹ODOO-ORD› +4: لكلٍّ من OSO/OPO تاريخُ الأمر (واقعة) وموعدُ التسليم أو الوصول (مخطَّط).
-  // ‹BHOME ذ› +9: ٦ ختومِ وقائع (تاريخُ كلّ مستند) + ٣ مواعيدِ استحقاقٍ مخطّطة (SINV·SINVI·ADV).
-  assert.equal(stats.total, 105, 'مجموع الحقول الزمنيّة المصنَّفة');
+  // ‹BHOME ذ› +9: ٦ ختومِ وقائع + ٣ مواعيدِ استحقاقٍ مخطّطة (SINV·SINVI·ADV).
+  // ‹BHOME س› +3: ختمُ واقعةٍ لكلّ مستندِ تشغيلٍ (TAXI·LABOR·CLEAN).
+  assert.equal(stats.total, 108, 'مجموع الحقول الزمنيّة المصنَّفة');
 });
 
 test('التوزيع: ختم الواقعة هو الغالب، والسمة تليه', () => {
   const { counts } = timeFieldStats();
-  assert.equal(counts.event, 55, "‹BHOME ذ› +6: تاريخُ كلّ مستندٍ ماليٍّ واقعةٌ وقعت");
+  assert.equal(counts.event, 58, "‹BHOME ذ› +6 و‹س› +3: تاريخُ كلّ مستندٍ ماليٍّ/تشغيليٍّ واقعةٌ وقعت");
   // ‹FNB-405› تاريخ الإنتاج سمةٌ كالصلاحيّة — وقع في مصنع المورّد لا عندنا.
   // ‹SRC-POST› +5: صلاحيّةُ بنود مستندات المصدر.
   assert.equal(counts.attribute, 29);
@@ -98,7 +99,7 @@ test('التوزيع: ختم الواقعة هو الغالب، والسمة ت�
   // ‹BHOME ذ› +3: استحقاقُ فاتورتَي المورّد وسلفةِ العامل (تذكيرُ السداد).
   assert.equal(counts.planned, 17, 'ومنها mustShipBy ‹EXE-301› وproductionDate ‹FNB-502› واستحقاقاتُ ذ');
   assert.equal(counts.reference, 4);
-  assert.equal(counts.event + counts.attribute + counts.planned + counts.reference, 105);
+  assert.equal(counts.event + counts.attribute + counts.planned + counts.reference, 108);
 });
 
 /* ═══════════ ٣. القواعد التي لا تُخرق ═══════════ */

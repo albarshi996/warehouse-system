@@ -7,7 +7,8 @@
  *   (سلفٌ − سداد) على حدةٍ ولا تُضاف إلى الإجماليّ، وإلّا تضخّم المصروفُ بما
  *   سيعود. منطق خالصٌ يُغذّى بالمستندات: بلا Firestore وبلا شبكة.
  */
-import { EXPENSE_CATEGORIES, normalizeCategory } from './expenseCategories.js';
+import { EXPENSE_CATEGORIES } from './expenseCategories.js';
+import { EXPENSE_EVENTS, expenseCategoryOf } from './deriveEntries.js';
 
 const num = (v) => Number(v) || 0;
 const money = (n) => Math.round(num(n) * 100) / 100;
@@ -34,8 +35,9 @@ export function expenseSummary(documents = [], { shop, states = ['done', 'closed
   };
 
   for (const d of docs) {
-    if (d?.type === 'EXP') bump(normalizeCategory(d?.header?.category), amountOf(d));
-    else if (d?.type === 'SAL') bump('salaries', amountOf(d));
+    // مصاريفُ الدفتر المزدوج (EXP/SAL ومستنداتُ التشغيل) تُبوَّب بفئتها التقريريّة.
+    if (EXPENSE_EVENTS[d?.type]) bump(expenseCategoryOf(d), amountOf(d));
+    // السلفةُ دَينٌ لا مصروف: صافيةٌ (سلفٌ − سداد) على حدة.
     else if (d?.type === 'ADV') bump('worker_advance', amountOf(d));
     else if (d?.type === 'ADVR') bump('worker_advance', -amountOf(d));
   }
