@@ -19,6 +19,7 @@ import Icon from '../../ui/Icon.jsx';
 import ListView from '../../odoo/ListView.jsx';
 import Pager from '../../odoo/Pager.jsx';
 import { pageSlice } from '../../../services/ui/pagination.js';
+import { listSectors, filterItemsBySector, sectorLabel, UNCLASSIFIED } from '../../../services/org/sectorDimension.js';
 
 const PAGE_SIZE = 50;
 import { int, num } from '../../odoo/format.js';
@@ -55,6 +56,7 @@ export default function ItemMaster() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [sector, setSector] = useState(''); // ق — بُعدٌ متعامدٌ مع البحث والأرشفة
   const [showArchived, setShowArchived] = useState(false);
   const [editor, setEditor] = useState(null); // null | { mode, item? }
   const [cardSku, setCardSku] = useState(null); // بطاقة الصنف (SAP-1) — كود الصنف المعروض
@@ -170,19 +172,24 @@ export default function ItemMaster() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  // ق — القطاعاتُ المتاحةُ من تصنيف الأصناف نفسِه (بُعدٌ مشتقٌّ لا كِيانٌ جديد).
+  const sectorList = useMemo(() => listSectors(items), [items]);
+
   const filtered = useMemo(() => {
+    // القطاعُ بُعدٌ متعامد: يُرشَّح أوّلًا، مستقلًّا عن البحث والأرشفة.
+    const scoped = filterItemsBySector(items, sector);
     const term = search.trim().toLowerCase();
-    if (!term) return items;
-    return items.filter((it) =>
+    if (!term) return scoped;
+    return scoped.filter((it) =>
       [it.sku, it.nameAr, it.nameEn, it.category, ...(it.barcodes || [])]
         .filter(Boolean)
         .some((field) => String(field).toLowerCase().includes(term))
     );
-  }, [items, search]);
+  }, [items, search, sector]);
 
   // ترقيم من طرف العميل فوق القائمة المحمّلة — يكشف الذيل بدل قصّه صامتًا (المحور ٧).
   const [page, setPage] = useState(0);
-  useEffect(() => setPage(0), [search, showArchived]);
+  useEffect(() => setPage(0), [search, showArchived, sector]);
   const pageItems = useMemo(() => pageSlice(filtered, page, PAGE_SIZE), [filtered, page]);
 
   const handleArchive = async (item) => {
@@ -506,6 +513,16 @@ export default function ItemMaster() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
+            {/* ق — مرشّحُ القطاع (متعامدٌ مع المحلّ والبحث) — يظهر متى صُنّف صنفٌ واحدٌ فأكثر. */}
+            {(sectorList.sectors.length > 0 || sectorList.unclassified > 0) && (
+              <select aria-label="القطاع" className="o_input" value={sector} onChange={(e) => setSector(e.target.value)}>
+                <option value="">كلُّ القطاعات</option>
+                {sectorList.sectors.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+                {sectorList.unclassified > 0 && <option value={UNCLASSIFIED}>{sectorLabel(UNCLASSIFIED)}</option>}
+              </select>
+            )}
             <label className="o_toggle">
               <input
                 type="checkbox"
