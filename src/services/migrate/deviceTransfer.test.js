@@ -11,8 +11,13 @@ import {
   applyTransferPlan,
   contentFingerprint,
   docUpdatedMillis,
+  toPortable,
   APPEND_ONLY,
 } from './deviceTransfer.js';
+import { fromExportValue } from './importDump.js';
+
+// طابعٌ حيٌّ كـmakeTimestamp المحلّيّ: مفاتيحُ دوالٍّ مملوكةٌ معدَّدة (تُسقَط في JSON).
+const liveTs = (ms) => ({ seconds: Math.floor(ms / 1000), nanoseconds: (ms % 1000) * 1e6, toMillis: () => ms, toDate: () => new Date(ms) });
 
 const localIndex = (docs) => new Map(docs.map((d) => [d.id, { data: d.data, updatedAt: d.updatedAt }]));
 
@@ -25,10 +30,11 @@ test('★ البصمةُ تتجاهل الترتيبَ وطوابعَ التغي
   assert.notEqual(contentFingerprint({ a: 1 }), contentFingerprint({ a: 2 }));
 });
 
-test('★ مِلّي التحديث يُقرأ من الطابع كائنًا/ISO/رقمًا', () => {
+test('★ مِلّي التحديث يُقرأ الطابعَ بأشكاله: رقمٌ · {seconds,nanoseconds} · {__ts__} · محمول', () => {
   assert.equal(docUpdatedMillis({ updatedAt: 1700 }), 1700);
-  assert.equal(docUpdatedMillis({ updatedAt: { iso: '2026-10-21T00:00:00Z' } }), Date.parse('2026-10-21T00:00:00Z'));
   assert.equal(docUpdatedMillis({ updatedAt: { seconds: 5, nanoseconds: 0 } }), 5000);
+  assert.equal(docUpdatedMillis({ updatedAt: { __ts__: 1700 } }), 1700);
+  assert.equal(docUpdatedMillis({ updatedAt: { __type: 'timestamp', iso: '2026-10-21T00:00:00Z' } }), Date.parse('2026-10-21T00:00:00Z'));
   assert.equal(docUpdatedMillis({}), 0);
 });
 
@@ -123,6 +129,45 @@ test('★ الروابطُ تُحفظ: المستندُ يُنقَل كاملً�
   assert.equal(op.data.shop, 'RH');
   assert.equal(op.data.header.sector, 'أغذية');
   assert.deepEqual(op.data.links, { PO: 'PO-1' });
+});
+
+/* ═══════════ الطوابعُ الزمنيّة عبر حدّ الـJSON (عطبُ المراجعة) ═══════════ */
+
+test('★★★ البصمةُ توحّد أشكالَ الطابع: الحيُّ = المحمولُ = {seconds,nanoseconds}', () => {
+  const ms = Date.parse('2026-01-15T10:00:00.000Z');
+  const live = contentFingerprint({ createdAt: liveTs(ms), n: 'x' });
+  const portable = contentFingerprint({ createdAt: { __type: 'timestamp', iso: new Date(ms).toISOString() }, n: 'x' });
+  const parsed = contentFingerprint({ createdAt: { seconds: Math.floor(ms / 1000), nanoseconds: 0 }, n: 'x' });
+  assert.equal(live, portable, 'الحيُّ والمحمولُ سواءٌ في البصمة');
+  assert.equal(live, parsed, 'وكذلك {seconds,nanoseconds} بعد دورة JSON');
+});
+
+test('★★★ إعادةُ نقلِ مستندٍ بطابعٍ غيرِ متقلّب (createdAt) = «بلا تغيير» لا «تعارض»', () => {
+  const ms = Date.parse('2026-01-15T10:00:00.000Z');
+  // المحلّيُّ طابعٌ حيّ؛ والحزمةُ تُرمِّزه محمولًا عبر buildTransferBundle.
+  const bundle = buildTransferBundle({ documents: [{ id: 'D1', data: { createdAt: liveTs(ms), n: 'ثابت' } }] });
+  const local = { documents: localIndex([{ id: 'D1', data: { createdAt: liveTs(ms), n: 'ثابت' }, updatedAt: ms }]) };
+  const plan = planTransferImport(bundle, local);
+  assert.equal(plan.items[0].status, 'unchanged', 'لا تعارضَ زائفًا من اختلاف شكل الطابع');
+  assert.equal(plan.summary.conflict, 0);
+});
+
+test('★★★ الشكلُ المحمولُ يَعبُر الـJSON ويُعاد بناؤه طابعًا (لا خريطةٌ عارية)', () => {
+  const ms = Date.parse('2026-01-15T10:00:00.000Z');
+  const portable = toPortable({ createdAt: liveTs(ms), n: 'x' });
+  assert.deepEqual(portable.createdAt, { __type: 'timestamp', iso: new Date(ms).toISOString() }, 'طابعٌ حيٌّ ⟵ شكلٌ محمول');
+  // دورةُ JSON ثمّ إعادةُ البناء بـfromExportValue (محوّلُ طابعٍ وهميّ).
+  const roundTripped = JSON.parse(JSON.stringify(portable));
+  const Timestamp = { fromMillis: (m) => ({ __rebuilt__: m }) };
+  const rebuilt = fromExportValue(roundTripped, Timestamp);
+  assert.deepEqual(rebuilt.createdAt, { __rebuilt__: ms }, 'يُعاد بناؤه طابعًا لا {seconds,nanoseconds} عارية');
+});
+
+test('★ docUpdatedMillis يقرأ الطابعَ الحيَّ والمحمولَ والرقم', () => {
+  const ms = Date.parse('2026-01-15T10:00:00.000Z');
+  assert.equal(docUpdatedMillis({ updatedAt: liveTs(ms) }), ms);
+  assert.equal(docUpdatedMillis({ updatedAt: { __type: 'timestamp', iso: new Date(ms).toISOString() } }), ms);
+  assert.equal(docUpdatedMillis({ updatedAt: 1700 }), 1700);
 });
 
 test('★ الحزمةُ تحصي وتَسِم، والفارغةُ لا ترمي', () => {

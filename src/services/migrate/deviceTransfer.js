@@ -35,6 +35,41 @@ function isAppendOnlyPath(path) {
   return APPEND_ONLY.has(str(path).split('/').pop());
 }
 
+/**
+ * ★ مِلّي ثانيةِ قيمةٍ إن كانت طابعًا زمنيًّا بأيّ شكل، وإلّا `null`.
+ * يوحّد كلَّ أشكال الطابع عبر حدود المخزن/الـJSON: طابعُ Firestore الحيّ، وكائنُ
+ * `makeTimestamp` المحلّيّ، و`{seconds,nanoseconds}` بعد دورة JSON، و`{__ts__}`
+ * شكلُ الباب، و`{__type:'timestamp',iso}` الشكلُ المحمول. **بلا هذا التوحيد**
+ * تختلف بصمةُ المستند الحيّ عن المنقول فيُصنَّف تعارضًا زائفًا (مراجعةٌ عدائيّة 2026-11-02).
+ */
+function tsMillis(v) {
+  if (v == null || typeof v !== 'object') return null;
+  if (typeof v.toMillis === 'function') { try { return v.toMillis(); } catch { /* تجاهل */ } }
+  if (typeof v.toDate === 'function') { try { return v.toDate().getTime(); } catch { /* تجاهل */ } }
+  if (v.__type === 'timestamp' && v.iso) { const t = Date.parse(v.iso); return Number.isFinite(t) ? t : null; }
+  if (v.__ts__ != null) {
+    if (typeof v.__ts__ === 'number') return v.__ts__;
+    const t = Date.parse(String(v.__ts__));
+    return Number.isFinite(t) ? t : null;
+  }
+  if (typeof v.seconds === 'number' && typeof v.nanoseconds === 'number') {
+    const keys = Object.keys(v).filter((k) => k !== 'type');
+    if (keys.length === 2) return v.seconds * 1000 + Math.floor(v.nanoseconds / 1e6);
+  }
+  return null;
+}
+
+/** تطبيعٌ للمقارنة: إسقاطُ الطوابع المتقلّبة، وتوحيدُ كلّ طابعٍ إلى مِلّي واحد. */
+function normalizeForCompare(v) {
+  if (v === null || typeof v !== 'object') return v;
+  const ms = tsMillis(v);
+  if (ms !== null) return { __ms__: ms };
+  if (Array.isArray(v)) return v.map(normalizeForCompare);
+  const out = {};
+  for (const k of Object.keys(v)) if (!VOLATILE.has(k)) out[k] = normalizeForCompare(v[k]);
+  return out;
+}
+
 /** تطبيعٌ ثابتٌ للترتيب — مقارنةُ محتوًى لا تتأثّر بترتيب المفاتيح. */
 function stableStringify(v) {
   if (v === null || typeof v !== 'object') return JSON.stringify(v) ?? 'null';
@@ -42,36 +77,40 @@ function stableStringify(v) {
   return `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${stableStringify(v[k])}`).join(',')}}`;
 }
 
-function strip(v) {
+/** بصمةُ محتوى مستندٍ للمقارنة — بلا طوابع التغيير، والطوابعُ موحَّدةٌ مِلّيًّا، مرتّبةً ثابتًا. */
+export function contentFingerprint(data) {
+  return stableStringify(normalizeForCompare(data));
+}
+
+/**
+ * ★ شكلٌ محمولٌ للتصدير: كلُّ طابعٍ حيٍّ يصير `{__type:'timestamp',iso}` فيعبر
+ * الـJSON بلا فقدِ نوعِه (الدوالُّ تسقط في `JSON.stringify` فتضيع هويّةُ الطابع).
+ * يُعاد بناؤه عند الاستيراد عبر `fromExportValue` (نظيرُ `importDump`). منطق خالص.
+ */
+export function toPortable(v) {
   if (v === null || typeof v !== 'object') return v;
-  if (Array.isArray(v)) return v.map(strip);
+  const ms = tsMillis(v);
+  if (ms !== null) return { __type: 'timestamp', iso: new Date(ms).toISOString() };
+  if (Array.isArray(v)) return v.map(toPortable);
   const out = {};
-  for (const k of Object.keys(v)) if (!VOLATILE.has(k)) out[k] = strip(v[k]);
+  for (const k of Object.keys(v)) out[k] = toPortable(v[k]);
   return out;
 }
 
-/** بصمةُ محتوى مستندٍ للمقارنة — بلا طوابع التغيير، مرتّبةً ثابتًا. */
-export function contentFingerprint(data) {
-  return stableStringify(strip(data));
-}
-
-/** مِلّي ثانيةِ آخرِ تحديثٍ من مستند — يتحمّل الطابعَ كائنًا أو ISO أو رقمًا، وإلّا 0. */
+/** مِلّي ثانيةِ آخرِ تحديثٍ من مستند — من `updatedAt` بأيّ شكلِ طابع، وإلّا 0. */
 export function docUpdatedMillis(data) {
   const v = data?.updatedAt ?? data?.updated_at ?? null;
   if (v == null) return 0;
   if (typeof v === 'number') return v;
-  if (typeof v === 'object') {
-    if (typeof v.toMillis === 'function') { try { return v.toMillis(); } catch { /* تجاهل */ } }
-    if (typeof v.seconds === 'number') return v.seconds * 1000 + Math.floor((v.nanoseconds || 0) / 1e6);
-    if (v.iso) { const t = Date.parse(v.iso); return Number.isFinite(t) ? t : 0; }
-    if (v.__ts__ != null) { const n = Number(v.__ts__); return Number.isFinite(n) ? n : 0; }
-  }
+  const ms = tsMillis(v);
+  if (ms !== null) return ms;
   const t = Date.parse(String(v));
   return Number.isFinite(t) ? t : 0;
 }
 
 /**
- * يبني حزمةَ تصديرٍ من مجموعاتٍ مقروءةٍ من المخزن.
+ * يبني حزمةَ تصديرٍ من مجموعاتٍ مقروءةٍ من المخزن. **يُرمِّز الطوابعَ محمولةً**
+ * (`toPortable`) فلا تُفسَد عبر الـJSON — والمُنادي يُعيد بناءها عند الكتابة.
  * @param collections {path: [{id, data, updatedAt?}]}  (`updatedAt` مِلّي؛ يُشتقّ إن غاب)
  */
 export function buildTransferBundle(collections = {}, { device = '', exportedAt = 0 } = {}) {
@@ -80,7 +119,7 @@ export function buildTransferBundle(collections = {}, { device = '', exportedAt 
   for (const [path, docs] of Object.entries(collections || {})) {
     out[path] = (Array.isArray(docs) ? docs : []).map((d) => ({
       id: str(d?.id),
-      data: d?.data ?? {},
+      data: toPortable(d?.data ?? {}),
       updatedAt: Number(d?.updatedAt) || docUpdatedMillis(d?.data),
     }));
     docCount += out[path].length;

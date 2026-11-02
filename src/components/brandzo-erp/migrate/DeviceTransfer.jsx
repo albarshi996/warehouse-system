@@ -14,6 +14,7 @@ import {
   docUpdatedMillis,
   TRANSFER_COLLECTIONS,
 } from '../../../services/migrate/deviceTransfer.js';
+import { fromExportValue } from '../../../services/migrate/importDump.js';
 
 const VIEWER_ROLES = ['admin', 'warehouse_manager', 'finance_manager'];
 const card = 'rounded-xl border border-line bg-surface p-4';
@@ -24,17 +25,18 @@ const todayStamp = () => {
   try { return new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-'); } catch { return 'export'; }
 };
 
-/** يقرأ مجموعةً من الباب → [{id, data, updatedAt}] — أو [] إن تعذّرت (مجموعةٌ غائبة). */
+/**
+ * يقرأ مجموعةً من الباب → [{id, data, updatedAt}]. المجموعةُ الغائبةُ تُعيد لقطةً
+ * فارغةً بلا رمي، فلا حاجةَ لابتلاع الخطأ. ★ **ولا يُبتلَع خطأُ قراءةٍ حقيقيّ**:
+ * ابتلاعُه يجعل المحلّيَّ يبدو فارغًا فيُدهَس الوارد عليه بلا كشف تعارض — فيُترك
+ * يرمي ليُجهِض الاستيراد/التصدير بأمان (مراجعةٌ عدائيّة 2026-11-02).
+ */
 async function readCollection(path) {
-  try {
-    const snap = await door.getDocs(door.collection(door.db, path));
-    return snap.docs.map((d) => {
-      const data = d.data() || {};
-      return { id: d.id, data, updatedAt: docUpdatedMillis(data) };
-    });
-  } catch {
-    return [];
-  }
+  const snap = await door.getDocs(door.collection(door.db, path));
+  return snap.docs.map((d) => {
+    const data = d.data() || {};
+    return { id: d.id, data, updatedAt: docUpdatedMillis(data) };
+  });
 }
 
 export default function DeviceTransfer() {
@@ -110,9 +112,13 @@ export default function DeviceTransfer() {
     try {
       const { ops, report: rep } = applyTransferPlan(plan, { resolutions });
       // كتابةٌ دفعةً دفعةً عبر الباب (نظيرُ importDump) — دهسٌ مقصودٌ لِما اختير فقط.
+      // ★ `fromExportValue` يُعيد بناءَ الطوابع المحمولة إلى طوابعِ الباب، فلا تُخزَّن
+      //   خريطةً عاريةً تكسر استعلاماتِ المدى و`.toDate()` (مراجعةٌ عدائيّة 2026-11-02).
       for (let i = 0; i < ops.length; i += 400) {
         const batch = door.writeBatch();
-        for (const o of ops.slice(i, i + 400)) batch.set(door.doc(door.db, o.collectionPath, o.id), o.data);
+        for (const o of ops.slice(i, i + 400)) {
+          batch.set(door.doc(door.db, o.collectionPath, o.id), fromExportValue(o.data, door.Timestamp));
+        }
         await batch.commit();
       }
       setReport(rep);
