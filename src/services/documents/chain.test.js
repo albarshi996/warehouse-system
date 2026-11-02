@@ -673,8 +673,9 @@ test('مخطّطات F4 الخمسة مسجّلة — والمجموعة صار�
     assert.ok(typeof s.warnings === 'function');
   }
   // ‹SRC-POST› +4: مستنداتُ المصدر المُنجَزة (SRI · SRO · SXO · SXI).
-  assert.equal(readyTypes().length, 49, 'تسعةٌ وأربعون نموذجًا: مستنداتُ المصدر الخمسة ‹SRC-POST› وأمرا أودو ‹ODOO-ORD›');
-  assert.equal(GOVERNED_FORMS.filter((f) => f.ready).length, 49);
+  // ‹BHOME ذ› +6: فاتورتا المورّد (SINV · SINVI) والرواتبُ والسلفُ والمصروف (SAL · ADV · ADVR · EXP).
+  assert.equal(readyTypes().length, 55, 'خمسةٌ وخمسون: +٦ ماليّاتِ المحلّ المستقلّ (ذ)');
+  assert.equal(GOVERNED_FORMS.filter((f) => f.ready).length, 55);
 });
 
 test('البضاعة المحميّة: المخطّطات الثلاثة مسجّلة وكاملة البنية', () => {

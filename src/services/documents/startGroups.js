@@ -55,6 +55,10 @@ export const START_GROUPS = [
   { title: 'الجرد', icon: 'clipboardList', types: COUNT_CHAIN },
   { title: 'التالف', icon: 'alertTriangle', types: ['DMG'] },
   { title: 'المشتريات الداخلية', icon: 'shoppingCart', types: INTERNAL_PROCUREMENT_CHAIN },
+  // ذ — المحاسبةُ المستقلّة لكلّ محلّ: فاتورةُ المورّد بنمطيها، والرواتبُ
+  // والسلفُ والمصروفُ المبوّب. ماليّةٌ خالصةٌ لا تمسّ المخزون، فبيتُها مستقلّ.
+  { title: 'فواتير الموردين', icon: 'fileText', types: ['SINV', 'SINVI'] },
+  { title: 'المصاريف والرواتب', icon: 'dollarSign', types: ['EXP', 'SAL', 'ADV', 'ADVR'] },
 ];
 
 /**

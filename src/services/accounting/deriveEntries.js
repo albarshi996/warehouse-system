@@ -14,6 +14,7 @@ import { entryFor } from '../ledger/partnerLedger.js';
 import { postEntry } from './journal.js';
 import { subAccount } from './accounts.js';
 import { toMinor } from './money.js';
+import { normalizeCategory, categoryAccount } from './expenseCategories.js';
 
 /** وقائعُ المال في هذه الشريحة، وأثرُها المزدوج. */
 export const CASH_EVENTS = Object.freeze({
@@ -94,7 +95,23 @@ export const COUNTERPART = Object.freeze({
   RCP: 'CASH', RCV: 'CASH_IN_TRANSIT',
   CN: 'SALES_RETURNS', RET: 'SALES_RETURNS', CRN: 'SALES_RETURNS',
   GRN: 'INVENTORY', SPV: 'CASH', SRN: 'INVENTORY',
+  // ذ — فاتورةُ المورّد: «القيمة» مشترياتٌ (لا مخزون)، و«الأصناف» مخزون.
+  SINV: 'PURCHASES', SINVI: 'INVENTORY',
+  // ذ — سلفُ العامل: نقدٌ يخرج ثمّ يعود (الطرفُ المقابلُ النقد في الحالين).
+  ADV: 'CASH', ADVR: 'CASH',
 });
+
+/** حسابُ الطرف الأساس في الدفتر المزدوج — العميلُ ذمّةٌ مدينة، المورّدُ دائنة، العاملُ سلفةٌ عليه. */
+function partyBaseAccount(party) {
+  if (party === 'customer') return 'AR';
+  if (party === 'worker') return 'WORKER_ADV';
+  return 'AP';
+}
+
+/** هل حسابُ الطرف أصلٌ (يزيد بالمدين)؟ العميلُ والعاملُ أصلٌ، المورّدُ التزام. */
+function partyIsAssetSide(party) {
+  return party === 'customer' || party === 'worker';
+}
 
 /** أنواعُ الدورة الكاملة (لاستماع الشاشة). */
 export const LEDGER_DOC_TYPES = Object.freeze(Object.keys(COUNTERPART));
@@ -113,9 +130,9 @@ export function deriveLedgerEntry(doc) {
   const units = toMinor(ple.amount);
   if (units <= 0) return null;
 
-  const partyAcc = subAccount(ple.party === 'customer' ? 'AR' : 'AP', ple.partyCode);
+  const partyAcc = subAccount(partyBaseAccount(ple.party), ple.partyCode);
   const outstandingUp = ple.direction === 'debit'; // يزيد ما على الطرف
-  const partyIsDebit = ple.party === 'customer' ? outstandingUp : !outstandingUp;
+  const partyIsDebit = partyIsAssetSide(ple.party) ? outstandingUp : !outstandingUp;
   const partyDebit = partyIsDebit ? units : 0;
   const partyCredit = partyIsDebit ? 0 : units;
 
@@ -152,4 +169,76 @@ export function deriveLedgerEntries(documents = [], { states = ['done', 'approve
       }
     })
     .filter(Boolean);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * المصروفاتُ النقديّة (ذ) — راتبٌ ومصروفٌ مبوّب: مدينٌ حسابُ المصروف، دائنٌ
+ * النقدُ (أو البنك). لا طرفَ لها في دفتر الذمم (مصروفٌ لا دَين)، فمسارُها
+ * مستقلٌّ عن `entryFor`/`COUNTERPART` — لكنّه يُقيَّد في الدفتر المزدوج نفسِه.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/** وقائعُ المصروف النقديّ وحسابُها المدين. EXP يُبوَّب بفئته الفرعيّة. */
+export const EXPENSE_EVENTS = Object.freeze({
+  SAL: { debit: 'SALARIES', labelAr: 'صرف راتب' },
+  EXP: { debit: 'EXPENSE', categorized: true, labelAr: 'مصروف' },
+});
+
+/** مبلغُ مستند المصروف — من رأسه (قيمةٌ مفردةٌ لا بنود). */
+export function expenseAmount(doc) {
+  const h = doc?.header || {};
+  return Number(h.amount ?? h.total ?? h.amountPaid) || 0;
+}
+
+/** فئةُ المصروف مُطبّعةً (EXP وحدَه)، أو '' لغير المبوّب. */
+export function expenseCategoryOf(doc) {
+  return doc?.type === 'EXP' ? normalizeCategory(doc?.header?.category) : '';
+}
+
+/** حسابُ النقد بحسب طريقة الدفع — التحويلُ المصرفيّ بنكٌ، وما عداه نقد. */
+function cashSideOf(doc) {
+  const m = String(doc?.header?.paymentMethod || doc?.header?.method || '').trim();
+  return m === 'تحويل مصرفي' ? 'BANK' : 'CASH';
+}
+
+/** أنواعُ المصروف النقديّ (لاستماع الشاشة). */
+export const EXPENSE_DOC_TYPES = Object.freeze(Object.keys(EXPENSE_EVENTS));
+
+/**
+ * قيدٌ مزدوجٌ من مستند مصروفٍ نقديّ (SAL/EXP)، أو null. مدينٌ حسابُ المصروف
+ * (مبوّبًا بالفئة في EXP)، دائنٌ النقدُ أو البنك. المعرّفُ حتميٌّ فالإعادةُ
+ * تُتخطّى، والمحلُّ يُوسَم. قد يرمي `postEntry` قبل T0 — والمُجمِّعُ يلتقطه.
+ */
+export function deriveExpenseEntry(doc) {
+  const spec = EXPENSE_EVENTS[doc?.type];
+  if (!spec) return null;
+
+  const units = toMinor(expenseAmount(doc));
+  if (units <= 0) return null;
+
+  const h = doc?.header || {};
+  const catKey = expenseCategoryOf(doc);
+  const debitAccount = spec.categorized
+    ? subAccount(categoryAccount(catKey), catKey.toUpperCase())
+    : spec.debit;
+  const worker = String(h.workerCode || h.worker || '').trim();
+  const date = String(h.payDate || h.expenseDate || h.date || h.paymentDate || '').slice(0, 10);
+
+  const entry = postEntry({
+    key: `${doc.type}__${String(doc.id ?? '')}`,
+    date,
+    memo: `${spec.labelAr} ${String(doc?.number || '')}`.trim(),
+    lines: [
+      { account: debitAccount, party: worker, debit: units, credit: 0 },
+      { account: cashSideOf(doc), debit: 0, credit: units },
+    ],
+  });
+  entry.docType = doc.type;
+  entry.docId = String(doc.id ?? '');
+  entry.shop = shopOfDoc(doc);
+  return entry;
+}
+
+/** هل لهذا النوع قيدٌ مزدوجٌ محلّيّ (ذمّةٌ أو مصروف)؟ بوّابةُ تفعيل الكتابة. */
+export function isPostableType(type) {
+  return Boolean(COUNTERPART[type] || EXPENSE_EVENTS[type]);
 }

@@ -73,6 +73,16 @@ export const LEDGER_RULES = Object.freeze({
   GRN: { party: 'supplier', direction: 'debit', labelAr: 'استلام بضاعة', amount: (d) => sumReceipt(d) },
   SPV: { party: 'supplier', direction: 'credit', labelAr: 'سداد مورّد', amount: (d) => sumLines(d, ['amount']) },
   SRN: { party: 'supplier', direction: 'credit', labelAr: 'رفض استلام', amount: (d) => sumReceipt(d) },
+  // فاتورةُ المورّد بنمطيها (ذ): كلاهما يزيد ما نَدينه — «القيمة» من الرأس،
+  // و«الأصناف» من البنود (كمّيّة × كلفة). الفرقُ في المخزون لا في الذمّة.
+  SINV: { party: 'supplier', direction: 'debit', labelAr: 'فاتورة مورّد (قيمة)', amount: (d) => headerAmount(d) },
+  SINVI: { party: 'supplier', direction: 'debit', labelAr: 'فاتورة مورّد (أصناف)', amount: (d) => sumCost(d) },
+
+  /* ── سلفُ العمّال (ذ): العاملُ طرفٌ ثالث ── */
+  // السلفةُ دَينٌ على العامل (مدين)، وسدادُها ينقصه (دائن). الراتبُ (SAL) ليس
+  // هنا: أجرُ عملٍ لا دَين — يُقيَّد مصروفًا في الدفتر المزدوج لا ذمّة.
+  ADV: { party: 'worker', direction: 'debit', labelAr: 'سلفة عامل', amount: (d) => headerAmount(d) },
+  ADVR: { party: 'worker', direction: 'credit', labelAr: 'سداد سلفة', amount: (d) => headerAmount(d) },
 });
 
 /** مجموع عمودٍ ماليٍّ من البنود — أوّل مفتاحٍ موجود يفوز. */
@@ -106,6 +116,17 @@ function sumReceipt(doc) {
       return total + qty * num(l?.unitCost ?? l?.unitPrice);
     }, 0)
   );
+}
+
+/** مبلغٌ من رأس المستند — فاتورةُ القيمة والسلفةُ والسداد (ذ). */
+function headerAmount(doc) {
+  const h = doc?.header || {};
+  return money(num(h.amount ?? h.total ?? h.amountPaid));
+}
+
+/** قيمةُ فاتورةٍ بالأصناف — كمّيّةٌ × كلفة (ذ). */
+function sumCost(doc) {
+  return money((doc?.lines || []).reduce((t, l) => t + num(l?.qty) * num(l?.unitCost ?? l?.unitPrice), 0));
 }
 
 /** هل لهذا المستند أثرٌ في دفتر الذمم؟ */

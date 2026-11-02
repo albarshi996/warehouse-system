@@ -291,6 +291,14 @@ service cloud.firestore {
            : docType == 'SRA'     ? ['warehouse_manager']
            : docType == 'OSO'     ? ['warehouse_manager']
            : docType == 'OPO'     ? ['warehouse_manager']
+           // ذ — المحاسبةُ المستقلّة لكلّ محلّ: الاعتمادُ للمالية ومدير المستودع.
+           // من صرف لا يعتمد صرفه، فالخزينةُ تُنشئ وتُنجز ولا تعتمد.
+           : docType == 'SINV'    ? ['finance_manager', 'warehouse_manager']
+           : docType == 'SINVI'   ? ['finance_manager', 'warehouse_manager']
+           : docType == 'SAL'     ? ['finance_manager', 'warehouse_manager']
+           : docType == 'ADV'     ? ['finance_manager', 'warehouse_manager']
+           : docType == 'ADVR'    ? ['finance_manager', 'warehouse_manager']
+           : docType == 'EXP'     ? ['finance_manager', 'warehouse_manager']
            : [];
     }
     function completeRoles(docType) {
@@ -352,6 +360,13 @@ service cloud.firestore {
            : docType == 'SRA'     ? ['warehouse_manager']
            : docType == 'OSO'     ? ['warehouse_manager']
            : docType == 'OPO'     ? ['warehouse_manager']
+           // ذ — الإنجازُ الماليّ: الخزينةُ تُنفّذ الصرفَ والقبض، والمالية فوقها.
+           : docType == 'SINV'    ? ['finance_manager', 'warehouse_manager']
+           : docType == 'SINVI'   ? ['finance_manager', 'warehouse_manager']
+           : docType == 'SAL'     ? ['treasury', 'finance_manager', 'warehouse_manager']
+           : docType == 'ADV'     ? ['treasury', 'finance_manager', 'warehouse_manager']
+           : docType == 'ADVR'    ? ['treasury', 'finance_manager', 'warehouse_manager']
+           : docType == 'EXP'     ? ['treasury', 'finance_manager', 'warehouse_manager']
            : [];
     }
 

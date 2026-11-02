@@ -60,6 +60,13 @@ import dlv from './dlv.js';
 import { sri, sro, sxo, sxi, sra } from './sourcePosted.js';
 import { oso, opo } from './sourceOrders.js';
 import tdr from './tdr.js';
+// ذ — المحاسبةُ المستقلّة لكلّ محلّ: فاتورةُ مورّدٍ بنمطين، ورواتبُ وسلفُ العمّال، والمصروفُ المبوّب.
+import sinv from './sinv.js';
+import sinvi from './sinvi.js';
+import sal from './sal.js';
+import adv from './adv.js';
+import advr from './advr.js';
+import exp from './exp.js';
 
 /** المخطّطات الجاهزة. */
 const SCHEMAS = {
@@ -116,6 +123,13 @@ const SCHEMAS = {
   SRA: sra,
   OSO: oso,
   OPO: opo,
+  // ذ — المحاسبةُ المستقلّة لكلّ محلّ.
+  SINV: sinv,
+  SINVI: sinvi,
+  SAL: sal,
+  ADV: adv,
+  ADVR: advr,
+  EXP: exp,
 };
 
 /**
@@ -179,6 +193,13 @@ export const GOVERNED_FORMS = [
   { type: 'SRA', stage: 9, titleAr: 'تسويةُ جردٍ منجَزةٌ في المصدر', file: '', phase: 'SRC' },
   { type: 'OSO', stage: 9, titleAr: 'أمرُ بيعٍ من أودو', file: '', phase: 'SRC' },
   { type: 'OPO', stage: 9, titleAr: 'أمرُ شراءٍ من أودو', file: '', phase: 'SRC' },
+  // ذ — المحاسبةُ المستقلّة لكلّ محلّ (المحلّات كشركات).
+  { type: 'SINV', stage: 7, titleAr: 'فاتورة مورّد (قيمة)', file: '', phase: 'BH' },
+  { type: 'SINVI', stage: 7, titleAr: 'فاتورة مورّد (بالأصناف)', file: '', phase: 'BH' },
+  { type: 'SAL', stage: 7, titleAr: 'صرف راتب', file: '', phase: 'BH' },
+  { type: 'ADV', stage: 7, titleAr: 'سلفة عامل', file: '', phase: 'BH' },
+  { type: 'ADVR', stage: 7, titleAr: 'سداد سلفة عامل', file: '', phase: 'BH' },
+  { type: 'EXP', stage: 7, titleAr: 'مصروف مبوّب', file: '', phase: 'BH' },
 ].map((f) => ({ ...f, ready: Boolean(SCHEMAS[f.type]) }));
 
 /** يُعيد مخطّط النوع، أو null إن لم يُبنَ بعد. */

@@ -29,6 +29,7 @@ import { postDocument } from '../ledger/ledgerService.js';
 import { ledgerRuleFor, partyCodeOf, invoiceOutstanding, overCollectionProblems } from '../ledger/partnerLedger.js';
 import { postToPartnerLedger, fetchPartnerLedger } from '../ledger/partnerLedgerService.js';
 import { createLedgerPost, shouldPostLocalJournal } from '../accounting/ledgerPostService.js';
+import { isPostableType } from '../accounting/deriveEntries.js';
 import * as dbDoor from '../_db/index.js';
 import { CASH_RULES } from '../field/repAccount.js';
 import { postToRepCash } from '../field/repAccountService.js';
@@ -403,7 +404,7 @@ export async function transitionDocument(docId, to, { note = '', profile, schema
   // «منجَز» يولّد قيدًا مزدوجًا موسومًا بالمحل في دفتر الجهاز — **أفضلَ جهدٍ** لا يُجهض
   // الانتقال، وذرّيٌّ بالمعرّف فلا يُضاعف. على الويب (Firestore الافتراضيّة) لا يعمل
   // إطلاقًا (البوّابةُ تمنعه)، فالخلفيّةُ الحيّةُ لا تتأثّر ولا يلزم تغييرُ القواعد الخادميّة.
-  if (shouldPostLocalJournal(dbDoor.BACKEND, to, POSTING_STATE, ledgerRuleFor(data.type))) {
+  if (shouldPostLocalJournal(dbDoor.BACKEND, to, POSTING_STATE, isPostableType(data.type))) {
     try {
       const r = await createLedgerPost(dbDoor).postDone({ ...data, id: docId });
       if (r?.posted) {

@@ -100,6 +100,18 @@ export const DOC_ODOO_MAP = {
   SPV: { model: 'account.payment', confirmState: 'posted', confirmLabel: 'مُرحّل', verb: 'رحّل' },
   RCV: { model: 'account.payment', confirmState: 'posted', confirmLabel: 'مُرحّل', verb: 'رحّل' },
   DLV: { model: 'stock.picking', confirmState: 'done', confirmLabel: 'مُسلَّم', verb: 'وثّق التسليم' },
+
+  /* ── ذ — المحاسبةُ المستقلّة لكلّ محلّ (BHOME) ──
+     لا مقابلَ أصليًّا لها في أودو: أثرُها الماليُّ يملكه الدفترُ المحلّيُّ على
+     الجهاز لا أودو (قرارُ المالك)، وهي **لا تُدفَع إلى أودو** (الجسرُ مختومٌ
+     سحبًا فقط، والدفعُ يدويٌّ لا يُطلَق على الإنجاز). فنموذجٌ مخصّص `x_bhome.*`
+     كنمط سائر ما لا أصلَ له (x_van.settlement)، والصفُّ هنا للشمول لا للمزامنة. */
+  SINV: { model: 'x_bhome.supplier_invoice', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
+  SINVI: { model: 'x_bhome.supplier_invoice', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
+  SAL: { model: 'x_bhome.salary', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
+  ADV: { model: 'x_bhome.worker_advance', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
+  ADVR: { model: 'x_bhome.worker_advance', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
+  EXP: { model: 'x_bhome.expense', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
 };
 
 /** صفّ العبور لنوعٍ ما، أو null إن كان النوع خارج الدورة المحكومة. */

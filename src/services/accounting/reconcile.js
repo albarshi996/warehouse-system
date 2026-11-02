@@ -103,6 +103,8 @@ export function reconcileLedger(documents = [], { states = ['done', 'approved'],
   const journalByParty = new Map();
   for (const [code, bal] of L.subBalances('AR')) journalByParty.set(up(code), money2(fromMinor(bal)));
   for (const [code, bal] of L.subBalances('AP')) journalByParty.set(up(code), money2(fromMinor(-bal)));
+  // ذ — العاملُ طرفٌ ثالث: سلفتُه أصلٌ عليه كالعميل (مدين − دائن) فيُطابَق قيدُه ذمّته.
+  for (const [code, bal] of L.subBalances('WORKER_ADV')) journalByParty.set(up(code), money2(fromMinor(bal)));
 
   const codes = new Set([...ledgerByParty.keys(), ...journalByParty.keys()]);
   const rows = [...codes]

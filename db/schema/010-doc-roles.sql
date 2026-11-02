@@ -19,6 +19,8 @@ GRANT SELECT ON doc_type_roles TO web_user;
 TRUNCATE doc_type_roles;
 INSERT INTO doc_type_roles (doc_type, approve_roles, complete_roles) VALUES
   ('ADJ', ARRAY['finance_manager', 'warehouse_manager']::text[], ARRAY['warehouse_manager', 'finance_manager']::text[]),
+  ('ADV', ARRAY['finance_manager', 'warehouse_manager']::text[], ARRAY['treasury', 'finance_manager', 'warehouse_manager']::text[]),
+  ('ADVR', ARRAY['finance_manager', 'warehouse_manager']::text[], ARRAY['treasury', 'finance_manager', 'warehouse_manager']::text[]),
   ('CC', ARRAY['inventory_auditor', 'warehouse_manager']::text[], ARRAY['inventory_auditor', 'warehouse_manager']::text[]),
   ('CN', ARRAY['finance_manager', 'warehouse_manager']::text[], ARRAY['finance_manager', 'warehouse_manager']::text[]),
   ('CRN', ARRAY['sales_supervisor', 'warehouse_manager', 'return_manager']::text[], ARRAY['sales_rep', 'sales_supervisor']::text[]),
@@ -26,6 +28,7 @@ INSERT INTO doc_type_roles (doc_type, approve_roles, complete_roles) VALUES
   ('DLV', ARRAY['department_user', 'warehouse_manager']::text[], ARRAY['purchase_officer', 'warehouse_manager']::text[]),
   ('DMG', ARRAY['qc_inspector', 'warehouse_manager']::text[], ARRAY['return_manager', 'warehouse_manager']::text[]),
   ('DN', ARRAY['warehouse_manager']::text[], ARRAY['storekeeper', 'warehouse_manager']::text[]),
+  ('EXP', ARRAY['finance_manager', 'warehouse_manager']::text[], ARRAY['treasury', 'finance_manager', 'warehouse_manager']::text[]),
   ('GP', ARRAY['gate_officer', 'warehouse_manager']::text[], ARRAY['gate_officer', 'warehouse_manager']::text[]),
   ('GRN', ARRAY['qc_inspector', 'warehouse_manager']::text[], ARRAY['storekeeper', 'warehouse_manager']::text[]),
   ('INV', ARRAY['finance_manager', 'warehouse_manager']::text[], ARRAY['finance_manager', 'warehouse_manager']::text[]),
@@ -48,6 +51,9 @@ INSERT INTO doc_type_roles (doc_type, approve_roles, complete_roles) VALUES
   ('RCV', ARRAY['sales_supervisor', 'finance_manager', 'warehouse_manager']::text[], ARRAY['sales_supervisor', 'finance_manager', 'warehouse_manager']::text[]),
   ('RET', ARRAY['qc_inspector', 'warehouse_manager']::text[], ARRAY['return_manager', 'warehouse_manager']::text[]),
   ('RFQ', ARRAY['finance_manager', 'warehouse_manager']::text[], ARRAY['purchase_officer', 'warehouse_manager']::text[]),
+  ('SAL', ARRAY['finance_manager', 'warehouse_manager']::text[], ARRAY['treasury', 'finance_manager', 'warehouse_manager']::text[]),
+  ('SINV', ARRAY['finance_manager', 'warehouse_manager']::text[], ARRAY['finance_manager', 'warehouse_manager']::text[]),
+  ('SINVI', ARRAY['finance_manager', 'warehouse_manager']::text[], ARRAY['finance_manager', 'warehouse_manager']::text[]),
   ('SO', ARRAY['warehouse_manager']::text[], ARRAY['storekeeper', 'warehouse_manager']::text[]),
   ('SPV', ARRAY['finance_manager', 'warehouse_manager']::text[], ARRAY['treasury', 'finance_manager', 'warehouse_manager']::text[]),
   ('SRA', ARRAY['warehouse_manager']::text[], ARRAY['warehouse_manager']::text[]),

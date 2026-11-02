@@ -91,6 +91,16 @@ export const FINANCIAL_IMPACT = Object.freeze({
   IPO: { financial: false, stockEffect: false, odooDoc: 'purchase.order', note: 'أمر شراءٍ داخليّ: التزامٌ يظهر في أودو، ولا قيدَ حتى الصرف.' },
   PV: { financial: true, stockEffect: false, odooDoc: 'account.payment', note: 'سند صرفٍ نقديّ: **الواقعة الماليّة** في السلسلة — دفعةٌ في أودو.' },
   DLV: { financial: false, stockEffect: false, odooDoc: null, note: 'تسليم موادّ التشغيل لطالبها: إثباتُ استلامٍ — والقيمة صُرفت في السند.' },
+  // ذ — المحاسبةُ المستقلّة لكلّ محلّ (BHOME): أثرُها الماليُّ يملكه **الدفترُ
+  // المحلّيُّ المزدوج** على الجهاز لا أودو (قرارُ المالك: الدفترُ المحليّ يملك
+  // المحاسبة). فمن منظور مرآةِ أودو هذه لا أثرَ مستورَدٌ لها — لذا `financial:false`
+  // هنا (أي: لا قيدَ أودو يُعرض)، وهي لا تحرّك مخزونًا فلا تعارضُ postingRules.
+  SINV: { financial: false, stockEffect: false, odooDoc: null, note: 'فاتورة مورّد (قيمة): ذمّةُ مورّدٍ تُقيَّد في الدفتر المحلّيّ (BHOME) لا في أودو — لا قيدَ مرآةٍ يُعرض.' },
+  SINVI: { financial: false, stockEffect: false, odooDoc: null, note: 'فاتورة مورّد (أصناف): ذمّةٌ وقيمةُ مخزونٍ تُقيَّدان في الدفتر المحلّيّ (BHOME) لا في أودو — وتحريكُ الكمّيّات بدورة الوارد.' },
+  SAL: { financial: false, stockEffect: false, odooDoc: null, note: 'صرف راتب: مصروفٌ نقديٌّ يُقيَّد في الدفتر المحلّيّ (BHOME) لا في أودو — لا قيدَ مرآةٍ له.' },
+  ADV: { financial: false, stockEffect: false, odooDoc: null, note: 'سلفة عامل: دَينٌ على العامل يُقيَّد في الدفتر المحلّيّ (BHOME) لا في أودو — لا قيدَ مرآةٍ له.' },
+  ADVR: { financial: false, stockEffect: false, odooDoc: null, note: 'سداد سلفة: يُنقص دَينَ العامل في الدفتر المحلّيّ (BHOME) لا في أودو — لا قيدَ مرآةٍ له.' },
+  EXP: { financial: false, stockEffect: false, odooDoc: null, note: 'مصروف مبوّب: يُقيَّد في الدفتر المحلّيّ (BHOME) بفئته لا في أودو — لا قيدَ مرآةٍ يُعرض.' },
 });
 
 /** الأثر الماليّ لنوعٍ ما، أو null لغير المعروف. */

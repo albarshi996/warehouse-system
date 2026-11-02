@@ -161,6 +161,16 @@ export const TIME_FIELD_MAP = Object.freeze({
   SPV: { paymentDate: E, docDate: R },
   RCV: { collectionDate: E, invoiceDate: R },
   DLV: { deliveryDate: E },
+
+  /* ═══ ذ — المحاسبةُ المستقلّة لكلّ محلّ ═══ */
+  // فاتورةُ المورّد: تاريخُها واقعةٌ، واستحقاقُها موعدٌ مخطَّطٌ يغذّي التذكير.
+  SINV: { invoiceDate: E, dueDate: P },
+  SINVI: { invoiceDate: E, dueDate: P },
+  SAL: { payDate: E },
+  // سلفةُ العامل واقعةٌ، واستحقاقُ سدادها المتوقّع موعدٌ مخطَّط.
+  ADV: { advanceDate: E, dueDate: P },
+  ADVR: { repayDate: E },
+  EXP: { expenseDate: E },
 });
 
 /**
