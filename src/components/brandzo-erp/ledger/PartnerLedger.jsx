@@ -13,6 +13,9 @@ import { listenPartnerLedger } from '../../../services/ledger/partnerLedgerServi
 import { subscribePartners } from '../../../services/partners/partnerService.js';
 import { listenSettings } from '../../../services/settings/settingsService.js';
 import { statement, balances, aging, reminders, AGING_BUCKETS, PARTIES, invoiceOutstanding } from '../../../services/ledger/partnerLedger.js';
+import { debtSummary, ledgerExcelSheets, ledgerReportModel } from '../../../services/ledger/partnerLedgerExport.js';
+import { exportAoaSheets } from '../../../services/excel/excelExport.js';
+import { exportElementToPdf } from '../../../services/reports/pdfExport.js';
 import { customerExposure } from '../../../services/ledger/creditGuard.js';
 
 // المندوب محصِّلٌ — من يُحاسَب على ذمم عملائه يجب أن يراها قبل أن يبيع.
@@ -59,6 +62,60 @@ function exportCsv(rows, columns, filename) {
   URL.revokeObjectURL(a.href);
 }
 
+/**
+ * عنصرُ DOM للتقرير — يُمرَّر إلى `exportElementToPdf` (الذي يرفض النصّ عمدًا).
+ * نبنيه عنصرًا ثمّ نضع فيه HTML: الحارسُ يمنع تمريرَ نصٍّ لا بناءَ عنصر. RTL
+ * صريحٌ وخطُّ البوّابة المحلّيّ، والأحمرُ للمتأخّر وحدَه (عرفُ الواجهات).
+ */
+function buildLedgerPdfElement(model) {
+  const s = model.summary;
+  const esc = (v) => String(v ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  const bucketHead = AGING_BUCKETS.map((b) => `<th style="padding:4px 6px;border:1px solid #ddd">${esc(b.label)}</th>`).join('');
+  const reminderRows = model.reminderRows
+    .map(
+      (r) =>
+        `<tr><td style="padding:4px 6px;border:1px solid #eee">${esc(r.partyName)}</td><td style="padding:4px 6px;border:1px solid #eee;color:${r.overdue > 0 ? '#b42318' : '#111'}">${esc(r.overdue)}</td><td style="padding:4px 6px;border:1px solid #eee">${esc(r.soon)}</td><td style="padding:4px 6px;border:1px solid #eee">${esc(r.nextDue)}</td></tr>`
+    )
+    .join('');
+  const balanceRows = model.balanceRows
+    .map(
+      (r) =>
+        `<tr><td style="padding:4px 6px;border:1px solid #eee">${esc(r.partyName)}</td><td style="padding:4px 6px;border:1px solid #eee">${esc(r.balance)}</td>${AGING_BUCKETS.map(
+          (b) => `<td style="padding:4px 6px;border:1px solid #eee">${esc(r.buckets[b.key] || '')}</td>`
+        ).join('')}</tr>`
+    )
+    .join('');
+  const statementBlock = model.statement
+    ? `<h3 style="margin:14px 0 4px">كشفُ الحساب — ${esc(model.statement.partyName)}</h3>
+       <p style="margin:0 0 6px;font-size:12px;color:#444">افتتاحيّ ${esc(model.statement.opening)} · مدين ${esc(model.statement.debit)} · دائن ${esc(model.statement.credit)} · المتبقّي ${esc(model.statement.closing)}</p>
+       <table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr>${['التاريخ', 'المستند', 'البيان', 'مدين', 'دائن', 'الاستحقاق', 'الرصيد'].map((h) => `<th style="padding:4px 6px;border:1px solid #ddd;background:#f6f6f6">${h}</th>`).join('')}</tr></thead><tbody>${model.statement.rows
+        .map(
+          (r) =>
+            `<tr><td style="padding:4px 6px;border:1px solid #eee">${esc(r.date)}</td><td style="padding:4px 6px;border:1px solid #eee">${esc(r.docNumber)}</td><td style="padding:4px 6px;border:1px solid #eee">${esc(r.labelAr)}</td><td style="padding:4px 6px;border:1px solid #eee">${esc(r.debit)}</td><td style="padding:4px 6px;border:1px solid #eee">${esc(r.credit)}</td><td style="padding:4px 6px;border:1px solid #eee">${esc(r.dueDate)}</td><td style="padding:4px 6px;border:1px solid #eee">${esc(r.balance)}</td></tr>`
+        )
+        .join('')}</tbody></table>`
+    : '';
+
+  const el = document.createElement('div');
+  el.setAttribute('dir', 'rtl');
+  el.style.cssText = 'font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif;color:#111;background:#fff;padding:10px;width:190mm';
+  el.innerHTML = `
+    <h2 style="margin:0 0 2px">${esc(model.title)}</h2>
+    <p style="margin:0 0 10px;font-size:12px;color:#444">${esc(model.partyLabel)} · بتاريخ ${esc(model.today)}</p>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px"><tbody>
+      <tr><td style="padding:4px 6px;border:1px solid #eee">المستحقُّ لنا</td><td style="padding:4px 6px;border:1px solid #eee">${esc(s.receivable)} (${esc(s.receivableParties)})</td>
+          <td style="padding:4px 6px;border:1px solid #eee">المستحقُّ علينا</td><td style="padding:4px 6px;border:1px solid #eee">${esc(s.payable)} (${esc(s.payableParties)})</td></tr>
+      <tr><td style="padding:4px 6px;border:1px solid #eee">المتأخّر</td><td style="padding:4px 6px;border:1px solid #eee;color:${s.overdue > 0 ? '#b42318' : '#111'}">${esc(s.overdue)} (${esc(s.overdueParties)})</td>
+          <td style="padding:4px 6px;border:1px solid #eee">يستحقّ خلال ${esc(model.soonDays)} يومًا</td><td style="padding:4px 6px;border:1px solid #eee">${esc(s.soon)} — أقرب ${esc(s.soonNextDue)}</td></tr>
+    </tbody></table>
+    <h3 style="margin:8px 0 4px">التذكير</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px"><thead><tr>${['الطرف', 'متأخّر', 'يقترب', 'أقربُ استحقاق'].map((h) => `<th style="padding:4px 6px;border:1px solid #ddd;background:#f6f6f6">${h}</th>`).join('')}</tr></thead><tbody>${reminderRows}</tbody></table>
+    <h3 style="margin:8px 0 4px">الأرصدة والأعمار</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="padding:4px 6px;border:1px solid #ddd;background:#f6f6f6">الطرف</th><th style="padding:4px 6px;border:1px solid #ddd;background:#f6f6f6">الرصيد</th>${bucketHead}</tr></thead><tbody>${balanceRows}</tbody></table>
+    ${statementBlock}`;
+  return el;
+}
+
 export default function PartnerLedger() {
   const [me, setMe] = useState(null);
   const [ready, setReady] = useState(false);
@@ -68,6 +125,8 @@ export default function PartnerLedger() {
   const [settings, setSettings] = useState(null);
   const [party, setParty] = useState('customer');
   const [selected, setSelected] = useState('');
+  // ذ — نافذةُ التنبيه «يقترب» قابلةٌ للضبط: المالكُ يحدّد مدى التذكير قبل الاستحقاق.
+  const [soonDays, setSoonDays] = useState(7);
 
   useEffect(() => {
     const unsub = subscribeAuth(async (u) => {
@@ -91,12 +150,17 @@ export default function PartnerLedger() {
     };
   }, [me]);
 
-  const today = new Date().toISOString().slice(0, 10);
+  // اليومُ المحلّيّ لا UTC: `toISOString` يرجع بتوقيت غرينتش، فقبل الفجر في ليبيا
+  // (UTC+2) يتأخّر يومًا كاملًا فينقلب حدُّ «المتأخّر/المقترب». نبنيه من مكوّنات محلّيّة.
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const scoped = useMemo(() => entries.filter((e) => e.party === party), [entries, party]);
   const rows = useMemo(() => balances(scoped), [scoped]);
   const ageRows = useMemo(() => aging(scoped, today), [scoped, today]);
-  // ذ — تذكيرُ السداد: المتأخّرُ والمقترب (خلال أسبوع) بمقاصّةِ الأقدم أوّلًا.
-  const due = useMemo(() => reminders(scoped, today, { soonDays: 7 }), [scoped, today]);
+  // ذ — تذكيرُ السداد: المتأخّرُ والمقترب (ضمن النافذة المضبوطة) بمقاصّةِ الأقدم أوّلًا.
+  const due = useMemo(() => reminders(scoped, today, { soonDays }), [scoped, today, soonDays]);
+  // مؤشّرُ متابعة المديونيّة — المستحقُّ لنا/علينا والمتأخّر، مصدرُه الدوالُّ الخالصة.
+  const summary = useMemo(() => debtSummary(scoped, today, { soonDays }), [scoped, today, soonDays]);
   const master = party === 'customer' ? partners : suppliers;
   const partner = useMemo(
     () => master.find((p) => String(p.code || '').toUpperCase() === selected) || null,
@@ -113,6 +177,35 @@ export default function PartnerLedger() {
     [party, selected, scoped, partner, settings]
   );
 
+  const partyLabel = PARTIES[party]?.label || '';
+  const baseName = `مديونية-${partyLabel}-${selected || 'الكل'}`;
+
+  // تصديرُ إكسل منظّم (مؤشّر · تذكير · أرصدة وأعمار · كشفُ الطرف) عبر البوّابة المشتركة.
+  function onExportExcel() {
+    const sheets = ledgerExcelSheets(scoped, today, { soonDays, partyLabel, partyCode: selected });
+    exportAoaSheets(sheets, baseName);
+  }
+
+  // تصديرُ PDF — نبني عنصرًا (لا نصًّا) ونمرّره إلى البوّابة المشتركة، ثمّ نزيله.
+  async function onExportPdf() {
+    const model = ledgerReportModel(scoped, today, { soonDays, partyLabel, partyCode: selected });
+    const el = buildLedgerPdfElement(model);
+    el.style.position = 'fixed';
+    el.style.left = '-9999px';
+    el.style.top = '0';
+    document.body.appendChild(el);
+    try {
+      await exportElementToPdf(el, {
+        margin: 10,
+        filename: `${baseName}.pdf`,
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        html2canvas: { scale: 2 },
+      });
+    } finally {
+      el.remove();
+    }
+  }
+
   if (!ready) return <p className="text-sm text-ink-2">جارٍ التحقّق…</p>;
   if (!me) return <p className="text-sm text-ink-2">سجّل الدخول أوّلًا.</p>;
   if (!VIEWER_ROLES.includes(me.role)) {
@@ -124,6 +217,46 @@ export default function PartnerLedger() {
 
   return (
     <div className="space-y-5">
+      {/* ═══ مؤشّرُ متابعة المديونيّة — المستحقُّ لنا/علينا والمتأخّر ═══ */}
+      <section className={card}>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <h2 className="text-base font-bold text-ink">مؤشّرُ المديونيّة — {partyLabel}</h2>
+          <label className="text-xs text-ink-2 flex items-center gap-2">
+            نافذةُ التنبيه (أيّام)
+            <input
+              type="number"
+              min="1"
+              max="90"
+              value={soonDays}
+              onChange={(e) => setSoonDays(Math.max(1, Math.min(90, Number(e.target.value) || 7)))}
+              className={`${input} w-20`}
+            />
+          </label>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-4 text-sm">
+          <div className="rounded-lg bg-chip border border-line p-3">
+            <div className="text-ink-2 text-xs mb-1">المستحقُّ لنا</div>
+            <div className="text-ink text-lg">{summary.receivable}</div>
+            <div className="text-ink-2 text-xs">{summary.receivableParties} طرفًا</div>
+          </div>
+          <div className="rounded-lg bg-chip border border-line p-3">
+            <div className="text-ink-2 text-xs mb-1">المستحقُّ علينا</div>
+            <div className="text-ink text-lg">{summary.payable}</div>
+            <div className="text-ink-2 text-xs">{summary.payableParties} طرفًا</div>
+          </div>
+          <div className="rounded-lg bg-chip border border-line p-3">
+            <div className="text-ink-2 text-xs mb-1">المتأخّر</div>
+            <div className={summary.overdue > 0 ? 'text-brand-red text-lg' : 'text-ink text-lg'}>{summary.overdue}</div>
+            <div className="text-ink-2 text-xs">{summary.overdueParties} طرفًا</div>
+          </div>
+          <div className="rounded-lg bg-chip border border-line p-3">
+            <div className="text-ink-2 text-xs mb-1">يستحقّ خلال {soonDays} يومًا</div>
+            <div className="text-ink text-lg">{summary.soon}</div>
+            <div className="text-ink-2 text-xs">{summary.soonNextDue ? `أقرب: ${summary.soonNextDue}` : '—'}</div>
+          </div>
+        </div>
+      </section>
+
       {/* ═══ الطبقة ١: تذكيرُ السداد — من استحقّ ومن يقترب ═══ */}
       <section className={card}>
         <h2 className="text-base font-bold text-ink mb-3">تذكيرُ السداد</h2>
@@ -149,7 +282,7 @@ export default function PartnerLedger() {
             )}
             {soonDue.length > 0 && (
               <div>
-                <div className="text-xs text-ink-2 mb-1">يستحقّ خلال أسبوع</div>
+                <div className="text-xs text-ink-2 mb-1">يستحقّ خلال {soonDays} يومًا</div>
                 <ul className="space-y-1">
                   {soonDue.slice(0, 6).map((r) => (
                     <li key={r.partyCode} className="text-sm text-ink">
@@ -180,6 +313,12 @@ export default function PartnerLedger() {
             disabled={view.rows.length === 0}
           >
             تصدير CSV
+          </button>
+          <button className={btn} onClick={onExportExcel} disabled={scoped.length === 0}>
+            تصدير Excel
+          </button>
+          <button className={btn} onClick={onExportPdf} disabled={scoped.length === 0}>
+            تصدير PDF
           </button>
         </div>
 

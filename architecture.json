@@ -11,7 +11,7 @@
   "counts": {
     "modules": 129,
     "serviceDomains": 57,
-    "serviceFiles": 802,
+    "serviceFiles": 804,
     "collections": 104,
     "roles": 20,
     "odooModels": 12,
@@ -2672,6 +2672,7 @@
         "normalizeBarcode",
         "normalizeHeader",
         "resolveHeaderCell",
+        "safeSheetName",
         "splitMulti",
         "toNumber"
       ],
@@ -3548,6 +3549,8 @@
         "operationsDashboard.test.js",
         "partnerLedger.js",
         "partnerLedger.test.js",
+        "partnerLedgerExport.js",
+        "partnerLedgerExport.test.js",
         "partnerLedgerService.js",
         "postingRules.js",
         "rebuild.js",
@@ -3569,8 +3572,8 @@
         "transferReports.test.js",
         "vehicle.test.js"
       ],
-      "fileCount": 42,
-      "testCount": 19,
+      "fileCount": 44,
+      "testCount": 20,
       "exports": [
         "ACCOUNT_LOCATIONS",
         "AGING_BUCKETS",
@@ -3655,6 +3658,7 @@
         "customerCodeFromLocation",
         "customerExposure",
         "customerLocationCode",
+        "debtSummary",
         "detectionsToDrafts",
         "documentExposure",
         "drillChain",
@@ -3691,6 +3695,8 @@
         "isVehicleToken",
         "isWarehouseToken",
         "itemOpenDemand",
+        "ledgerExcelSheets",
+        "ledgerReportModel",
         "ledgerRuleFor",
         "limitOf",
         "listenExceptions",

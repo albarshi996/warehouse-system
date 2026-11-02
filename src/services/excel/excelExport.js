@@ -47,9 +47,23 @@ export function buildWorkbook(sheets) {
     const ds = DATASETS[datasetKey];
     const ws = XLSX.utils.aoa_to_sheet(toMatrix(datasetKey, records));
     ws['!cols'] = ds.columns.map(() => ({ wch: 20 }));
-    XLSX.utils.book_append_sheet(wb, ws, (sheetName ?? ds.labelAr).slice(0, 31));
+    XLSX.utils.book_append_sheet(wb, ws, safeSheetName(sheetName ?? ds.labelAr));
   }
   return wb;
+}
+
+/**
+ * اسمُ ورقةٍ آمن: xlsx يمنع المحارف `: \ / ? * [ ]` في اسم الورقة ويحدّها ٣١ حرفًا،
+ * و`book_append_sheet` يرمي عليها — فورقةٌ اسمُها مشتقٌّ من بيانات (رمزُ طرفٍ فيه `/`)
+ * كانت تُسقط التصديرَ كلَّه. نُبدّل الممنوعَ ولا نرمي (نظيرُ `ensureXlsxName` للملفّ).
+ */
+export function safeSheetName(name, fallback = 'ورقة') {
+  const clean = String(name ?? '')
+    .replace(/[:\\/?*[\]]/g, '-')
+    .trim()
+    .slice(0, 31)
+    .trim();
+  return clean || fallback;
 }
 
 /** Sanitize a user/derived filename and ensure a single .xlsx extension. */
@@ -81,7 +95,7 @@ export function exportAoaSheets(sheets, fileName) {
       ws['!cols'] = (aoa[0] || []).map((_, c) => ({
         wch: Math.min(60, Math.max(10, ...aoa.slice(0, 500).map((r) => String(r[c] ?? '').length + 2))),
       }));
-      XLSX.utils.book_append_sheet(wb, ws, String(name).slice(0, 31));
+      XLSX.utils.book_append_sheet(wb, ws, safeSheetName(name));
     }
     wb.Workbook = { Views: [{ RTL: true }] };
     const out = ensureXlsxName(fileName, 'BHOME_report');

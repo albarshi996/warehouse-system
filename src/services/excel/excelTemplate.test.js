@@ -13,10 +13,22 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as XLSX from 'xlsx';
 
-import { buildTemplateWorkbook, buildWorkbook } from './excelExport.js';
+import { buildTemplateWorkbook, buildWorkbook, safeSheetName } from './excelExport.js';
 import { importSheet } from './excelImport.js';
 import { DATASETS } from './excelSchema.js';
 import { orgTemplateGuide, planOrgImport } from '../org/orgImport.js';
+
+test('★★ اسمُ الورقة يُنقّى من محارف xlsx الممنوعة فلا يسقط التصديرُ كلُّه', () => {
+  // رمزُ طرفٍ فيه «/» أو «:» (يرتدّ من اسم الطرف) كان يُسقط تصديرَ إكسل بأكمله —
+  // `book_append_sheet` يرمي على `: \\ / ? * [ ]`، والبوّابةُ تمرّر الاسمَ عبر safeSheetName.
+  for (const bad of ['A/B', 'X*1', 'Y[2]', 'Z:9', 'P\\Q', 'R?S']) {
+    const safe = safeSheetName(`كشف ${bad}`);
+    assert.ok(!/[:\\/?*[\]]/.test(safe), `نُقّي: ${safe}`);
+  }
+  assert.equal(safeSheetName(''), 'ورقة', 'الفارغُ يرتدّ لاسمٍ افتراضيّ');
+  assert.ok(safeSheetName('ا'.repeat(50)).length <= 31, 'يُحدّ ٣١ حرفًا');
+  assert.equal(safeSheetName('كشف C-01'), 'كشف C-01', 'السليمُ يمرّ كما هو');
+});
 
 const GUIDE = orgTemplateGuide();
 const COLUMNS = DATASETS.orgLocations.columns;
