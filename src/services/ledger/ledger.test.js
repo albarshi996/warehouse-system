@@ -101,7 +101,8 @@ test('الأنواع التي تحتاج حقل مستودع (بما فيها ا
   // ‹FNB-502› +2: صرف الموادّ يخرج من مخزنٍ بعينه، واستلام الإنتاج يدخله —
   // كلاهما طرفُه الآخر موقعُ الإنتاج الوسيط، فالمستودع لازمٌ لا مستنتَج.
   // ‹SRC-POST› +4: مستندُ المصدر يدخل مستودعًا بعينه أو يخرج منه — لا ساحةً نظاميّة.
-  assert.deepEqual(need, ['ADJ', 'DMG', 'MIS', 'PICK', 'PRC', 'PUTAWAY', 'SRA', 'SRI', 'SRO', 'SXI', 'SXO', 'TRC', 'TRN', 'VLD', 'VRT']);
+  // ‹ISS› +1: الصرفُ المخزنيُّ العامّ يخرج من مستودعٍ بعينه إلى الخارج (طلب المالك).
+  assert.deepEqual(need, ['ADJ', 'DMG', 'ISS', 'MIS', 'PICK', 'PRC', 'PUTAWAY', 'SRA', 'SRI', 'SRO', 'SXI', 'SXO', 'TRC', 'TRN', 'VLD', 'VRT']);
   assert.equal(needsWarehouse('SRA'), true, 'تسويةُ المصدر تُطبَّق على مستودعٍ بعينه');
   assert.equal(needsWarehouse('SRO'), true, 'تسليمُ المصدر يخرج من مستودعٍ بعينه إلى الخارج');
   assert.equal(needsWarehouse('SXI'), true, 'استلامُ نقل المصدر يدخل مستودعَ الوجهة');

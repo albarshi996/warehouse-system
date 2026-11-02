@@ -37,6 +37,7 @@ const schema = {
       fields: [
         { key: 'serviceDate', label: 'التاريخ (Date)', kind: 'date', required: true },
         { key: 'provider', label: 'الجهة / العامل (Provider)', kind: 'text' },
+        { key: 'workers', label: 'عدد العمّال', kind: 'number' },
         { key: 'area', label: 'المكان / المساحة (Area)', kind: 'text' },
         { key: 'period', label: 'المدّة (Period)', kind: 'text' },
         {

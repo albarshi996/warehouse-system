@@ -71,6 +71,8 @@ import exp from './exp.js';
 import taxi from './taxi.js';
 import labor from './labor.js';
 import clean from './clean.js';
+// صرفٌ مخزنيٌّ عامّ — إذن صرفٍ مستقلٌّ يُخرج البضاعة من المستودع (طلب المالك).
+import iss from './iss.js';
 
 /** المخطّطات الجاهزة. */
 const SCHEMAS = {
@@ -138,6 +140,8 @@ const SCHEMAS = {
   TAXI: taxi,
   LABOR: labor,
   CLEAN: clean,
+  // صرفٌ مخزنيٌّ عامّ — إذن صرفٍ مستقلّ (طلب المالك).
+  ISS: iss,
 };
 
 /**
@@ -212,6 +216,8 @@ export const GOVERNED_FORMS = [
   { type: 'TAXI', stage: 7, titleAr: 'نقل / تاكسي', file: '', phase: 'BH' },
   { type: 'LABOR', stage: 7, titleAr: 'أجرة عمالة', file: '', phase: 'BH' },
   { type: 'CLEAN', stage: 7, titleAr: 'نظافة', file: '', phase: 'BH' },
+  // صرفٌ مخزنيٌّ عامّ — طلب المالك.
+  { type: 'ISS', stage: 7, titleAr: 'إذن صرف مخزنيّ', file: '', phase: 'F3' },
 ].map((f) => ({ ...f, ready: Boolean(SCHEMAS[f.type]) }));
 
 /** يُعيد مخطّط النوع، أو null إن لم يُبنَ بعد. */

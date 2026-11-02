@@ -1,0 +1,18 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+// ⚠️ لا تُحذف: المكوّن يرسم داخل `.o_theme`، وبلا هذين الملفّين تسقط الأنماط كلّها (حارسُه في audit-portal).
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+import WarehouseMovements from '../../components/brandzo-erp/reports/WarehouseMovements.jsx';
+---
+
+<DashboardLayout title="حركة المستودعات" light>
+  <div class="text-right" dir="rtl">
+    <h1 class="text-2xl font-bold text-ink mb-1">حركة المستودعات وفق المستودعات</h1>
+    <p class="text-sm text-ink-2 mb-5">
+      لكلّ مستودعٍ على حدة: ما دخل رفوفه (الوارد) وما خرج منها (المنصرف) وصافيهما وقيمتهما وعددُ حركاته،
+      ثمّ تفصيلُ كلّ حركةٍ بسببها وطرفها المقابل — ويُنزَّل إكسل وPDF.
+    </p>
+    <WarehouseMovements client:load />
+  </div>
+</DashboardLayout>

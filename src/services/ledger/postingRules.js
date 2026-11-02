@@ -215,6 +215,19 @@ export const POSTING_RULES = {
     reason: 'damage',
     labelAr: 'إتلاف',
   },
+  // ‹ISS› صرفٌ مخزنيٌّ عامّ (طلب المالك): يُخرج البضاعة من المستودع إلى خارج
+  // الدفتر (استهلاكٌ · صرفٌ لإدارة · استخدامٌ تشغيليّ) — خروجٌ مباشرٌ بقيمةٍ
+  // دفتريّة كالتالف، لكن بسببٍ مكتوبٍ لا «تلف». والموقع يخصّ المصدر.
+  ISS: {
+    from: WAREHOUSE,
+    to: EXTERNAL,
+    qtyField: 'qty',
+    expiryField: 'expiry',
+    costField: 'unitCost',
+    reason: 'issue-out',
+    labelAr: 'صرف من المستودع',
+    binSide: 'from',
+  },
   ADJ: {
     from: ADJUSTMENT.code,
     to: WAREHOUSE,

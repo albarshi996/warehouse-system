@@ -116,6 +116,8 @@ export const DOC_ODOO_MAP = {
   TAXI: { model: 'x_bhome.transport', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
   LABOR: { model: 'x_bhome.labor', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
   CLEAN: { model: 'x_bhome.cleaning', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
+  // صرفٌ مخزنيٌّ عامّ: محلّيٌّ لا يُدفَع إلى أودو (الصفُّ للشمول لا للمزامنة).
+  ISS: { model: 'x_bhome.issue', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
 };
 
 /** صفّ العبور لنوعٍ ما، أو null إن كان النوع خارج الدورة المحكومة. */

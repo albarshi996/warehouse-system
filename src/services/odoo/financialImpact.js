@@ -105,6 +105,8 @@ export const FINANCIAL_IMPACT = Object.freeze({
   TAXI: { financial: false, stockEffect: false, odooDoc: null, note: 'نقل/تاكسي: مصروفُ نقلٍ يُقيَّد في الدفتر المحلّيّ (BHOME) تحت فئة النقل لا في أودو — لا قيدَ مرآةٍ له.' },
   LABOR: { financial: false, stockEffect: false, odooDoc: null, note: 'أجرة عمالة: مصروفُ مناولةٍ يُقيَّد في الدفتر المحلّيّ (BHOME) لا في أودو — لا قيدَ مرآةٍ له.' },
   CLEAN: { financial: false, stockEffect: false, odooDoc: null, note: 'نظافة: مصروفُ خدمةٍ يُقيَّد في الدفتر المحلّيّ (BHOME) تحت فئة النظافة لا في أودو — لا قيدَ مرآةٍ له.' },
+  // صرفٌ مخزنيٌّ عامّ (طلب المالك): يحرّك المخزون، وقيمتُه تُقرأ من الحركة محلّيًّا.
+  ISS: { financial: false, stockEffect: true, odooDoc: null, note: 'صرفٌ مخزنيٌّ عامّ: يُخرج البضاعة من المستودع (استهلاكٌ أو صرفٌ لإدارة) — أثرُه الكمّيّ مباشرٌ وقيمتُه تُقرأ من الحركة، ولا قيدَ مرآةٍ من أودو له (محلّيّ BHOME).' },
 });
 
 /** الأثر الماليّ لنوعٍ ما، أو null لغير المعروف. */

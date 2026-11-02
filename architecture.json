@@ -9,9 +9,9 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 129,
+    "modules": 130,
     "serviceDomains": 57,
-    "serviceFiles": 804,
+    "serviceFiles": 808,
     "collections": 104,
     "roles": 20,
     "odooModels": 12,
@@ -1084,6 +1084,14 @@
       "usesServices": []
     },
     {
+      "name": "warehouse-movement",
+      "route": "/dashboard/warehouse-movement",
+      "title": "حركة المستودعات",
+      "summary": "",
+      "file": "src/pages/dashboard/warehouse-movement.astro",
+      "usesServices": []
+    },
+    {
       "name": "warehouses",
       "route": "/dashboard/warehouses",
       "title": "إدارة المستودعات",
@@ -2057,6 +2065,8 @@
         "inv.js",
         "ipo.js",
         "ipr.js",
+        "iss.js",
+        "iss.test.js",
         "itemResolver.js",
         "itemResolver.test.js",
         "labor.js",
@@ -2130,8 +2140,8 @@
         "vsi.js",
         "vsr.js"
       ],
-      "fileCount": 144,
-      "testCount": 50,
+      "fileCount": 146,
+      "testCount": 51,
       "exports": [
         "ACCEPTED_ATTACHMENT_TYPES",
         "AMEND_CLASSES",
@@ -2412,6 +2422,8 @@
         "isSourceRecord",
         "isStale",
         "isTerminal",
+        "issueValue",
+        "issueWarnings",
         "kindLabel",
         "laborWarnings",
         "latestReconciliation",
@@ -2590,6 +2602,7 @@
         "totalDamage",
         "totalDecrease",
         "totalIncrease",
+        "totalIssue",
         "totalQty",
         "totalReceived",
         "totalShipped",
@@ -5421,10 +5434,12 @@
         "stockReports.js",
         "stockReports.test.js",
         "traceReports.js",
-        "traceReports.test.js"
+        "traceReports.test.js",
+        "warehouseMovements.js",
+        "warehouseMovements.test.js"
       ],
-      "fileCount": 16,
-      "testCount": 7,
+      "fileCount": 18,
+      "testCount": 8,
       "exports": [
         "ACCOUNT_REPORTS",
         "COLUMNS",
@@ -5461,11 +5476,13 @@
         "isReceipt",
         "isReturn",
         "isReturnDoc",
+        "isWarehouseCode",
         "item360",
         "libyaDayOf",
         "libyaMidnightMs",
         "lineRows",
         "monthlyStock",
+        "moveDay",
         "orderLineRows",
         "ordersReport",
         "reportIds",
@@ -5482,7 +5499,9 @@
         "totalsByWarehouse",
         "totalsOf",
         "traceAnswers",
-        "traceMoves"
+        "traceMoves",
+        "warehouseMovementReport",
+        "warehouseMovementSheets"
       ],
       "collections": [
         "documents"

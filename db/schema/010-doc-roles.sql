@@ -35,6 +35,7 @@ INSERT INTO doc_type_roles (doc_type, approve_roles, complete_roles) VALUES
   ('INV', ARRAY['finance_manager', 'warehouse_manager']::text[], ARRAY['finance_manager', 'warehouse_manager']::text[]),
   ('IPO', ARRAY['finance_manager', 'warehouse_manager']::text[], ARRAY['purchase_officer', 'warehouse_manager']::text[]),
   ('IPR', ARRAY['finance_manager', 'warehouse_manager']::text[], ARRAY['purchase_officer', 'warehouse_manager']::text[]),
+  ('ISS', ARRAY['warehouse_manager', 'inventory_auditor']::text[], ARRAY['storekeeper', 'warehouse_manager']::text[]),
   ('LABOR', ARRAY['finance_manager', 'warehouse_manager']::text[], ARRAY['treasury', 'finance_manager', 'warehouse_manager']::text[]),
   ('MIS', ARRAY['executive_chef', 'warehouse_manager']::text[], ARRAY['storekeeper', 'warehouse_manager']::text[]),
   ('OPO', ARRAY['warehouse_manager']::text[], ARRAY['warehouse_manager']::text[]),

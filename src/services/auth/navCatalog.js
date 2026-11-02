@@ -383,6 +383,8 @@ export const NAV_GROUPS = [
       // ‹ODOO-RPT› تقارير أودو: «البوّابةُ هي الشاشةُ السهلةُ الفهم لأحداث أودو» (المالك 2026-10-21) —
       // أوامر البيع والاستلام والتوصيل والمرتجع والمخزون اليوميّ والشهريّ، وكلٌّ يُنزَّل إكسل.
       { path: '/dashboard/odoo-reports', label: 'تقارير أودو', icon: 'barChart3', roles: ['admin', 'warehouse_manager', 'inventory_auditor', 'finance_manager', 'purchase_officer', 'sales_supervisor'] },
+      // ‹WH-MOVE› حركة المستودعات وفق كلّ مستودع (طلب المالك 2026-11-02): واردٌ ومنصرفٌ وصافٍ وقيمةٌ لكلّ مستودعٍ من حركات الدفتر، بإكسل وPDF.
+      { path: '/dashboard/warehouse-movement', label: 'حركة المستودعات', icon: 'barChart3', roles: ['admin', 'warehouse_manager', 'inventory_auditor', 'finance_manager'] },
       // دفتر الذمم وكشوف الحساب (م٤-هـ): للمديرَين والمالي والخزينة —
       // وللمندوب (CC-302): المحصِّلُ يُحاسَب على ذمم عملائه فيجب أن يراها قبل
       // أن يبيع (وهو نصّ فلسفة قاعدة partner_ledger نفسها: القراءة لكلّ مصادَق).

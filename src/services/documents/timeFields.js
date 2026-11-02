@@ -176,6 +176,9 @@ export const TIME_FIELD_MAP = Object.freeze({
   TAXI: { tripDate: E },
   LABOR: { workDate: E },
   CLEAN: { serviceDate: E },
+
+  /* ═══ صرفٌ مخزنيٌّ عامّ (طلب المالك) ═══ */
+  ISS: { issueDate: E, expiry: A },
 });
 
 /**

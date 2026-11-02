@@ -37,6 +37,14 @@ const schema = {
       fields: [
         { key: 'workDate', label: 'التاريخ (Date)', kind: 'date', required: true },
         { key: 'crew', label: 'العامل / الطاقم (Crew)', kind: 'text' },
+        {
+          key: 'laborType',
+          label: 'نوع العمالة (Labor Type)',
+          kind: 'select',
+          options: ['عُرضة', 'مياومة', 'طاقم', 'دائمة'],
+          required: true,
+          hint: 'عُرضة: عمالةٌ تُستدعى عند الحاجة. مياومة: بأجرٍ يوميّ. طاقم: فريقٌ متعاقَد. دائمة: على رأس العمل.',
+        },
         { key: 'task', label: 'العمل المنجَز (Task)', kind: 'text' },
         { key: 'workers', label: 'عدد العمّال', kind: 'number' },
         { key: 'dayRate', label: 'الأجرة اليوميّة (د.ل)', kind: 'number' },

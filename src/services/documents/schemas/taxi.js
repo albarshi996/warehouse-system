@@ -37,6 +37,14 @@ const schema = {
       fields: [
         { key: 'tripDate', label: 'التاريخ (Date)', kind: 'date', required: true },
         { key: 'vendor', label: 'السائق / الشركة (Driver/Vendor)', kind: 'text' },
+        {
+          key: 'moveType',
+          label: 'نوع النقل (Type)',
+          kind: 'select',
+          options: ['داخلي', 'خارجي'],
+          required: true,
+          hint: 'داخليّ: بين مواقع الشركة ومستودعاتها. خارجيّ: إلى العملاء أو خارج المنشأة.',
+        },
         { key: 'fromTo', label: 'المسار (من ← إلى)', kind: 'text' },
         { key: 'purpose', label: 'الغرض (Purpose)', kind: 'text' },
         {
