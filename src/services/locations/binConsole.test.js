@@ -606,3 +606,24 @@ test('★★★ ZH-02: لا رصيدَ لصنفٍ غير مسجّل — يُرف
   const empty = buildItemIndexes([]);
   assert.deepEqual(entryProblems('putaway', { line: { bin: BIN, sku: 'GHOST-999', qty: 3 }, contents: c, indexes: empty }), []);
 });
+
+test('★★★ ZH-02ب: السحبُ لصنفٍ له رصيدٌ في الخانة بلا بطاقةٍ في الماستر لا يُحبَس — والتخزينُ يبقى محروسًا', () => {
+  // WNW-004 (ملح) له رصيدٌ ٥ في الخانة (BALANCES) ولا بطاقةَ له في ITEMS — فجوةٌ واردةٌ
+  // من استيراد أودو أو صنفٍ أُرشف. السحبُ يُنقِص رصيدًا قائمًا طُوبِق من محتوى الخانة
+  // لا يكتب رصيدًا لمجهول، فحبسُه إفسادٌ لا تطوير.
+  const c = binContents(BIN, { balances: BALANCES, units: UNITS, indexes: INDEXES });
+  const orphan = c.lines.find((l) => l.sku === 'WNW-004');
+  assert.ok(orphan, 'الرصيدُ اليتيمُ يظهر في محتوى الخانة رغم غياب بطاقته');
+  // السحبُ لا يُرفض برسالة «غير مسجّل» (الكمّيّة ٣ ≤ المتاح ٥).
+  const pick = entryProblems('pick', {
+    line: { bin: BIN, sku: 'WNW-004', barcode: '6281006552', qtyPicked: 3 },
+    contents: c, scanned: '6281006552', indexes: INDEXES,
+  });
+  assert.deepEqual(pick, [], pick.join(' | '));
+  // لكنّ التخزينَ (يكتب رصيدًا جديدًا) يبقى محروسًا — القصدُ الأصليّ لـZH-02 لم يُنقَض.
+  const put = entryProblems('putaway', {
+    line: { bin: BIN, sku: 'WNW-004', barcode: '6281006552', qty: 3 },
+    contents: c, indexes: INDEXES,
+  });
+  assert.ok(put.some((p) => /غيرُ مسجّل/.test(p) && /WNW-004|6281006552/.test(p)), put.join(' | '));
+});

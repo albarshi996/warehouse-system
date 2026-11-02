@@ -11,6 +11,7 @@
  * منطق خالص: بلا Firestore وبلا DOM.
  */
 import { uomLabel } from '../items/uomModel.js';
+import { confirmedCount, hasCount } from '../documents/schemas/cc.js';
 
 const str = (v) => String(v ?? '').trim();
 const num = (v) => Number(v) || 0;
@@ -160,25 +161,31 @@ const countVariance = {
     (data?.documents || [])
       .filter((d) => d.type === 'CC' || d.type === 'ADJ')
       .flatMap((d) =>
-        (d.lines || []).map((l) => {
-          const bookQty = num(l.bookQty ?? l.systemQty ?? l.qtyBook);
-          // ‹AQ-11› العدُّ يُخزَّن بحقلٍ مختلفٍ لكلّ نوع: CC في count2/count1، وADJ في
-          // actualQty — لا `countedQty` (فكان صفرًا دائمًا والفرقُ = −الدفتريّ كاذبًا).
-          const countedQty = d.type === 'ADJ'
-            ? num(l.actualQty ?? l.qty ?? l.countedQty)
-            : num(l.count2 ?? l.count1 ?? l.countedQty ?? l.counted ?? l.qtyCounted);
-          return {
-            date: day(d.header?.countDate || d.header?.adjustmentDate),
-            docNumber: str(d.number),
-            docType: d.type,
-            sku: str(l.sku),
-            bookQty,
-            countedQty,
-            variance: Math.round((countedQty - bookQty) * 1e6) / 1e6,
-            state: str(d.state),
-            approvedBy: str(d.approvedByName),
-          };
-        })
+        (d.lines || [])
+          // ‹AQ-11ب› بندُ CC لم يُعدّ (count1/count2 كلاهما فارغ) سطرٌ لم يُلمَس لا عجزٌ
+          // — إقحامُه يصطنع عجزًا بكامل الدفتريّ. دلالةُ «عُدّ فعلًا» هي `hasCount` cc.js.
+          .filter((l) => d.type !== 'CC' || hasCount(l))
+          .map((l) => {
+            const bookQty = num(l.bookQty ?? l.systemQty ?? l.qtyBook);
+            // ‹AQ-11› العدُّ يُخزَّن بحقلٍ مختلفٍ لكلّ نوع: ADJ في actualQty، وCC في
+            // count2/count1 — ومصدرُ دلالةِ العدّ المؤكَّد `confirmedCount` في cc.js:
+            // `''` تعني «لا عدّ ثانٍ» فيرجع للأول، وكان `??` يُبقي `''` فيُقرأ صفرًا
+            // فيصطنع «الفرق = −الدفتريّ» كاذبًا لكلّ جردٍ مفردِ العدّ (الشكلُ الغالب).
+            const countedQty = d.type === 'ADJ'
+              ? num(l.actualQty ?? l.qty ?? l.countedQty)
+              : confirmedCount(l);
+            return {
+              date: day(d.header?.countDate || d.header?.adjustmentDate),
+              docNumber: str(d.number),
+              docType: d.type,
+              sku: str(l.sku),
+              bookQty,
+              countedQty,
+              variance: Math.round((countedQty - bookQty) * 1e6) / 1e6,
+              state: str(d.state),
+              approvedBy: str(d.approvedByName),
+            };
+          })
       )
       .filter((r) => r.variance !== 0),
 };

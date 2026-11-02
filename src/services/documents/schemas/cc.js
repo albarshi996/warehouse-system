@@ -27,7 +27,7 @@ import { reasonsFor } from '../reasonCodes.js';
 const COUNT_REASONS = reasonsFor('count_variance').map((r) => r.label);
 
 /** العدّ المؤكَّد: الثاني إن وُجد، وإلا الأول. */
-function confirmedCount(line) {
+export function confirmedCount(line) {
   const second = line?.count2;
   if (second !== undefined && second !== null && second !== '') return Number(second) || 0;
   return Number(line?.count1) || 0;
@@ -49,7 +49,7 @@ export function matchedCount(lines) {
 }
 
 /** هل عُدّ هذا البند فعلًا؟ (بلا عدٍّ لا يُحسب في الدقّة) */
-function hasCount(line) {
+export function hasCount(line) {
   return (
     (line?.count1 !== undefined && line.count1 !== '') ||
     (line?.count2 !== undefined && line.count2 !== '')
