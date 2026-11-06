@@ -11,7 +11,7 @@
   "counts": {
     "modules": 132,
     "serviceDomains": 58,
-    "serviceFiles": 823,
+    "serviceFiles": 825,
     "collections": 107,
     "roles": 20,
     "odooModels": 12,
@@ -6272,11 +6272,15 @@
       "dir": "src/services/updater",
       "files": [
         "autoUpdate.js",
-        "autoUpdate.test.js"
+        "autoUpdate.test.js",
+        "updateView.js",
+        "updateView.test.js"
       ],
-      "fileCount": 2,
-      "testCount": 1,
+      "fileCount": 4,
+      "testCount": 2,
       "exports": [
+        "UPDATE_PHASES",
+        "describeUpdate",
         "runAutoUpdate"
       ],
       "collections": []
