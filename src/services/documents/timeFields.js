@@ -179,6 +179,8 @@ export const TIME_FIELD_MAP = Object.freeze({
 
   /* ═══ صرفٌ مخزنيٌّ عامّ (طلب المالك) ═══ */
   ISS: { issueDate: E, expiry: A },
+  HND: { handlingDate: E },
+  VEH: { logDate: E },
 });
 
 /**

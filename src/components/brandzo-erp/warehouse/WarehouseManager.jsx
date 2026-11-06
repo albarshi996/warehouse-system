@@ -25,8 +25,9 @@ import {
   schemeFromTemplate,
   templateById,
 } from '../../../services/locations/binTemplate.js';
-import { saveWarehouseNumbering } from '../../../services/locations/warehouseService.js';
+import { saveWarehouseNumbering, canEditWarehouses } from '../../../services/locations/warehouseService.js';
 import BIN_SCHEMES from '../../../data/warehouse-schemes.json';
+import SITE_155 from '../../../data/site-155-warehouses.json';
 
 /**
  * شاشة ماستر المستودعات — قائمة حيّة + إضافة/تعديل/حذف + تصدير/استيراد JSON،
@@ -40,11 +41,26 @@ import BIN_SCHEMES from '../../../data/warehouse-schemes.json';
 
 const STORAGE_KEY = 'brandzo_warehouses_local';
 
+// النموذجُ الفارغ في موضعٍ واحد — ثلاثةُ مواضع تُصفّره، فلا تفترق. الحقولُ
+// الأربعة (موقع/مساحة/إشغال/محتوى) اختياريّةٌ على نمط facilityType: غيابُها
+// = مستودعٌ بلا بُعد موقع (سلوكُ اليوم حرفيًّا)، فالترحيلُ بلا أثر.
+const BLANK_FORM = {
+  code: '', name: '', manager: '', facilityType: DEFAULT_FACILITY_TYPE,
+  site: '', area: '', occupancyPct: '', content: '',
+};
+
+// عددٌ أو null — خانةُ المساحة/الإشغال فارغةً تعني «غيرُ معلوم» لا صفرًا.
+const numOrNull = (v) => (v === '' || v == null ? null : Number(v));
+
+const SITE_155_WAREHOUSES = SITE_155?.warehouses || [];
+
 const LIST_COLS = [
   { key: 'code', label: 'الكود' },
   { key: 'name', label: 'الاسم' },
+  { key: 'site', label: 'الموقع' },
   { key: 'manager', label: 'المدير' },
   { key: 'facilityType', label: 'النوع' },
+  { key: 'occupancy', label: 'الإشغال' },
   { key: 'status', label: 'الحالة' },
   // ‹LOC-704› عمودُ المواقع: «كم خانةً لهذا المستودع وكم ينقصه» — الرقمُ في
   // مكانه لا في شاشةٍ أخرى، فمن يعرّف مستودعًا يرى فورًا أنّه بلا مواقع.
@@ -65,12 +81,13 @@ const WarehouseManager = () => {
   const [genBusy, setGenBusy] = useState('');
   const [genTick, setGenTick] = useState(0);
   const [warehouses, setWarehouses] = useState([]);
-  const [formData, setFormData] = useState({ code: '', name: '', manager: '', facilityType: DEFAULT_FACILITY_TYPE });
+  const [formData, setFormData] = useState(BLANK_FORM);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [statusMsg, setStatusMsg] = useState({ type: '', text: '' });
   const [offlineMode, setOfflineMode] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [seedBusy, setSeedBusy] = useState(false);
 
   // الدور يحكم تحرير المواقع (المديران) — والقراءة لأيّ مصادَق.
   useEffect(
@@ -167,6 +184,12 @@ const WarehouseManager = () => {
           // ‹FNB-106› نوع المنشأة: مستودعٌ أم وحدة إنتاج مركزيّة (المطبخ).
           // الغياب ⇒ مستودع — سلوك اليوم حرفيًّا، فالترحيل بلا أثر.
           facilityType: formData.facilityType || DEFAULT_FACILITY_TYPE,
+          // ‹155› بُعدُ الموقع وصفاتُ المساحة/الإشغال/المحتوى — اختياريّةٌ
+          // لكلّ المستودعات، تُملأ لمخازن موقع 155 وتبقى فارغةً لغيرها.
+          site: (formData.site || '').trim(),
+          area: numOrNull(formData.area),
+          occupancyPct: numOrNull(formData.occupancyPct),
+          content: (formData.content || '').trim(),
           status: 'نشط',
           createdAt: serverTimestamp(),
         };
@@ -178,7 +201,7 @@ const WarehouseManager = () => {
         }
       }
 
-      setFormData({ code: '', name: '', manager: '', facilityType: DEFAULT_FACILITY_TYPE });
+      setFormData(BLANK_FORM);
       setEditingId(null);
       setStatusMsg({ type: 'success', text: editingId ? 'تم تعديل المستودع بنجاح' : 'تمت إضافة المستودع بنجاح' });
       setHasUnsavedChanges(false);
@@ -206,7 +229,10 @@ const WarehouseManager = () => {
 
   const startEdit = (wh) => {
     setEditingId(wh.id);
-    setFormData({ code: wh.code, name: wh.name, manager: wh.manager || '', facilityType: facilityTypeOf(wh) });
+    setFormData({
+      code: wh.code, name: wh.name, manager: wh.manager || '', facilityType: facilityTypeOf(wh),
+      site: wh.site || '', area: wh.area ?? '', occupancyPct: wh.occupancyPct ?? '', content: wh.content || '',
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -245,6 +271,11 @@ const WarehouseManager = () => {
                 name: wh.name || '',
                 manager: wh.manager || '',
                 status: wh.status || 'نشط',
+                // ‹155› الحقولُ الاختياريّة تُحمَل بالاستيراد — كانت تُسقَط صامتةً.
+                site: wh.site || '',
+                area: wh.area ?? null,
+                occupancyPct: wh.occupancyPct ?? null,
+                content: wh.content || '',
                 createdAt: serverTimestamp()
               });
             });
@@ -258,6 +289,57 @@ const WarehouseManager = () => {
       reader.readAsText(file);
     };
     input.click();
+  };
+
+  /**
+   * ‹155› بذرُ مخازن موقع 155 (E1..E11) بضغطةٍ واحدة — **آمنٌ عند التكرار**:
+   * يُكتب الناقصُ وحدَه بمقارنة الأكواد القائمة (toUpperCase)، فالضغطةُ الثانية
+   * لا تجد ما تكتبه ولا تُفرّع رصيدًا. الأكوادُ من بذرةٍ محكومةٍ في الريبو
+   * (`src/data/site-155-warehouses.json`)، لا كتابةٌ حرّة.
+   */
+  const seedSite155 = async () => {
+    if (seedBusy) return;
+    const have = new Set(warehouses.map((w) => String(w.code || '').trim().toUpperCase()));
+    const todo = SITE_155_WAREHOUSES.filter((w) => !have.has(String(w.code).trim().toUpperCase()));
+    if (!todo.length) {
+      setStatusMsg({ type: 'info', text: 'مخازن موقع 155 موجودةٌ كلُّها — لا جديدَ يُضاف.' });
+      setTimeout(() => setStatusMsg({ type: '', text: '' }), 3000);
+      return;
+    }
+    setSeedBusy(true);
+    setStatusMsg({ type: 'info', text: 'يبذر مخازن موقع 155…' });
+    try {
+      if (offlineMode) {
+        setWarehouses([
+          ...warehouses,
+          ...todo.map((w) => ({
+            id: crypto.randomUUID(), status: 'نشط', createdAt: new Date().toISOString(),
+            code: w.code, name: w.name || w.code, manager: '',
+            site: w.site || '155', area: w.area ?? null, occupancyPct: w.occupancyPct ?? null, content: w.content || '',
+          })),
+        ]);
+      } else {
+        const batch = writeBatch(db);
+        todo.forEach((w) => {
+          const ref = doc(collection(db, 'warehouses'));
+          batch.set(ref, {
+            code: w.code, name: w.name || w.code, manager: '', status: 'نشط',
+            site: w.site || '155', area: w.area ?? null, occupancyPct: w.occupancyPct ?? null, content: w.content || '',
+            createdAt: serverTimestamp(),
+          });
+        });
+        await batch.commit();
+      }
+      setStatusMsg({
+        type: 'success',
+        text: `أُضيف ${int(todo.length)} مخزنًا لموقع 155 — ${todo.map((w) => w.code).join('، ')}. والموجودُ لم يُكرَّر.`,
+      });
+      setTimeout(() => setStatusMsg({ type: '', text: '' }), 5000);
+    } catch (err) {
+      setStatusMsg({ type: 'error', text: 'تعذّر البذر: ' + (err?.message || 'سببٌ غير معروف') });
+    } finally {
+      setSeedBusy(false);
+    }
   };
 
   const handleInputChange = (field) => (e) => {
@@ -435,12 +517,25 @@ const WarehouseManager = () => {
     cells: {
       code: <span className="decoration-bf" style={{ fontFamily: 'monospace' }}>{wh.code}</span>,
       name: wh.name,
+      site: wh.site ? <Badge variant="info">{wh.site}</Badge> : '—',
       manager: wh.manager || '—',
       facilityType: (
         <Badge variant={facilityTypeOf(wh) === 'production_unit' ? 'info' : 'muted'}>
           {FACILITY_TYPES[facilityTypeOf(wh)].labelAr}
         </Badge>
       ),
+      // ‹155› الإشغالُ والمساحةُ والمحتوى — من تفصيل مخازن الموقع. غيرُ المعلوم «—».
+      occupancy:
+        wh.occupancyPct == null ? (
+          '—'
+        ) : (
+          <span
+            style={{ fontFamily: 'monospace' }}
+            title={`${wh.area != null ? 'المساحة ' + int(wh.area) + ' م² · ' : ''}${wh.content || ''}`}
+          >
+            {int(wh.occupancyPct)}%
+          </span>
+        ),
       status: <Badge variant={(wh.status || 'نشط') === 'نشط' ? 'done' : 'danger'}>{wh.status || 'نشط'}</Badge>,
       bins: (() => {
         // ‹LOC-READS› قبل وصول الأكواد لا يُعرض «0/2600» ولا زرُّ «ولّد 2600» — كان
@@ -491,6 +586,11 @@ const WarehouseManager = () => {
           <nav className="o_breadcrumb" aria-label="مسار التنقّل"><span className="o_active">إدارة المستودعات</span></nav>
         </div>
         <div className="o_cp_end" style={{ gap: '8px' }}>
+          {canEditWarehouses(role) && (
+            <button type="button" className="btn btn-primary" disabled={seedBusy} onClick={seedSite155} title="يكتب مخازن E1..E11 لموقع 155 — الموجودُ لا يُكرَّر">
+              <Icon name="package" size={15} /> {seedBusy ? 'يبذر…' : 'بذر مخازن موقع 155'}
+            </button>
+          )}
           <button type="button" className="btn btn-secondary" onClick={handleExport}>
             <Icon name="arrowUpTray" size={15} /> تصدير JSON
           </button>
@@ -636,13 +736,54 @@ const WarehouseManager = () => {
                 onChange={handleInputChange('manager')}
               />
             </FieldWrap>
+            {/* ‹155› بُعدُ الموقع وصفاتُه — اختياريّةٌ لكلّ المستودعات، تُملأ لمخازن الموقع. */}
+            <FieldWrap label="الموقع (مثل: 155)">
+              <input
+                type="text"
+                className="o_input"
+                placeholder="رمز الموقع"
+                value={formData.site}
+                onChange={handleInputChange('site')}
+                style={{ direction: 'ltr', textAlign: 'right' }}
+              />
+            </FieldWrap>
+            <FieldWrap label="المساحة (م²)">
+              <input
+                type="number"
+                min="0"
+                className="o_input"
+                placeholder="المساحة بالمتر المربّع"
+                value={formData.area}
+                onChange={handleInputChange('area')}
+              />
+            </FieldWrap>
+            <FieldWrap label="نسبة الإشغال (%)">
+              <input
+                type="number"
+                min="0"
+                max="100"
+                className="o_input"
+                placeholder="0 — 100"
+                value={formData.occupancyPct}
+                onChange={handleInputChange('occupancyPct')}
+              />
+            </FieldWrap>
+            <FieldWrap label="المحتوى / الجهة">
+              <input
+                type="text"
+                className="o_input"
+                placeholder="وصفُ المخزون أو الجهة"
+                value={formData.content}
+                onChange={handleInputChange('content')}
+              />
+            </FieldWrap>
           </div>
           <div className="o_form_actions">
             {editingId && (
               <button
                 type="button"
                 className="btn btn-secondary"
-                onClick={() => { setEditingId(null); setFormData({ code: '', name: '', manager: '', facilityType: DEFAULT_FACILITY_TYPE }); }}
+                onClick={() => { setEditingId(null); setFormData(BLANK_FORM); }}
               >
                 إلغاء
               </button>

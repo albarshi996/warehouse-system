@@ -61,7 +61,7 @@ export const START_GROUPS = [
   { title: 'المصاريف والرواتب', icon: 'dollarSign', types: ['EXP', 'SAL', 'ADV', 'ADVR'] },
   // ‹BHOME · المرحلة س› مستنداتُ التشغيل: نقلٌ/تاكسي · عمالةٌ يوميّة · نظافة —
   // مصاريفُ تشغيلٍ بحقولها الميدانيّة، تُقيَّد وتُطبع وتظهر في المصاريف بمحلّها.
-  { title: 'التشغيل', icon: 'truck', types: ['TAXI', 'LABOR', 'CLEAN'] },
+  { title: 'التشغيل', icon: 'truck', types: ['TAXI', 'LABOR', 'CLEAN', 'HND', 'VEH'] },
 ];
 
 /**

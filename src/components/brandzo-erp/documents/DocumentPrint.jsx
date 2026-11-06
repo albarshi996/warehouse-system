@@ -68,8 +68,14 @@ export default function DocumentPrint({ schema, doc, attachments = [], reconcili
   const files = (attachments || []).filter((a) => !String(a?.mime || '').startsWith('image/'));
   const control = schema?.control ? reconciliationVerdict(reconciliations) : null;
 
+  // رايةُ الطباعة المحايدة (طلب المالك — منظومة موقع 155): مخطّطٌ يحمل
+  // `plainPrint:true` يُطبع بلا اسمٍ/شعارٍ/صفةِ شركة. الراية تُضيف صِنفَ
+  // `dp-plain` على الجذر فحسب، والإخفاءُ كلُّه في CSS يطابق هذا الصنف وحده —
+  // فلا مستندٌ رسميٌّ آخر يتأثّر.
+  const plain = schema?.plainPrint === true;
+
   return (
-    <div className="doc-print" dir="rtl">
+    <div className={plain ? 'doc-print dp-plain' : 'doc-print'} dir="rtl">
       <style>{PRINT_CSS}</style>
 
       <header className="dp-head">
@@ -380,5 +386,17 @@ const PRINT_CSS = `
 
   .dp-foot { display: flex; justify-content: space-between; margin-top: 5mm;
     border-top: 1px solid #ddd; padding-top: 1.5mm; font-size: 7pt; color: #666; }
+
+  /* ═══ الطباعةُ المحايدة (dp-plain) — مستندات موقع 155 بلا هويّة شركة ═══
+     طلبُ المالك: كلُّ مستندٍ (جرد/صرف/استلام/مناولة/نقل/عهد) يُطبع بلا اسمٍ
+     أو شعارٍ أو صفةِ شركة. رايةُ schema.plainPrint تُضيف صِنفَ dp-plain على
+     الجذر، فتُخفى كتلةُ الشعار (BFP/BHOME) والتذييلُ (العنوان والهاتف)، ويُحيَّد
+     الأحمرُ البراندُ في حدِّ الترويسة إلى رماديٍّ داكن. خاناتُ التوقيع ورقمُ
+     المستند وعنوانُه والجدولُ تبقى — فالمواصفةُ تطلبها. والقاعدةُ تطابق
+     dp-plain وحدها، فلا تمسّ أيَّ مستندٍ رسميٍّ يُطبع بالترويسة الكاملة.
+     (لا شَوْلَة مائلة في هذا التعليق — الكتلةُ قالبٌ نصّيّ.) */
+  .doc-print.dp-plain .dp-brand { display: none; }
+  .doc-print.dp-plain .dp-foot { display: none; }
+  .doc-print.dp-plain .dp-head { border-bottom-color: #333; }
 }
 `;
