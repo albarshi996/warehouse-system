@@ -1332,6 +1332,45 @@ service cloud.firestore {
       }
     }
 
+    // ── احتياجات الموقع ‹155› (مجموعةٌ خاصّةٌ مستقلّةٌ عن محرّك المستندات) ──
+    // دورةُ حالاتٍ خاصّةٌ بها (جديد ← معتمَد ← قيد التنفيذ ← منجَز/مرفوض)، فيها
+    // «قيد التنفيذ» غير الموجودة في `states.js` المشتركة — ولذلك مجموعةٌ مستقلّة.
+    // القراءةُ لأيّ مصادَق (لوحةٌ تشغيليّةٌ مشتركة). التسجيلُ لأمين المخزن والمديرَين.
+    // الاعتماد/الرفض للمديرَين؛ والبدء/الإنهاء لهما ولأمين المخزن — تطابق
+    // `needStates.js` (عدّلهما معًا). ولا حذف — نمط `operations`/`hiring_requests`.
+    match /site_needs/{needId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+                    && request.resource.data.createdByUid == request.auth.uid
+                    && request.resource.data.state == 'new'
+                    && (isManager()
+                        || (signedIn() && hasProfile() && isActive() && myRole() == 'storekeeper'));
+      // التحوّل بالدور وحسب النقلة: مُنشئُ البطاقة لا يتغيّر، والقفزُ ممنوعٌ
+      // (لا «جديد»→«منجَز»). المديران يعتمدون/يرفضون/ينفّذون؛ وأمين المخزن ينفّذ.
+      allow update: if request.resource.data.createdByUid == resource.data.createdByUid
+                    && (
+                      (isManager() && (
+                        (resource.data.state == 'new' && request.resource.data.state in ['approved', 'rejected'])
+                        || (resource.data.state == 'approved' && request.resource.data.state == 'in_progress')
+                        || (resource.data.state == 'in_progress' && request.resource.data.state == 'done')
+                      ))
+                      || ((signedIn() && hasProfile() && isActive() && myRole() == 'storekeeper') && (
+                        (resource.data.state == 'approved' && request.resource.data.state == 'in_progress')
+                        || (resource.data.state == 'in_progress' && request.resource.data.state == 'done')
+                      ))
+                    );
+      allow delete: if false;
+
+      // سجلّ تغيّر الحالة — إضافةٌ فقط (تدقيقٌ دائمٌ لا يُعدَّل ولا يُحذف).
+      match /events/{eventId} {
+        allow read: if signedIn();
+        allow create: if (isManager()
+                          || (signedIn() && hasProfile() && isActive() && myRole() == 'storekeeper'))
+                      && request.resource.data.byUid == request.auth.uid;
+        allow update, delete: if false;
+      }
+    }
+
     // ── الهيكل التنظيمي (المصدر الواحد للحقيقة) ──────────────────
     // وثيقة تنظيمية تُعرض على سبع إدارات وتُعتمد من الإدارة العامة ⇒
     // يقرؤها كل مصادَق (الموظّف يرى موقعه)، ويكتبها المديران وحدهما.

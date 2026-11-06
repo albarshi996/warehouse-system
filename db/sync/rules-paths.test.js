@@ -44,7 +44,8 @@ test('العددُ مُثبَّت — نقصانُه يعني مسارًا يس�
   // ★ ٩٨ ⟵ ١٠٤ عند دمج `main` (2026-10-21): أُضيفت `department_assets`
   //   و`warehouse_assets` و`warehouse_cards` و`waves` ومجموعتا ملاحظاتٍ
   //   فرعيّتان. **والرقمُ يُرفع عند إضافةٍ مقصودة، ونقصانُه وحدَه هو العطب.**
-  assert.equal(pathsFromRules(RULES).length, 104);
+  // ★ ١٠٤ ⟵ ١٠٦ ‹155›: أُضيفت `site_needs` وسجلُّها الفرعيّ `site_needs/events`.
+  assert.equal(pathsFromRules(RULES).length, 106);
 });
 
 test('★★★ «الملحقة-فقط» تُشتقّ من منعِ التعديل والحذف معًا', () => {

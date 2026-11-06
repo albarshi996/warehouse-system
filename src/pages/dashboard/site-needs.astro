@@ -1,0 +1,30 @@
+---
+/**
+ * احتياجات الموقع — شاشةٌ تفاعليّةٌ مستقلّةٌ بمجموعة Firestore خاصّة
+ * (`site_needs`)، لا نوعَ مستندٍ على المحرّك. تسجّل احتياجات الموقع وتتابع
+ * دورتها: جديد ← معتمَد ← قيد التنفيذ ← منجَز / مرفوض.
+ *
+ * القراءةُ لأيّ مصادَق؛ والتسجيلُ والتحوّلُ بالدور (مدير المستودع · المدير
+ * العام · أمين المخزن حسب التحوّل) — الإلزامُ في `firestore.rules`.
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+import SiteNeedsBoard from '../../components/brandzo-erp/needs/SiteNeedsBoard.jsx';
+---
+
+<DashboardLayout title="احتياجات الموقع" showGuide={false} light>
+  <div class="text-right" dir="rtl">
+    <div class="mb-6">
+      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">احتياجات الموقع</h1>
+      <p class="text-ink-2 text-sm leading-relaxed max-w-3xl">
+        سجّل احتياجات الموقع (قطع غيار · مواد تعبئة · أدوات · صيانة) وتابِع دورتها:
+        جديد ← معتمَد ← قيد التنفيذ ← منجَز، أو مرفوض بسببٍ موثّق. الاعتمادُ والرفضُ
+        للمديرَين، والتنفيذُ لهما ولأمين المخزن.
+      </p>
+      <div class="w-20 h-1 bg-brand-red rounded-full mt-3"></div>
+    </div>
+
+    <SiteNeedsBoard client:load />
+  </div>
+</DashboardLayout>

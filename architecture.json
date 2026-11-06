@@ -9,10 +9,10 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 130,
-    "serviceDomains": 57,
-    "serviceFiles": 812,
-    "collections": 104,
+    "modules": 131,
+    "serviceDomains": 58,
+    "serviceFiles": 815,
+    "collections": 106,
     "roles": 20,
     "odooModels": 12,
     "odooGuards": 51,
@@ -892,6 +892,14 @@
       "title": "إدارة المحلّات",
       "summary": "",
       "file": "src/pages/dashboard/shops.astro",
+      "usesServices": []
+    },
+    {
+      "name": "site-needs",
+      "route": "/dashboard/site-needs",
+      "title": "احتياجات الموقع",
+      "summary": "احتياجات الموقع — شاشةٌ تفاعليّةٌ مستقلّةٌ بمجموعة Firestore خاصّة",
+      "file": "src/pages/dashboard/site-needs.astro",
       "usesServices": []
     },
     {
@@ -4855,6 +4863,42 @@
         "toPortable"
       ],
       "collections": []
+    },
+    {
+      "domain": "needs",
+      "dir": "src/services/needs",
+      "files": [
+        "needStates.js",
+        "needStates.test.js",
+        "siteNeedsService.js"
+      ],
+      "fileCount": 3,
+      "testCount": 1,
+      "exports": [
+        "APPROVER_ROLES",
+        "DEFAULT_SITE",
+        "EXECUTOR_ROLES",
+        "INITIAL_STATE",
+        "NEED_CATEGORIES",
+        "NEED_STATES",
+        "REQUESTER_ROLES",
+        "TERMINAL_STATES",
+        "TRANSITIONS",
+        "availableTransitions",
+        "canCreateNeed",
+        "canDo",
+        "canReviewNeeds",
+        "canTransition",
+        "createSiteNeed",
+        "getNeedState",
+        "isLegalTransition",
+        "isTerminal",
+        "subscribeSiteNeeds",
+        "transitionSiteNeed"
+      ],
+      "collections": [
+        "site_needs"
+      ]
     },
     {
       "domain": "nova",
@@ -9015,6 +9059,90 @@
           },
           {
             "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "site_needs",
+        "path": "site_needs",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "signedIn() && request.resource.data.createdByUid == request.auth.uid && request.resource.data.state == 'new' && (isManager() || (signedIn() && hasProfile() && i",
+            "roles": [
+              "signedIn",
+              "isManager",
+              "hasProfile",
+              "isActive",
+              "myRole"
+            ]
+          },
+          {
+            "actions": [
+              "update"
+            ],
+            "condition": "request.resource.data.createdByUid == resource.data.createdByUid && ( (isManager() && ( (resource.data.state == 'new' && request.resource.data.state in ['approv",
+            "roles": [
+              "isManager",
+              "signedIn",
+              "hasProfile",
+              "isActive",
+              "myRole"
+            ]
+          },
+          {
+            "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "events",
+        "path": "site_needs/events",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "(isManager() || (signedIn() && hasProfile() && isActive() && myRole() == 'storekeeper')) && request.resource.data.byUid == request.auth.uid",
+            "roles": [
+              "isManager",
+              "signedIn",
+              "hasProfile",
+              "isActive",
+              "myRole"
+            ]
+          },
+          {
+            "actions": [
+              "update",
               "delete"
             ],
             "condition": "false",

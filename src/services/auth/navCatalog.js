@@ -111,6 +111,10 @@ export const NAV_GROUPS = [
       { path: '/dashboard/data-reports', label: 'التقارير التفصيليّة', icon: 'barChart3', roles: ['storekeeper', 'return_manager', 'scm_manager'] },
       { path: '/dashboard/transfers', label: 'النقل بين المستودعات', icon: 'truck' },
       { path: '/dashboard/order-control', label: 'الرقابة على الطلبات', icon: 'clipboardList' },
+      // ‹155› احتياجات الموقع: شاشةٌ تفاعليّةٌ بمجموعةٍ خاصّة (`site_needs`) ودورةِ
+      // حالاتٍ مستقلّة (جديد ← معتمَد ← قيد التنفيذ ← منجَز/مرفوض). للمديرَين
+      // ولأمين المخزن — من يسجّل احتياجَ موقعه وينفّذه.
+      { path: '/dashboard/site-needs', label: 'احتياجات الموقع', icon: 'clipboardList', roles: ['admin', 'warehouse_manager', 'storekeeper'] },
       { path: '/dashboard/retail-hub', label: 'خريطة التجزئة', icon: 'mapPin' },
       { path: '/dashboard/assets-inventory', label: 'جرد الأصول', icon: 'clipboardList' },
       // ‹WH-501› منظارُ إدارة المستودعات: أصولُها من `department_assets`
