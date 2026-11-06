@@ -18,6 +18,7 @@ import {
   sha256Hex,
   newVersionPayload,
   versionChains,
+  attachmentsStatus,
 } from './attachmentFile.js';
 
 // ── قبول الصيغة ────────────────────────────────────────────────────
@@ -128,4 +129,23 @@ test('حلقة supersedes مكسورة أو دائريّة لا تُسقط ال�
     { id: 'c2', supersedes: 'c1' },
   ]);
   assert.ok(Array.isArray(cyclic));
+});
+
+// ── حالة العرض: الخطأ لا يُعرَض فراغًا (صورةُ الصنف محجوبةٌ لا غائبة) ──────
+test('★ attachmentsStatus: فراغٌ مع خطأ = «error» لا «empty» (نقضُ العطب الصامت)', () => {
+  // العطبُ القديم: المستمعُ يفشل صامتًا فتبدو البطاقة «لا مرفقات» — فيُخلط
+  // «محجوبٌ» (القاعدة لم تُنشر / لا اتّصال) بـ«غير موجود». الحالتان تفترقان الآن.
+  assert.equal(attachmentsStatus([], { code: 'permission-denied' }), 'error');
+  assert.equal(attachmentsStatus([], new Error('offline')), 'error');
+});
+
+test('attachmentsStatus: فراغٌ بلا خطأ = «empty»، ووجودُ صفٍّ = «ready»', () => {
+  assert.equal(attachmentsStatus([], null), 'empty');
+  assert.equal(attachmentsStatus([], undefined), 'empty');
+  assert.equal(attachmentsStatus([{ latest: { id: 'a1' } }], null), 'ready');
+});
+
+test('attachmentsStatus: البياناتُ المخبّأة تغلب خطأً متأخّرًا — الموجودُ يُعرَض', () => {
+  // كاشُ القرص المحلّيّ قد يُسلّم صفوفًا ثمّ يقع خطأٌ عابر؛ لا نُخفي ما بين اليد.
+  assert.equal(attachmentsStatus([{ latest: { id: 'a1' } }], { code: 'unavailable' }), 'ready');
 });

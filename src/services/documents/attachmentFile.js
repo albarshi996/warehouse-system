@@ -161,3 +161,21 @@ export function versionChains(attachments) {
       return { latest, history, count: history.length + 1 };
     });
 }
+
+/**
+ * حالةُ عرض المرفقات — نقيّةٌ ليُختبَر (تسدّ: «الخطأ يُعرَض فراغًا»).
+ *
+ * ★★★ قبل هذا كانت الشاشةُ تُظهر «لا مرفقات» في حالتين لا تُفرَّقان: مصدرٌ
+ * فارغٌ حقًّا، أو قراءةٌ فشلت **صامتةً** — قاعدةُ `entity_attachments` لم تُنشر
+ * بعد (قرار المالك)، أو انقطاعُ اتّصال. فيظنّ المستخدمُ أنّ الصنفَ بلا صورةٍ
+ * وهي **محجوبةٌ لا غائبة**. فنُفرِد حالةَ الخطأ. والبياناتُ المخبّأةُ (الكاش
+ * المحلّيّ) تغلب خطأً متأخّرًا: إن وُجد صفٌّ عُرض، فالموجودُ خيرٌ من رسالة.
+ *
+ * @param {Array} chains ناتجُ versionChains (رؤوسُ السلاسل)
+ * @param {unknown} [error] خطأُ القراءة إن وقع (أو null)
+ * @returns {'ready'|'empty'|'error'}
+ */
+export function attachmentsStatus(chains, error = null) {
+  if (chains && chains.length > 0) return 'ready';
+  return error ? 'error' : 'empty';
+}

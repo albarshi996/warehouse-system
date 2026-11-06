@@ -2289,6 +2289,7 @@
         "applyPartySelection",
         "applyPastePlan",
         "applyResolvedItem",
+        "attachmentsStatus",
         "attentionItems",
         "availableTransitions",
         "awaitingMyApproval",

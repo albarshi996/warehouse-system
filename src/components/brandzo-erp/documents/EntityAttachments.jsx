@@ -16,6 +16,7 @@ import {
   isImageType,
   versionChains,
   newVersionPayload,
+  attachmentsStatus,
 } from '../../../services/documents/attachmentFile.js';
 import {
   addEntityAttachment,
@@ -27,11 +28,23 @@ export default function EntityAttachments({ entityKind, entityId, me }) {
   const [attachments, setAttachments] = useState([]);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null); // { kind: 'ok'|'err', text }
+  // خطأُ القراءة (مثلًا القاعدة لم تُنشر بعد) — كان يُبتلع صامتًا فتبدو البطاقة
+  // «بلا مرفقات»؛ نُمسكه الآن ونُفرِده كي لا يُخلط «محجوبٌ» بـ«غير موجود».
+  const [loadErr, setLoadErr] = useState(null);
   const fileRef = useRef(null);
   const slotRef = useRef({ version: 1, supersedes: null, kind: 'other', label: 'مرفق' });
 
   useEffect(() => {
-    return listenEntityAttachments(entityKind, entityId, setAttachments);
+    setLoadErr(null);
+    return listenEntityAttachments(
+      entityKind,
+      entityId,
+      (rows) => {
+        setAttachments(rows);
+        setLoadErr(null);
+      },
+      (e) => setLoadErr(e)
+    );
   }, [entityKind, entityId]);
 
   function pick(slot = { version: 1, supersedes: null, kind: 'other', label: 'مرفق' }) {
@@ -79,6 +92,8 @@ export default function EntityAttachments({ entityKind, entityId, me }) {
   }
 
   const chains = versionChains(attachments);
+  const status = attachmentsStatus(chains, loadErr);
+  const errCode = loadErr?.code ? ` (${loadErr.code})` : '';
 
   return (
     <div>
@@ -101,7 +116,12 @@ export default function EntityAttachments({ entityKind, entityId, me }) {
         )}
       </div>
 
-      {chains.length === 0 ? (
+      {status === 'error' ? (
+        <p style={{ margin: '6px 0 0', fontSize: 'var(--o-font-size-xs)', color: 'var(--o-text-warning, #8a6d1b)' }}>
+          تعذّر تحميل المرفقات{errCode} — إمّا أنّ قاعدةَ entity_attachments لم تُنشر بعد، أو لا اتّصال.
+          لا يعني هذا أنّ الصنفَ بلا صورة.
+        </p>
+      ) : status === 'empty' ? (
         <p style={{ margin: '6px 0 0', fontSize: 'var(--o-font-size-xs)', color: 'var(--o-main-color-muted)' }}>
           لا مرفقات — صورة تُضغط تلقائيًّا أو PDF، ملحق-فقط لا يُحذف.
         </p>
@@ -113,6 +133,17 @@ export default function EntityAttachments({ entityKind, entityId, me }) {
               return (
                 <tr key={att.id} style={{ borderTop: '1px solid var(--o-border-color, #e5e5ea)' }}>
                   <td style={{ padding: '5px 4px' }}>
+                    {/* صورة؟ تُعرَض معاينةً كي يُرى وجودُها فورًا — لا رابطًا فقط. */}
+                    {isImageType(att.mime) && att.dataUrl && (
+                      <a href={att.dataUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginBottom: '4px' }} title="فتح الصورة بالحجم الكامل">
+                        <img
+                          src={att.dataUrl}
+                          alt={att.label || att.name || 'صورة الصنف'}
+                          loading="lazy"
+                          style={{ display: 'block', maxHeight: '72px', maxWidth: '120px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--o-border-color, #e5e5ea)' }}
+                        />
+                      </a>
+                    )}
                     <a href={att.dataUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--o-action)', fontWeight: 'var(--o-font-weight-bold)' }}>
                       {att.label || att.name}
                     </a>

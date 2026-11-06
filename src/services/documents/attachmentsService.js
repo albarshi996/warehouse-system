@@ -95,8 +95,13 @@ export async function addEntityAttachment(entityKind, entityId, payload) {
 /**
  * يستمع لمرفقات بطاقةٍ لحظيًّا. الترتيب محلّيًّا بوقت الإرفاق — شرطا التساوي
  * لا يحتاجان فهرسًا مركّبًا، وإضافة orderBy كانت ستحتاجه.
+ *
+ * ★★★ `onError` اختياريٌّ لكنّه جوهريّ: قراءةُ `entity_attachments` قد تُرفَض
+ * (`permission-denied`) إن لم تُنشر قاعدتُها بعد (قرار المالك)، أو تنقطع. وبلا
+ * مُمسِكٍ للخطأ كان المستمعُ يفشل صامتًا فتبدو البطاقةُ «بلا مرفقات» — فيظنّ
+ * المستخدمُ أنّ لا صورةَ وهي محجوبة. نفس عقد `subscribeCatalogForItem`.
  */
-export function listenEntityAttachments(entityKind, entityId, callback) {
+export function listenEntityAttachments(entityKind, entityId, callback, onError) {
   const id = String(entityId ?? '').trim().toUpperCase();
   if (!ATTACHMENT_ENTITY_KINDS.includes(entityKind) || !id) {
     callback([]);
@@ -107,19 +112,27 @@ export function listenEntityAttachments(entityKind, entityId, callback) {
     where('entityKind', '==', entityKind),
     where('entityId', '==', id)
   );
-  return onSnapshot(q, (snap) => {
-    const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    rows.sort((a, b) => (a.at?.seconds || 0) - (b.at?.seconds || 0));
-    callback(rows);
-  });
+  return onSnapshot(
+    q,
+    (snap) => {
+      const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      rows.sort((a, b) => (a.at?.seconds || 0) - (b.at?.seconds || 0));
+      callback(rows);
+    },
+    (err) => onError?.(err)
+  );
 }
 
-/** يستمع لمرفقات المستند (الأقدم أولًا — بترتيب إرفاقها). */
-export function listenAttachments(docId, callback) {
+/** يستمع لمرفقات المستند (الأقدم أولًا — بترتيب إرفاقها). `onError` كأعلاه. */
+export function listenAttachments(docId, callback, onError) {
   if (!docId) {
     callback([]);
     return () => {};
   }
   const q = query(collection(db, DOCS, docId, ATT), orderBy('at', 'asc'));
-  return onSnapshot(q, (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))));
+  return onSnapshot(
+    q,
+    (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
+    (err) => onError?.(err)
+  );
 }
