@@ -9,10 +9,10 @@
     "desktop": "Tauri (src-tauri)"
   },
   "counts": {
-    "modules": 131,
+    "modules": 132,
     "serviceDomains": 58,
-    "serviceFiles": 820,
-    "collections": 106,
+    "serviceFiles": 823,
+    "collections": 107,
     "roles": 20,
     "odooModels": 12,
     "odooGuards": 51,
@@ -118,6 +118,14 @@
       "title": "الخزينة اليوميّة",
       "summary": "",
       "file": "src/pages/dashboard/cash-book.astro",
+      "usesServices": []
+    },
+    {
+      "name": "cash-custody",
+      "route": "/dashboard/cash-custody",
+      "title": "العهد النقديّة",
+      "summary": "العهد النقديّة — شاشةٌ تفاعليّةٌ مستقلّةٌ بمجموعة Firestore خاصّة",
+      "file": "src/pages/dashboard/cash-custody.astro",
       "usesServices": []
     },
     {
@@ -1946,28 +1954,44 @@
       "domain": "custody",
       "dir": "src/services/custody",
       "files": [
+        "cashCustody.js",
+        "cashCustody.test.js",
+        "cashCustodyService.js",
         "custody.test.js",
         "custodyAssetLink.test.js",
         "custodyModel.js",
         "custodyService.js"
       ],
-      "fileCount": 4,
-      "testCount": 2,
+      "fileCount": 7,
+      "testCount": 3,
       "exports": [
         "CONDITIONS",
+        "CUSTODY_CATEGORIES",
         "CUSTODY_ITEM_KINDS",
+        "CUSTODY_KINDS",
         "CUSTODY_NUMBER_TYPE",
+        "CUSTODY_SITES",
         "CUSTODY_STATES",
         "CUSTODY_TRANSITIONS",
+        "CUSTODY_WRITER_ROLES",
+        "DEFAULT_SITE",
+        "addExpense",
+        "addReceipt",
         "byEmployee",
+        "canManageCustody",
         "canTransitionCustody",
         "closeCustody",
+        "custodyBalance",
+        "custodyStatement",
         "custodySummary",
         "custodyVerdict",
         "issueCustody",
-        "listenCustodies"
+        "listCustodians",
+        "listenCustodies",
+        "subscribeCashCustody"
       ],
       "collections": [
+        "cash_custody",
         "custodies"
       ]
     },
@@ -6891,6 +6915,42 @@
           },
           {
             "actions": [
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "cash_custody",
+        "path": "cash_custody",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "signedIn() && request.resource.data.createdByUid == request.auth.uid && (isManager() || (hasProfile() && isActive() && myRole() in ['finance_manager', 'treasury",
+            "roles": [
+              "signedIn",
+              "isManager",
+              "hasProfile",
+              "isActive",
+              "myRole"
+            ]
+          },
+          {
+            "actions": [
+              "update",
               "delete"
             ],
             "condition": "false",

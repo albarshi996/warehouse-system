@@ -53,6 +53,10 @@
       "createdAt": 14
     }
   },
+  "cash_custody": {
+    "count": 0,
+    "fields": {}
+  },
   "counters": {
     "count": 2,
     "fields": {}

@@ -1,0 +1,32 @@
+---
+/**
+ * العهد النقديّة — شاشةٌ تفاعليّةٌ مستقلّةٌ بمجموعة Firestore خاصّة
+ * (`cash_custody`). سجلٌّ نقديٌّ لحمَلة العهد (موقع ١٥٥ ومخزن الرحبة): استلامُ
+ * عهدةٍ ⟵ مصروفاتٌ بفواتيرَ مبوّبة (إعاشة · نظافة · مناولة · أخرى) ⟵ رصيدٌ
+ * لكلّ حامل، وكشفُ عهدةٍ يُطبع بلا هويّةِ شركة. العملةُ الدينارُ الليبيّ.
+ *
+ * ★ نقديّةٌ لا عينيّة: غيرُ `/dashboard/custody` (عهدُ الأجهزة)، وغيرُ دفترِ
+ *   القيد المزدوج — مجموعةٌ وسجلٌّ مستقلّان. الكتابةُ للمديرَين والمالية والخزينة
+ *   (الإلزامُ في `firestore.rules`).
+ */
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import '../../styles/tokens.css';
+import '../../styles/odoo.css';
+import CashCustodyBoard from '../../components/brandzo-erp/custody/CashCustodyBoard.jsx';
+---
+
+<DashboardLayout title="العهد النقديّة" showGuide={false} light>
+  <div class="text-right" dir="rtl">
+    <div class="mb-6 no-print">
+      <h1 class="text-2xl sm:text-3xl font-bold text-ink mb-2">العهد النقديّة</h1>
+      <p class="text-ink-2 text-sm leading-relaxed max-w-3xl">
+        سجلٌّ نقديٌّ لحمَلة العهد في موقع ١٥٥ ومخزن الرحبة: سجّل استلامَ العهدة،
+        ثمّ المصروفاتِ بفئاتها (إعاشة · نظافة · مناولة · أخرى) وأرقامِ فواتيرها،
+        وتابِع الرصيدَ المتبقّي لكلّ حامل — واطبع كشفَ العهدة. المبالغُ بالدينار الليبيّ.
+      </p>
+      <div class="w-20 h-1 bg-brand-red rounded-full mt-3"></div>
+    </div>
+
+    <CashCustodyBoard client:load />
+  </div>
+</DashboardLayout>

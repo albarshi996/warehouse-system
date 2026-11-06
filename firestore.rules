@@ -1380,6 +1380,22 @@ service cloud.firestore {
       }
     }
 
+    // ── العهد النقديّة ‹155› (مجموعةٌ خاصّةٌ مستقلّةٌ عن محرّك المستندات) ──
+    // سجلٌّ نقديٌّ لحمَلة العهد (موقع ١٥٥ ومخزن الرحبة): قيدُ استلامِ عهدةٍ أو
+    // مصروفٍ ⟵ رصيدٌ لكلّ حامل. **نقديٌّ لا عينيّ** (غيرُ `custodies`)، ومستقلٌّ
+    // عن دفترِ القيد المزدوج (`partner_ledger`). القراءةُ لأيّ مصادَق (لوحةٌ
+    // مشتركة). التسجيلُ للمديرَين (isManager) والمالية والخزينة — من يُدير النقد،
+    // تطابق `CUSTODY_WRITER_ROLES` في `cashCustody.js` (عدّلهما معًا). والقيودُ
+    // **ملحق-فقط** كـ`partner_ledger`: لا تعديلَ ولا حذف، والتصحيحُ قيدٌ مضادّ.
+    match /cash_custody/{entryId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+                    && request.resource.data.createdByUid == request.auth.uid
+                    && (isManager()
+                        || (hasProfile() && isActive() && myRole() in ['finance_manager', 'treasury']));
+      allow update, delete: if false;
+    }
+
     // ── الهيكل التنظيمي (المصدر الواحد للحقيقة) ──────────────────
     // وثيقة تنظيمية تُعرض على سبع إدارات وتُعتمد من الإدارة العامة ⇒
     // يقرؤها كل مصادَق (الموظّف يرى موقعه)، ويكتبها المديران وحدهما.
