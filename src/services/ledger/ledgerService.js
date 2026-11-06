@@ -20,7 +20,7 @@
 import { collection, doc, getDoc, getDocs, onSnapshot, query, where, orderBy, limit, increment, serverTimestamp, runTransaction, writeBatch, Timestamp, db } from '../_db/index.js';
 import { OPENING_MS } from '../documents/actualWork.js';
 import { auth } from '../../config/firebase.js';
-import { buildMoves, balanceDeltas, canPost, findNegativeBalance } from './movements.js';
+import { buildMoves, balanceDeltas, canPost, findNegativeBalance, formationViolation } from './movements.js';
 import { reservationDeltas } from './reservations.js';
 import { getItem } from '../items/itemService.js';
 import { indexLocations } from '../org/orgLocations.js';
@@ -81,12 +81,50 @@ async function loadOrgIndex(cache = null) {
  * @returns {{orgIndex: (object|null|undefined), items: Map<string, object|null>}}
  */
 export function createPostingCache() {
-  return { orgIndex: undefined, items: new Map() };
+  return { orgIndex: undefined, items: new Map(), warehouses: undefined };
 }
 
 const MOVES = 'stock_moves';
 const BALANCES = 'balances';
 const DOCS = 'documents';
+const WAREHOUSES = 'warehouses';
+
+/**
+ * خريطةُ المستودعات لحارس التكوين — `code → {formed, requiresFormation, site}`.
+ *
+ * تُقرأ **مرّةً** عبر `cache` (كـ`loadOrgIndex`): المجموعةُ صغيرةٌ (~١٥ وثيقة)
+ * لكنّ كلَّ قراءةٍ تُحسب في ميزانيّة المشروع، فدفعةُ قيودٍ تقرؤها مرّةً لا لكلّ
+ * مستند. و**العجزُ عن القراءة لا يوقف القيد**: تُعاد خريطةٌ فارغةٌ فيمرّ كلُّ
+ * شيءٍ (حارسُ انضباطٍ لا حارسُ أمنٍ — الأمنُ في القواعد)، نفسُ فلسفة loadOrgIndex.
+ */
+async function loadWarehouses(cache = null) {
+  if (cache && cache.warehouses !== undefined) return cache.warehouses;
+  const build = async () => {
+    try {
+      const snap = await getDocs(collection(db, WAREHOUSES));
+      const map = new Map();
+      snap.docs.forEach((d) => {
+        const w = d.data() || {};
+        const code = String(w.code ?? '').trim().toUpperCase();
+        if (code) {
+          map.set(code, {
+            formed: w.formed === true,
+            requiresFormation: w.requiresFormation === true,
+            site: String(w.site ?? ''),
+          });
+        }
+      });
+      return map;
+    } catch {
+      return new Map();
+    }
+  };
+  if (cache) {
+    cache.warehouses = await build();
+    return cache.warehouses;
+  }
+  return build();
+}
 
 /** أقصى عدد بنود في مستندٍ واحد — حدّ Firestore 500 كتابة لكل معاملة. */
 const MAX_LINES = 150;
@@ -157,6 +195,20 @@ export async function postDocument(docData, profile, { markDone = false, cache =
 
   const { deltas, problems: deltaProblems } = balanceDeltas(moves);
   if (deltaProblems.length) throw new Error(deltaProblems.join(' · '));
+
+  // ★★★ حارسُ التكوين (منظومة موقع 155): **لا حركةَ على مخزنٍ قبل تكوينه بجردٍ
+  // معتمد**. يُفحص **خارج** المعاملة (Firestore يمنع الاستعلامَ فيها) و**خارج**
+  // `canPost` النقيّة (تحتاج قراءةَ المستودعات). المخازنُ القديمة (`site ≠ '155'`
+  // وبلا `requiresFormation`) **لا تُبوَّب أبدًا** — والدالّةُ `formationViolation`
+  // المختبَرةُ وحدَها هي الحَكَم.
+  const warehouseByCode = await loadWarehouses(cache);
+  const formGate = formationViolation(moves, warehouseByCode);
+  if (formGate) {
+    throw new Error(
+      `المخزنُ ${formGate.warehouse} غيرُ مكوَّن — اعتمدْ جردَه أوّلًا ` +
+        `(منه يتكوّن ماستر الأصناف والأرصدةُ الافتتاحيّة) قبل أيّ حركةٍ عليه.`
+    );
+  }
 
   const uid = currentUid();
   const byName = currentName(profile);

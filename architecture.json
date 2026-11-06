@@ -11,7 +11,7 @@
   "counts": {
     "modules": 131,
     "serviceDomains": 58,
-    "serviceFiles": 815,
+    "serviceFiles": 818,
     "collections": 106,
     "roles": 20,
     "odooModels": 12,
@@ -3196,16 +3196,22 @@
       "files": [
         "balanceValuation.js",
         "balanceValuation.test.js",
+        "formation.js",
+        "formation.test.js",
+        "formationService.js",
         "inventoryAnalytics.js",
         "inventoryAnalytics.test.js"
       ],
-      "fileCount": 4,
-      "testCount": 2,
+      "fileCount": 7,
+      "testCount": 3,
       "exports": [
         "TRANSIT_ACCOUNT",
         "balanceCost",
         "balanceValuation",
+        "buildFormation",
         "canonKey",
+        "countedQtyOf",
+        "formWarehouseFromCount",
         "inventorySummary",
         "itemCostIndex",
         "itemsWithLedger",
@@ -3215,7 +3221,9 @@
         "stagnantReport",
         "valuationReport"
       ],
-      "collections": []
+      "collections": [
+        "warehouses"
+      ]
     },
     {
       "domain": "items",
@@ -3704,6 +3712,7 @@
         "findByFingerprint",
         "findNegativeBalance",
         "fingerprint",
+        "formationViolation",
         "freshnessLevel",
         "inStockBreakdown",
         "invoiceOutstanding",
@@ -3803,7 +3812,8 @@
         "exceptions",
         "org_locations",
         "partner_ledger",
-        "stock_moves"
+        "stock_moves",
+        "warehouses"
       ]
     },
     {

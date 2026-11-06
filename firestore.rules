@@ -871,6 +871,13 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ── المستودعات ───────────────────────────────────────────────
+    // الكتابةُ للمديرَين (isManager). ومنها **ختمُ التكوين** (منظومة موقع 155):
+    // `formed`/`formedAt`/`formedByCount` — تُضبط حين يُعتمد جردُ المخزن فيتكوّن
+    // (ماستر الأصناف والأرصدة الافتتاحيّة)، وعليها يقوم حارسُ `formationViolation`
+    // الذي يمنع أيّ حركةٍ على مخزنٍ `requiresFormation`/`site:'155'` قبل تكوينه.
+    // وهي حقولُ مديرٍ كبقيّة حقول الوثيقة — فلا تحتاج استثناءً، ولا حذفَ (أرشفةٌ
+    // لا محو: مخزنٌ له حركاتٌ يبقى أثره).
     match /warehouses/{docId} {
       allow read: if signedIn();
       allow write: if isManager();

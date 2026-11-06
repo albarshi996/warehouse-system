@@ -22,7 +22,14 @@ import {
   isCustomerToken,
   POSTING_STATE,
 } from './postingRules.js';
-import { vehicleLocationCode, customerLocationCode, isAccountLocation } from './locations.js';
+import {
+  vehicleLocationCode,
+  customerLocationCode,
+  isAccountLocation,
+  isSystemLocation,
+  isVehicleLocation,
+  isCustomerLocation,
+} from './locations.js';
 import { normalizeStockStatus } from './stockStatus.js';
 import { orgCodeOf, dimensionsOf } from '../org/orgLocations.js';
 import { isStocked, typeOf } from '../items/itemType.js';
@@ -361,6 +368,49 @@ export function findNegativeBalance(deltas, currentById = {}) {
         requested: -d.delta,
       };
     }
+  }
+  return null;
+}
+
+/**
+ * حارسُ التكوين — نقيٌّ وقابلٌ للاختبار وحده (نظيرُ `findNegativeBalance`).
+ *
+ * المبدأ (منظومة موقع 155): **لا حركةَ على مخزنٍ قبل تكوينه بجردٍ معتمد**. يمرّ
+ * على طرفَي كلّ حركة، فإن كان طرفٌ **مستودعًا حقيقيًّا** يلزمه تكوينٌ ولم يُكوَّن
+ * رُدّ أوّلُ خرق. و«يلزمه تكوين» = المستودعُ في الخريطة و(`requiresFormation ===
+ * true || site === '155'`) و`formed !== true`.
+ *
+ * ما **لا يُبوَّب أبدًا**:
+ *   · المواقعُ غيرُ المستودعيّة (نظامٌ · مركبةٌ · عميلٌ · الخارج `null`) — ليست
+ *     مخازنَ يُكوَّنها جردٌ، بل مراحلُ رحلةٍ أو أطرافٌ خارجيّة.
+ *   · المخزنُ **القديم** (ليس في الخريطة، أو بلا الوسمَين) — فـWH001/WH002 وكلُّ
+ *     ما `site ≠ '155'` وبلا `requiresFormation` يمرّ كما اليوم حرفيًّا.
+ *
+ * خريطةٌ غائبة (لم تُقرأ) ⇒ `null` — فلا يوقف تعذُّرُ قراءة المستودعات القيدَ
+ * (نفسُ فلسفة `loadOrgIndex`): الحمايةُ النهائيّةُ في القواعد، وهذا حارسُ انضباط.
+ *
+ * @param {Array} moves الحركاتُ المبنيّة (`from`/`to` محلولان إلى أكوادٍ فعليّة).
+ * @param {Map<string,object>|object} warehouseByCode
+ *   كود(أحرفٌ كبيرة) → `{formed, requiresFormation, site}`.
+ * @returns {{warehouse:string}|null} أوّلُ مخزنٍ غيرِ مكوَّنٍ يلزمه تكوين، أو null.
+ */
+export function formationViolation(moves, warehouseByCode) {
+  if (!warehouseByCode) return null;
+  const get = (code) =>
+    warehouseByCode instanceof Map ? warehouseByCode.get(code) : warehouseByCode[code];
+  const needs = (wh) => Boolean(wh) && (wh.requiresFormation === true || String(wh.site ?? '') === '155');
+  const check = (endpoint) => {
+    if (endpoint === null || endpoint === undefined || endpoint === '') return null;
+    const code = String(endpoint).toUpperCase();
+    // غيرُ المستودعيّ لا يُكوَّن: نظامٌ · مركبةٌ · عميل.
+    if (isSystemLocation(code) || isVehicleLocation(code) || isCustomerLocation(code)) return null;
+    const wh = get(code);
+    if (needs(wh) && wh.formed !== true) return code;
+    return null;
+  };
+  for (const m of moves || []) {
+    const hit = check(m?.from) || check(m?.to);
+    if (hit) return { warehouse: hit };
   }
   return null;
 }

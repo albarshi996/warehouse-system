@@ -37,6 +37,7 @@ import { CASH_RULES } from '../field/repAccount.js';
 import { postToRepCash } from '../field/repAccountService.js';
 import { vsrPostProblem } from '../vanSales/settlement.js';
 import { fetchBalancesOnce } from '../balances/balancesService.js';
+import { formWarehouseFromCount } from '../inventory/formationService.js';
 import { allocateAndReserve, releaseReservation, releaseForPick } from '../ledger/salesService.js';
 import {
   createDocumentRelation,
@@ -487,6 +488,46 @@ export async function transitionDocument(docId, to, { note = '', profile, schema
       await appendAudit(docId, {
         action: 'release-failed',
         note: `تعذّر فكّ حجز أمر البيع بعد السحب: ${err?.message || err}`,
+        profile,
+      });
+    }
+  }
+
+  // 🏭 تكوينُ المستودع من جردٍ معتمد (منظومة موقع 155): **اعتمادُ الجرد = تكوينُ
+  //    المخزن**. منه يتكوّن ماستر الأصناف والأرصدةُ الافتتاحيّة، ويُرفع علَمُ
+  //    `formed` على المخزن — فلا حركةَ عليه قبله (حارسُ `formationViolation` في
+  //    `postDocument`). أفضلَ جهدٍ لا شرطَ اعتماد (فشلُه يُثبَّت في التدقيق ولا
+  //    يُبطل اعتمادَ الجرد)، و**إيديمبوتنت** (المكوَّنُ لا يُعاد). يحتاج كاتبًا
+  //    مديرًا (قاعدتا warehouses/Items_Master)، فمن اعتمده مدقّقٌ غيرُ مديرٍ
+  //    يُسجَّل تعذُّره. ويُفعَّل حين يحمل الجردُ مخزنًا في رأسه فقط — فجردٌ قديمٌ
+  //    بلا `header.warehouse` يمرّ كما كان حرفًا بحرف.
+  if (to === 'approved' && data.type === 'CC' && String(data.header?.warehouse || '').trim()) {
+    const whCode = String(data.header.warehouse).trim().toUpperCase();
+    try {
+      const r = await formWarehouseFromCount({
+        warehouseCode: whCode,
+        countedLines: data.lines || [],
+        countId: docId,
+        countNumber: data.number || '',
+        countDate: String(data.header?.countDate || '').trim(),
+      });
+      if (r?.ok && !r.skipped) {
+        await appendAudit(docId, {
+          action: 'formation',
+          note: `كُوِّن المخزن ${whCode} من الجرد: ${r.items} صنفًا، ${r.balances} رصيدًا افتتاحيًّا`,
+          profile,
+        });
+      } else if (!r?.ok) {
+        await appendAudit(docId, {
+          action: 'formation-skipped',
+          note: `لم يُكوَّن المخزن ${whCode}: ${r?.reason || 'سببٌ غير معروف'}`,
+          profile,
+        });
+      }
+    } catch (err) {
+      await appendAudit(docId, {
+        action: 'formation-failed',
+        note: `تعذّر تكوينُ المخزن ${whCode} من الجرد: ${err?.message || err}`,
         profile,
       });
     }
