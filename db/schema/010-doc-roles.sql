@@ -51,6 +51,7 @@ INSERT INTO doc_type_roles (doc_type, approve_roles, complete_roles) VALUES
   ('PUTAWAY', ARRAY['warehouse_manager', 'inventory_auditor']::text[], ARRAY['storekeeper', 'warehouse_manager']::text[]),
   ('PV', ARRAY['finance_manager', 'warehouse_manager']::text[], ARRAY['treasury', 'warehouse_manager']::text[]),
   ('QC', ARRAY['qc_inspector', 'warehouse_manager']::text[], ARRAY['qc_inspector', 'warehouse_manager']::text[]),
+  ('RCN', ARRAY['warehouse_manager', 'inventory_auditor']::text[], ARRAY['storekeeper', 'warehouse_manager']::text[]),
   ('RCP', ARRAY['finance_manager', 'warehouse_manager']::text[], ARRAY['treasury', 'finance_manager', 'warehouse_manager']::text[]),
   ('RCV', ARRAY['sales_supervisor', 'finance_manager', 'warehouse_manager']::text[], ARRAY['sales_supervisor', 'finance_manager', 'warehouse_manager']::text[]),
   ('RET', ARRAY['qc_inspector', 'warehouse_manager']::text[], ARRAY['return_manager', 'warehouse_manager']::text[]),

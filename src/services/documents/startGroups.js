@@ -37,7 +37,8 @@ import { GOVERNED_FORMS } from './schemas/index.js';
  * تخصّها: `CTR` مناولةُ حاويةٍ واردة، و`RCV` تحصيلٌ ميدانيٌّ من المركبة.
  */
 export const START_GROUPS = [
-  { title: 'الوارد', icon: 'arrowDownTray', types: [...PURCHASE_CHAIN, 'SRN', 'CTR'] },
+  // ‹155› إذن الاستلام المخزنيّ (RCN) وارِدٌ مستقلٌّ كالاستلام من مورّد — فبيتُه الوارد.
+  { title: 'الوارد', icon: 'arrowDownTray', types: [...PURCHASE_CHAIN, 'SRN', 'CTR', 'RCN'] },
   // ‹FNB-502› المطبخ المركزيّ: أمرٌ ← صرفُ موادّ ← استلامُ منتَج.
   { title: 'الإنتاج', icon: 'factory', types: PRODUCTION_CHAIN },
   { title: 'المبيعات والصرف', icon: 'shoppingCart', types: [...OUTBOUND_CHAIN, 'POD', 'ISS'] },

@@ -118,6 +118,8 @@ export const DOC_ODOO_MAP = {
   CLEAN: { model: 'x_bhome.cleaning', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
   // صرفٌ مخزنيٌّ عامّ: محلّيٌّ لا يُدفَع إلى أودو (الصفُّ للشمول لا للمزامنة).
   ISS: { model: 'x_bhome.issue', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
+  // ‹155› استلامٌ مخزنيٌّ عامّ: محلّيٌّ لا يُدفَع إلى أودو (الصفُّ للشمول لا للمزامنة).
+  RCN: { model: 'x_bhome.receipt', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
   HND: { model: 'x_bhome.handling', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
   VEH: { model: 'x_bhome.vehicle', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
 };

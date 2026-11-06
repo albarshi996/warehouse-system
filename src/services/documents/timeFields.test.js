@@ -77,7 +77,7 @@ test('كلّ المستندات ممثَّلة — لا نوع بلا زمن', (
   const stats = timeFieldStats();
   // الأعداد تُحدَّث **بقصد** عند إضافة نوعٍ جديد — فتغيّرها إعلانٌ لا مفاجأة.
   assert.equal(stats.types, Object.keys(SCHEMAS).length, 'كلّ نوعٍ ممثَّل');
-  assert.equal(stats.types, 61, '٤٩ + ٦ ماليّاتِ المحلّ ‹ذ› + ٣ مستنداتِ التشغيل ‹س› + صرفٌ مخزنيٌّ عامّ ‹ISS› + مناولةٌ ونقلُ موقع 155 ‹HND·VEH›');
+  assert.equal(stats.types, 62, '٤٩ + ٦ ماليّاتِ المحلّ ‹ذ› + ٣ مستنداتِ التشغيل ‹س› + صرفٌ مخزنيٌّ عامّ ‹ISS› + استلامٌ مخزنيٌّ عامّ ‹155 RCN› + مناولةٌ ونقلُ موقع 155 ‹HND·VEH›');
   // ‹EXE-301› +2: `mustShipBy` في SO وPICK — مهلة الشحن التشغيليّة.
   // ‹FNB-405› +3: `mfgDate` في GRN وQC وPUTAWAY — سمةُ دفعةٍ تعبر السلسلة.
   // ‹FNB-502› +7: دورة الإنتاج الثلاثة بحقولها.
@@ -88,20 +88,21 @@ test('كلّ المستندات ممثَّلة — لا نوع بلا زمن', (
   // ‹BHOME س› +3: ختمُ واقعةٍ لكلّ مستندِ تشغيلٍ (TAXI·LABOR·CLEAN).
   // ‹ISS› +2: تاريخُ الصرف (واقعة) وصلاحيّةُ البند (سمة).
   // ‹155› +2: ختمُ واقعةٍ لكلٍّ من المناولة (handlingDate) والنقل (logDate).
-  assert.equal(stats.total, 112, 'مجموع الحقول الزمنيّة المصنَّفة');
+  // ‹155 RCN› +2: تاريخُ الاستلام (واقعة) وصلاحيّةُ البند (سمة).
+  assert.equal(stats.total, 114, 'مجموع الحقول الزمنيّة المصنَّفة');
 });
 
 test('التوزيع: ختم الواقعة هو الغالب، والسمة تليه', () => {
   const { counts } = timeFieldStats();
-  assert.equal(counts.event, 61, "‹BHOME ذ› +6 و‹س› +3 و‹ISS› +1 و‹155› +2: تاريخُ كلّ مستندٍ ماليٍّ/تشغيليٍّ/صرفٍ/مناولةٍ/نقلٍ واقعةٌ وقعت");
+  assert.equal(counts.event, 62, "‹BHOME ذ› +6 و‹س› +3 و‹ISS› +1 و‹155› +2 و‹155 RCN› +1: تاريخُ كلّ مستندٍ ماليٍّ/تشغيليٍّ/صرفٍ/استلامٍ/مناولةٍ/نقلٍ واقعةٌ وقعت");
   // ‹FNB-405› تاريخ الإنتاج سمةٌ كالصلاحيّة — وقع في مصنع المورّد لا عندنا.
   // ‹SRC-POST› +5: صلاحيّةُ بنود مستندات المصدر.
-  assert.equal(counts.attribute, 30); // ‹ISS› +1: صلاحيّةُ بند الصرف
+  assert.equal(counts.attribute, 31); // ‹ISS› +1: صلاحيّةُ بند الصرف · ‹155 RCN› +1: صلاحيّةُ بند الاستلام
   // ‹FNB-502› +1: `productionDate` موعدٌ مخطَّط يُقبل في المستقبل.
   // ‹BHOME ذ› +3: استحقاقُ فاتورتَي المورّد وسلفةِ العامل (تذكيرُ السداد).
   assert.equal(counts.planned, 17, 'ومنها mustShipBy ‹EXE-301› وproductionDate ‹FNB-502› واستحقاقاتُ ذ');
   assert.equal(counts.reference, 4);
-  assert.equal(counts.event + counts.attribute + counts.planned + counts.reference, 112);
+  assert.equal(counts.event + counts.attribute + counts.planned + counts.reference, 114);
 });
 
 /* ═══════════ ٣. القواعد التي لا تُخرق ═══════════ */

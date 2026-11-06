@@ -73,6 +73,8 @@ import labor from './labor.js';
 import clean from './clean.js';
 // صرفٌ مخزنيٌّ عامّ — إذن صرفٍ مستقلٌّ يُخرج البضاعة من المستودع (طلب المالك).
 import iss from './iss.js';
+// ‹155› إذن استلامٍ مخزنيّ — نظيرُ ISS نحو الداخل (بضاعةٌ تدخل مخزنًا فيزيد رصيدُه).
+import rcn from './rcn.js';
 import hnd from './hnd.js';
 import veh from './veh.js';
 
@@ -144,6 +146,8 @@ const SCHEMAS = {
   CLEAN: clean,
   // صرفٌ مخزنيٌّ عامّ — إذن صرفٍ مستقلّ (طلب المالك).
   ISS: iss,
+  // ‹155› إذن استلامٍ مخزنيّ — نظيرُ ISS نحو الداخل.
+  RCN: rcn,
   HND: hnd,
   VEH: veh,
 };
@@ -222,6 +226,7 @@ export const GOVERNED_FORMS = [
   { type: 'CLEAN', stage: 7, titleAr: 'نظافة', file: '', phase: 'BH' },
   // صرفٌ مخزنيٌّ عامّ — طلب المالك.
   { type: 'ISS', stage: 7, titleAr: 'إذن صرف مخزنيّ', file: '', phase: 'F3' },
+  { type: 'RCN', stage: 7, titleAr: 'إذن استلام مخزنيّ', file: '', phase: '155' },
   { type: 'HND', stage: 7, titleAr: 'مستند مناولة', file: '', phase: '155' },
   { type: 'VEH', stage: 7, titleAr: 'مستند سيارات النقل', file: '', phase: '155' },
 ].map((f) => ({ ...f, ready: Boolean(SCHEMAS[f.type]) }));

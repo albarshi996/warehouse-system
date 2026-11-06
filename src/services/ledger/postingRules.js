@@ -228,6 +228,20 @@ export const POSTING_RULES = {
     labelAr: 'صرف من المستودع',
     binSide: 'from',
   },
+  // ‹155› استلامٌ مخزنيٌّ عامّ — نظيرُ ISS نحو الداخل (مواصفة موقع 155: «الاستلام
+  // يزيد الرصيد»): يُدخل البضاعة من خارج الدفتر إلى المستودع فيزيد رصيدُه عند
+  // الإنجاز. اتّجاهُ SRI (EXTERNAL → WAREHOUSE) لكنّ الموقع يخصّ **الوجهة** —
+  // الرفُّ الذي توضع عليه البضاعة — فـ`binSide:'to'`.
+  RCN: {
+    from: EXTERNAL,
+    to: WAREHOUSE,
+    qtyField: 'qty',
+    expiryField: 'expiry',
+    costField: 'unitCost',
+    reason: 'receipt-in',
+    labelAr: 'استلام إلى المستودع',
+    binSide: 'to',
+  },
   ADJ: {
     from: ADJUSTMENT.code,
     to: WAREHOUSE,
