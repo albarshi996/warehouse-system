@@ -46,7 +46,7 @@ const STORAGE_KEY = 'brandzo_warehouses_local';
 // = مستودعٌ بلا بُعد موقع (سلوكُ اليوم حرفيًّا)، فالترحيلُ بلا أثر.
 const BLANK_FORM = {
   code: '', name: '', manager: '', facilityType: DEFAULT_FACILITY_TYPE,
-  site: '', area: '', occupancyPct: '', content: '',
+  site: '', area: '', occupancyPct: '', entity: '', content: '',
 };
 
 // عددٌ أو null — خانةُ المساحة/الإشغال فارغةً تعني «غيرُ معلوم» لا صفرًا.
@@ -189,6 +189,9 @@ const WarehouseManager = () => {
           site: (formData.site || '').trim(),
           area: numOrNull(formData.area),
           occupancyPct: numOrNull(formData.occupancyPct),
+          // ‹155› الجهةُ المالكة/المستأجرة للمخزن (E10 — مصرف المتوسط) — حقلٌ مستقلٌّ
+          // يُعرض في المستندات؛ كان مدفونًا داخل «المحتوى» نصًّا.
+          entity: (formData.entity || '').trim(),
           content: (formData.content || '').trim(),
           status: 'نشط',
           createdAt: serverTimestamp(),
@@ -231,7 +234,7 @@ const WarehouseManager = () => {
     setEditingId(wh.id);
     setFormData({
       code: wh.code, name: wh.name, manager: wh.manager || '', facilityType: facilityTypeOf(wh),
-      site: wh.site || '', area: wh.area ?? '', occupancyPct: wh.occupancyPct ?? '', content: wh.content || '',
+      site: wh.site || '', area: wh.area ?? '', occupancyPct: wh.occupancyPct ?? '', entity: wh.entity || '', content: wh.content || '',
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -315,7 +318,7 @@ const WarehouseManager = () => {
           ...todo.map((w) => ({
             id: crypto.randomUUID(), status: 'نشط', createdAt: new Date().toISOString(),
             code: w.code, name: w.name || w.code, manager: '',
-            site: w.site || '155', area: w.area ?? null, occupancyPct: w.occupancyPct ?? null, content: w.content || '',
+            site: w.site || '155', area: w.area ?? null, occupancyPct: w.occupancyPct ?? null, entity: w.entity || '', content: w.content || '',
           })),
         ]);
       } else {
@@ -324,7 +327,7 @@ const WarehouseManager = () => {
           const ref = doc(collection(db, 'warehouses'));
           batch.set(ref, {
             code: w.code, name: w.name || w.code, manager: '', status: 'نشط',
-            site: w.site || '155', area: w.area ?? null, occupancyPct: w.occupancyPct ?? null, content: w.content || '',
+            site: w.site || '155', area: w.area ?? null, occupancyPct: w.occupancyPct ?? null, entity: w.entity || '', content: w.content || '',
             createdAt: serverTimestamp(),
           });
         });
@@ -531,7 +534,7 @@ const WarehouseManager = () => {
         ) : (
           <span
             style={{ fontFamily: 'monospace' }}
-            title={`${wh.area != null ? 'المساحة ' + int(wh.area) + ' م² · ' : ''}${wh.content || ''}`}
+            title={`${wh.entity ? 'الجهة: ' + wh.entity + ' · ' : ''}${wh.area != null ? 'المساحة ' + int(wh.area) + ' م² · ' : ''}${wh.content || ''}`}
           >
             {int(wh.occupancyPct)}%
           </span>
@@ -768,11 +771,20 @@ const WarehouseManager = () => {
                 onChange={handleInputChange('occupancyPct')}
               />
             </FieldWrap>
-            <FieldWrap label="المحتوى / الجهة">
+            <FieldWrap label="الجهة (المالك/المستأجر)">
               <input
                 type="text"
                 className="o_input"
-                placeholder="وصفُ المخزون أو الجهة"
+                placeholder="مثال: مصرف المتوسط · شركة أركاديا"
+                value={formData.entity}
+                onChange={handleInputChange('entity')}
+              />
+            </FieldWrap>
+            <FieldWrap label="المحتوى">
+              <input
+                type="text"
+                className="o_input"
+                placeholder="وصفُ المخزون"
                 value={formData.content}
                 onChange={handleInputChange('content')}
               />
