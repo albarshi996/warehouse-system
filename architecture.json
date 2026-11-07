@@ -421,7 +421,9 @@
       "title": "لوحة التحكم",
       "summary": "",
       "file": "src/pages/dashboard/index.astro",
-      "usesServices": []
+      "usesServices": [
+        "auth"
+      ]
     },
     {
       "name": "integration-control",
@@ -1734,6 +1736,7 @@
         "MIN_PASSWORD_LENGTH",
         "NAV_GROUPS",
         "NAV_GROUP_LABELS",
+        "NAV_SECTIONS",
         "PINNED_ITEM",
         "REQUIRED_AUTH_SYMBOLS",
         "RETURN_PARAM",
@@ -1780,6 +1783,7 @@
         "returnPathFrom",
         "safeReturnPath",
         "saveMatrix",
+        "sectionOf",
         "sendPasswordReset",
         "setOverride",
         "setUserActive",

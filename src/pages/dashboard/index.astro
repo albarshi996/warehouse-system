@@ -2,6 +2,9 @@
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
 import Icon from '../../components/ui/Icon.astro';
 import OperationsCommand from '../../components/brandzo-erp/ledger/OperationsCommand.jsx';
+import { placementsFor } from '../../services/auth/navCatalog.js';
+import { canOpenPath } from '../../services/auth/pageAccess.js';
+import { ROLE_NAV } from '../../services/auth/navAccess.js';
 
 const base = import.meta.env.BASE_URL.endsWith('/')
   ? import.meta.env.BASE_URL.slice(0, -1)
@@ -16,17 +19,30 @@ const base = import.meta.env.BASE_URL.endsWith('/')
  * توكِنز global.css · أرقام لاتينية. عقد سكربت التخصيص محفوظ حرفيًّا.
  */
 
-// ── الطبقة الأولى العمليّة: ابدأ من هنا (المسار الأساسيّ الأكثر تكرارًا) ──
-const startHere = [
-  { id: 'start-portal-ops', path: '/dashboard/portal-operations', icon: 'globe',
-    title: 'عمليات البوابة', desc: 'الفهرس الجامع لكل شاشات البوابة مرتّبًا بالأقسام والبطاقات' },
-  { id: 'start-docs', path: '/dashboard/documents', icon: 'fileText',
-    title: 'المستندات', desc: 'إنشاء ومتابعة المستندات التشغيلية المحكومة' },
-  { id: 'start-tasks', path: '/dashboard/tasks', icon: 'checkSquare',
-    title: 'المهام التشغيلية', desc: 'لوحة المهام اليومية وتوزيعها ومتابعتها' },
-  { id: 'start-reports', path: '/dashboard/reports', icon: 'barChart3',
-    title: 'مركز التقارير', desc: 'كل تقارير المنظومة — تشغيلية وجودة وتحليلية' },
-];
+// ── «ابدأ من هنا» — اختصاراتٌ منظّمةٌ لأكثر الشاشات استعمالًا، شاملةً أحدثَ ما
+//    بُني (المحلّات · الخزينة اليوميّة · موقع 155). القاعدة: **مصدرٌ واحد** —
+//    التسميةُ والأيقونةُ من `navCatalog`، فلا تنحرف؛ و`data-item-roles` تُحسب من
+//    `canOpenPath` (تشمل admin دائمًا، فلا تصير «للكلّ» سهوًا)، فيُخفي RoleNav
+//    البطاقةَ لمن لا يفتح شاشتها — بلا منطق صلاحيّاتٍ جديد.
+const ALL_ROLES = Object.keys(ROLE_NAV);
+const quickCard = (p) => {
+  const spot = placementsFor(p)[0];
+  if (!spot) return null;
+  return {
+    id: `qs-${p.replace(/\W+/g, '-')}`,
+    path: p,
+    icon: spot.icon,
+    label: spot.label,
+    roles: ALL_ROLES.filter((r) => canOpenPath(r, p)).join(','),
+  };
+};
+const quickClusters = [
+  { title: 'العمل اليوميّ', icon: 'calendar', paths: ['/dashboard/portal-operations', '/dashboard/documents', '/dashboard/forms', '/dashboard/tasks'] },
+  { title: 'المخزون والجرد', icon: 'package', paths: ['/dashboard/command-center', '/dashboard/warehouses', '/dashboard/operations', '/dashboard/stock-reconcile'] },
+  { title: 'المحلّات والمال', icon: 'building2', paths: ['/dashboard/shops', '/dashboard/cash-book', '/dashboard/partner-ledger', '/dashboard/expenses'] },
+  { title: 'موقع 155 والميدان', icon: 'mapPin', paths: ['/dashboard/site-needs', '/dashboard/cash-custody', '/dashboard/field-operations'] },
+  { title: 'التقارير', icon: 'barChart3', paths: ['/dashboard/reports', '/dashboard/data-reports', '/dashboard/odoo-reports', '/dashboard/warehouse-movement'] },
+].map((c) => ({ ...c, cards: c.paths.map(quickCard).filter(Boolean) }));
 
 // ── البطاقات الحاوية (كل المقاصد محفوظة كما هي) ──
 const hubs = [
@@ -203,30 +219,29 @@ const soon = [
       </li>
     </ul>
 
-    {/* ─── الطبقة الأولى: ابدأ من هنا ─────────────────────────────────────── */}
-    <section data-section data-group="start" class="mb-10">
-      <div class="flex items-center gap-3 mb-4">
-        <span class="inline-grid place-items-center w-8 h-8 rounded-lg bg-accent/10 border border-accent/25 text-accent"><Icon name="rocket" size={17} /></span>
-        <h2 class="text-lg sm:text-xl font-bold text-ink">ابدأ من هنا</h2>
-        <div class="flex-1 h-px bg-line"></div>
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {startHere.map((c) => (
-          <div class="dash-card relative" data-card-id={c.id}>
-            <span class="card-badge"></span>
-            <a href={`${base}${c.path}`}
-              class="group flex items-center gap-4 h-full rounded-card p-5 bg-surface border border-line shadow-card hover:bg-surface-2 hover:border-accent/40 hover:-translate-y-0.5 transition-all">
-              <span class="inline-grid place-items-center w-12 h-12 rounded-xl bg-accent/10 border border-accent/25 text-accent shrink-0"><Icon name={c.icon} size={24} /></span>
-              <span class="flex-1 min-w-0">
-                <span class="block font-bold text-ink">{c.title}</span>
-                <span class="block text-xs text-muted mt-1 leading-relaxed">{c.desc}</span>
-              </span>
-              <span class="text-muted group-hover:text-accent text-xl transition-all group-hover:-translate-x-1">←</span>
-            </a>
-          </div>
-        ))}
-      </div>
-    </section>
+    {/* ─── الطبقة الأولى: ابدأ من هنا — اختصاراتٌ منظّمةٌ بالأدوار ───────────── */}
+    {quickClusters.map((cl, ci) => (
+      <section data-section data-group={`qs-${ci}`} class="mb-8">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="inline-grid place-items-center w-8 h-8 rounded-lg bg-accent/10 border border-accent/25 text-accent"><Icon name={cl.icon} size={17} /></span>
+          <h2 class="text-lg sm:text-xl font-bold text-ink">{cl.title}</h2>
+          <div class="flex-1 h-px bg-line"></div>
+        </div>
+        <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 list-none p-0 m-0">
+          {cl.cards.map((c) => (
+            <li class="dash-card relative" data-card-id={c.id} data-item-roles={c.roles || null}>
+              <span class="card-badge"></span>
+              <a href={`${base}${c.path}`}
+                class="group flex items-center gap-3 h-full rounded-card p-4 bg-surface border border-line shadow-card hover:bg-surface-2 hover:border-accent/40 hover:-translate-y-0.5 transition-all">
+                <span class="inline-grid place-items-center w-11 h-11 rounded-xl bg-accent/10 border border-accent/25 text-accent shrink-0"><Icon name={c.icon} size={20} /></span>
+                <span class="flex-1 min-w-0 font-bold text-ink truncate">{c.label}</span>
+                <span class="text-muted group-hover:text-accent transition-all group-hover:-translate-x-1">←</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
 
     {/* ─── الأنظمة الرئيسية (الحاويات) ────────────────────────────────────── */}
     <section data-section data-group="hubs" class="mb-10">

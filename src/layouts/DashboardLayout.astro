@@ -6,7 +6,7 @@ import DesktopUpdater from '../components/pwa/DesktopUpdater.jsx';
 import AuthGate from '../components/brandzo-erp/access/AuthGate.jsx';
 import UserMenu from '../components/brandzo-erp/access/UserMenu.jsx';
 import RoleNav from '../components/brandzo-erp/access/RoleNav.jsx';
-import { NAV_GROUPS, PINNED_ITEM } from '../services/auth/navCatalog.js';
+import { NAV_GROUPS, PINNED_ITEM, sectionOf } from '../services/auth/navCatalog.js';
 
 // `light` — نظام أودو الفاتح (المرحلة ١): يضع bz-light على <html> فينقلب
 // الإطار (الشريط الجانبي + الرأس + الخلفية) وتوكِنز global.css الدلالية للفاتح.
@@ -33,6 +33,20 @@ const navGroups = NAV_GROUPS.map((g) => ({
   ...g,
   items: g.items.map((it) => ({ ...it, href: `${base}${it.path}` })),
 }));
+
+// أقسامٌ كبرى بصريّةٌ فوق المجموعات (بلا أثرٍ على الصلاحيّات — عرضٌ فقط). نُدرج
+// ترويسةَ القسم مرّةً عند تغيّره، فتبقى المجموعاتُ بترتيبها. مفاتيحُ `NAV_SECTIONS`
+// بترتيب الكتالوج نفسِه، فالأقسامُ متّصلةٌ بلا إعادة ترتيب.
+const navUnits = [];
+let _prevSection = null;
+for (const grp of navGroups) {
+  const sec = sectionOf(grp.key);
+  if (sec && sec !== _prevSection) {
+    navUnits.push({ kind: 'section', label: sec });
+    _prevSection = sec;
+  }
+  navUnits.push({ kind: 'group', grp });
+}
 
 const currentPath = Astro.url.pathname;
 ---
@@ -545,15 +559,19 @@ const currentPath = Astro.url.pathname;
             </a>
           </li>
 
-          {/* المجموعات المنطقية (الدفعة 4) */}
-          {navGroups.map((grp) => (
-            <li class="nav-group pt-2" data-nav-group data-group-key={grp.key}>
-              <div class="sb-group-head px-3 pt-3 pb-1 flex items-center gap-2 text-[11px] font-bold text-brand-gold/70 tracking-wide border-t border-white/5" title={grp.group}>
-                {grp.icon ? <Icon name={grp.icon} size={15} class="text-brand-gold/70" /> : <span>{grp.emoji}</span>}
-                <span class="sb-x">{grp.group}</span>
+          {/* المجموعات المنطقية تحت أقسامٍ كبرى بصريّة (الدفعة 4) */}
+          {navUnits.map((u) => (u.kind === 'section' ? (
+            <li class="sb-section-head px-3 pt-4 pb-1" data-sb-section>
+              <span class="sb-x text-[10px] font-extrabold text-brand-gold/45 tracking-[0.18em]">{u.label}</span>
+            </li>
+          ) : (
+            <li class="nav-group pt-2" data-nav-group data-group-key={u.grp.key}>
+              <div class="sb-group-head px-3 pt-3 pb-1 flex items-center gap-2 text-[11px] font-bold text-brand-gold/70 tracking-wide border-t border-white/5" title={u.grp.group}>
+                {u.grp.icon ? <Icon name={u.grp.icon} size={15} class="text-brand-gold/70" /> : <span>{u.grp.emoji}</span>}
+                <span class="sb-x">{u.grp.group}</span>
               </div>
               <ul class="space-y-1 mt-1">
-                {grp.items.map((item) => (
+                {u.grp.items.map((item) => (
                   <li data-label={item.label} data-item-roles={item.roles ? item.roles.join(',') : null}>
                     <a
                       href={item.href}
@@ -574,7 +592,7 @@ const currentPath = Astro.url.pathname;
                     </a>
                   </li>
                 ))}
-                {grp.group === 'الأرشيف والمرجعية' && showGuide && (
+                {u.grp.group === 'الأرشيف والمرجعية' && showGuide && (
                   <li data-label="الدليل التشغيلي">
                     <button
                       id="open-guide"
@@ -589,7 +607,7 @@ const currentPath = Astro.url.pathname;
                 )}
               </ul>
             </li>
-          ))}
+          )))}
         </ul>
       </nav>
 
@@ -1002,6 +1020,37 @@ const currentPath = Astro.url.pathname;
         close: (el) => el.close(),
       });
     </script>
+    {/* إخفاءُ ترويسة القسم الكبير إن خُفيت كلُّ مجموعاته لهذا الدور (بعد RoleNav).
+        عرضٌ فقط — RoleNav وحده يقرّر رؤيةَ المجموعات؛ وهذا يرتّب ما بقي. */}
+    <script is:inline>
+      (function () {
+        function hideEmptySections() {
+          var heads = document.querySelectorAll('[data-sb-section]');
+          Array.prototype.forEach.call(heads, function (head) {
+            var any = false;
+            var n = head.nextElementSibling;
+            while (n && !n.hasAttribute('data-sb-section')) {
+              if (
+                n.hasAttribute('data-nav-group') &&
+                !n.hasAttribute('data-role-hidden') &&
+                n.style.display !== 'none'
+              ) { any = true; break; }
+              n = n.nextElementSibling;
+            }
+            head.style.display = any ? '' : 'none';
+          });
+        }
+        function run() {
+          if (document.body.hasAttribute('data-role-nav-ready')) { hideEmptySections(); return true; }
+          return false;
+        }
+        if (!run()) {
+          var obs = new MutationObserver(function () { if (run()) obs.disconnect(); });
+          obs.observe(document.body, { attributes: true, attributeFilter: ['data-role-nav-ready'] });
+        }
+      })();
+    </script>
+
     {isDesktopBuild && <DesktopUpdater client:idle />}
   </body>
 </html>

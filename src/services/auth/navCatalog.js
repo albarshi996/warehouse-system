@@ -604,6 +604,27 @@ export const NAV_GROUPS = [
   },
 ];
 
+/**
+ * الأقسام الكبرى — تجميعٌ **بصريٌّ** لمجموعات الشريط الجانبيّ تحت عناوينَ قليلة.
+ * ★ عرضٌ فقط، بلا أثرٍ على الصلاحيّات: لا يقرؤه `pageAccess` ولا `navAccess` ولا
+ *   `navBaseline` ولا التدقيق — فتغييرُه لا يمسّ «من يرى ماذا». والمفاتيحُ بترتيب
+ *   ظهور المجموعات نفسِه، فتخرج الأقسامُ متّصلةً بلا إعادة ترتيب.
+ */
+export const NAV_SECTIONS = [
+  { label: 'التشغيل والمخزون', keys: ['daily', 'procurement', 'warehouses'] },
+  { label: 'الميدان والحركة', keys: ['fleet', 'field', 'gate', 'lpn', 'putaway'] },
+  { label: 'القطاعات', keys: ['fnb'] },
+  { label: 'أودو والتكامل', keys: ['odoo'] },
+  { label: 'التقارير والعروض', keys: ['reports', 'presentations'] },
+  { label: 'الإدارة والمرجع', keys: ['archive', 'dept'] },
+];
+
+/** قسمُ مجموعةٍ ما (للعرض في الشريط الجانبيّ) — '' إن لم تُصنَّف. */
+export function sectionOf(groupKey) {
+  const s = NAV_SECTIONS.find((x) => x.keys.includes(groupKey));
+  return s ? s.label : '';
+}
+
 /** كل عناصر الكتالوج مسطَّحة، كلٌّ يحمل مفتاح مجموعته. */
 export function flatItems() {
   return NAV_GROUPS.flatMap((g) => g.items.map((it) => ({ ...it, groupKey: g.key })));
