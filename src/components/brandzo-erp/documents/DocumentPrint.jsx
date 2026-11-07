@@ -137,7 +137,7 @@ export default function DocumentPrint({ schema, doc, attachments = [], reconcili
           الحالة: <strong>{state.label}</strong>
         </span>
         <span>
-          اعتمده: <strong>{show(doc?.approvedByName)}</strong>
+          اعتمده: <strong>{plain ? ' ' : show(doc?.approvedByName)}</strong>
         </span>
         {/* وسمُ التعديل بعد الإرسال — يُطبَع لأنّ قارئَ الورقة من حقّه أن
             يعرف أنّها عُدِّلت بعد اعتمادها، ومتى وبأيّ سبب. */}
@@ -274,7 +274,7 @@ export default function DocumentPrint({ schema, doc, attachments = [], reconcili
         {(schema.signatures || []).map((s) => (
           <div key={s.key} className="dp-sign">
             <div className="dp-sign-name">
-              {s.source === 'creator'
+              {plain ? ' ' : s.source === 'creator'
                 ? show(doc?.createdByName)
                 : s.source === 'approver'
                   ? show(doc?.approvedByName)
