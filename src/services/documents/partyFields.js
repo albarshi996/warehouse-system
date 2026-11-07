@@ -69,7 +69,13 @@ export function partyOptions(source, { suppliers = [], customers = [], warehouse
     case 'customer':
       return alive(customers).map((c) => ({ code: text(c.code), name: text(c.nameAr || c.nameEn) }));
     case 'warehouse':
-      return alive(warehouses).map((w) => ({ code: text(w.code || w.id), name: text(w.nameAr || w.name) }));
+      // ‹155› يُعرض اسمُ الجهة المالكة/المستأجرة مع الكود (E10 — مصرف المتوسط)
+      // إن وُجدت، وإلّا الاسمُ المعتاد — فيختار المستخدمُ المخزنَ بجهته.
+      return alive(warehouses).map((w) => {
+        const code = text(w.code || w.id);
+        const entity = text(w.entity);
+        return { code, name: entity ? `${code} — ${entity}` : text(w.nameAr || w.name), entity };
+      });
     case 'rep':
       // المصدر ماستر المندوبين (SAP-21): صفوفه {name, active, archived} —
       // ويقبل توافقًا صفوف دليل المستخدمين القديمة (فيها role).
