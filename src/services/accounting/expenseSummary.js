@@ -11,7 +11,9 @@ import { EXPENSE_CATEGORIES } from './expenseCategories.js';
 import { EXPENSE_EVENTS, expenseCategoryOf } from './deriveEntries.js';
 
 const num = (v) => Number(v) || 0;
-const money = (n) => Math.round(num(n) * 100) / 100;
+// ثلاثُ منازل (الدرهم) — يطابق `expenseReport` والحقلَ (step=0.001) والعملةَ، فلا
+// يظهر المصروفُ نفسُه برقمين بين الملخّص والتقرير على الشاشة الواحدة.
+const money = (n) => Math.round(num(n) * 1000) / 1000;
 const shopOf = (d) => d?.shop ?? d?.header?.shop ?? null;
 const amountOf = (d) => num(d?.header?.amount ?? d?.header?.total ?? d?.header?.amountPaid);
 
@@ -20,7 +22,10 @@ const amountOf = (d) => num(d?.header?.amount ?? d?.header?.total ?? d?.header?.
  * @param {{shop?:string, states?:string[]}} opts المحلُّ (null=الكلّ) والحالات المقبولة
  * @returns {{rows, expenseTotal, advancesOut, docs}} صفوفُ الفئات الفعّالة، والإجماليّان، وعددُ المستندات
  */
-export function expenseSummary(documents = [], { shop, states = ['done', 'closed'] } = {}) {
+// ★ «منجَز» وحدَه يُحتسب: القيدُ المزدوجُ يقع عند `done` حصرًا، و`closed` مبهمةٌ
+//   (done→closed صُرف ثمّ أُرشِف، لكن approved→closed التزامٌ أُلغي قبل الصرف ولم
+//   يُقيَّد) — فاحتسابُها يضخّم المصروفَ بما لم يُصرَف. مراجعةٌ عدائيّة 2026-11-09.
+export function expenseSummary(documents = [], { shop, states = ['done'] } = {}) {
   const scoped = shop !== undefined && shop !== null && shop !== '';
   const docs = (Array.isArray(documents) ? documents : [])
     .filter((d) => states.includes(d?.state))

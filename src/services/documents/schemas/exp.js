@@ -53,6 +53,10 @@ const schema = {
       columns: 3,
       fields: [
         { key: 'expenseDate', label: 'تاريخ المصروف (Date)', kind: 'date', required: true },
+        // ‹EXP-INV› رقمُ الفاتورة/السند — به يُسجَّل المصروفُ ويُطبع التقرير (طلب
+        // المالك 2026-11-09). اختياريٌّ في المخطّط (توافقُ المستندات القديمة بلا
+        // فاتورة)، ويُلزمه مسارُ الإدخال السريع (`expenseEntry.js`).
+        { key: 'invoiceNo', label: 'رقم الفاتورة (Invoice No.)', kind: 'text' },
         { key: 'category', label: 'الفئة (Category)', kind: 'select', options: EXP_CATEGORY_LABELS, required: true },
         { key: 'beneficiary', label: 'المستفيد / الجهة (Beneficiary)', kind: 'text' },
         {
