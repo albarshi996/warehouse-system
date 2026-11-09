@@ -21,7 +21,7 @@
  *
  * والقراءة لأيّ مصادَق (الجرد والمستندات تحتاج معرفة الرصيد).
  */
-import { collection, doc, getCountFromServer, getDocs, onSnapshot, query, Timestamp, where, writeBatch, serverTimestamp, db } from '../_db/index.js';
+import { collection, doc, getCountFromServer, getDocs, limit, onSnapshot, query, Timestamp, where, writeBatch, serverTimestamp, db } from '../_db/index.js';
 import { importSheet } from '../excel/excelImport.js';
 import { balanceId } from './balanceKey.js';
 import { normalizeSku, normalizeBarcode } from '../items/itemService.js';
@@ -74,6 +74,27 @@ export async function fetchBalancesInBinsOf(prefixes) {
     for (const d of snap.docs) if (!seen.has(d.id)) seen.set(d.id, { id: d.id, ...d.data() });
   }
   return [...seen.values()];
+}
+
+/**
+ * ‹155-P3› أرصدةُ مستودعٍ واحدٍ بكوده — استعلامٌ مقيَّدٌ بـ`warehouse ==` و`limit`،
+ * لا قراءةٌ للمجموعة كلّها. يغذّي منتقيَ أصناف المخزن المفلتر في مستندات النقل
+ * (جزء ٣ · موقع 155): عند اختيار مخزن المصدر تُقرأ أرصدتُه **مرّةً** لبناء قائمة
+ * الاقتراح — فلا تُفتح كلُّ الأرصدة (حارسُ الميزانيّة §11)، ولا يُقرأ ما لا يُعرَض.
+ *
+ * ★ `warehouse` على الرصيد كودُ البوّابة (`E5`) بأحرفٍ كبيرة كما يكتبه القيدُ
+ *   والتكوين — فالمطابقةُ مطبَّعةٌ عليه. والسقفُ `max` حارسُ أمانٍ: مخزنٌ واحدٌ
+ *   لا يبلغ آلافَ الأصناف، فإن بلغ فالاقتراحُ يكفيه أوّلُ ما قُرئ.
+ *
+ * @param {string} warehouse كودُ المخزن (E5 …).
+ * @param {{max?: number}} [opts]
+ * @returns {Promise<Array>} صفوفُ الأرصدة في ذلك المخزن.
+ */
+export async function fetchBalancesForWarehouse(warehouse, { max = 2000 } = {}) {
+  const wh = String(warehouse ?? '').trim().toUpperCase();
+  if (!wh) return [];
+  const snap = await getDocs(query(collection(db, COL), where('warehouse', '==', wh), limit(max)));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
 function balancesStorage() {

@@ -24,10 +24,24 @@ export default function LineItemsTable({
   binOptions,
   binVerdict,
   skuVerdict,
+  // ‹155-P3› قوائمُ اقتراحِ الأصناف لعمودَي الكود والباركود — `{ sku:[], barcode:[] }`
+  //   من أرصدة المصدر المفلترة (أو الماستر عند «عرض الكل»). اختياريّةٌ: غيابُها =
+  //   سلوكُ اليوم حرفيًّا (إدخالٌ حرّ بلا قائمة).
+  itemOptions,
 }) {
   const columns = section.columns || [];
   // معرّف قائمة الاقتراح — واحدٌ للجدول كلّه، فلا تتكرّر آلاف الخيارات لكل صفّ.
   const binListId = `bin-options-${schema?.type || 'doc'}`;
+  const skuListId = `item-sku-${schema?.type || 'doc'}`;
+  const barcodeListId = `item-barcode-${schema?.type || 'doc'}`;
+
+  /** معرّفُ قائمةِ الاقتراح لهذا العمود — موقعٌ، أو كودُ صنفٍ، أو باركودُ صنف. */
+  function listIdFor(column) {
+    if (column.key === 'bin' && binOptions?.length) return binListId;
+    if (column.key === 'sku' && itemOptions?.sku?.length) return skuListId;
+    if (column.key === 'barcode' && itemOptions?.barcode?.length) return barcodeListId;
+    return null;
+  }
 
   function setCell(index, key, value) {
     const next = lines.map((line, i) => (i === index ? { ...line, [key]: value } : line));
@@ -137,7 +151,8 @@ export default function LineItemsTable({
                       uomChoices={c.key === 'uom' && uomOptions ? uomOptions(line) : null}
                       // LOC-104: خانة الموقع مرجعيّة **مركزيًّا هنا** لا في كل
                       // مخطّط — اقتراحٌ يُعين من يكتب، وحكمٌ يُنبّه ولا يمنع.
-                      listId={c.key === 'bin' && binOptions?.length ? binListId : null}
+                      // ‹155-P3›: وعمودا الكود/الباركود يأخذان قائمةَ أصناف المصدر.
+                      listId={listIdFor(c)}
                       // حكمُ الخانة — تنبيهٌ يُعرض ولا يُحفظ في البند:
                       // موقعٌ لا يعرفه السيّد (LOC-104)، أو كودٌ لم يُستبن
                       // من لصقةٍ جماعيّة (BULK-104). أصفرُ ينبّه ولا يمنع.
@@ -167,6 +182,26 @@ export default function LineItemsTable({
       {binOptions?.length > 0 && (
         <datalist id={binListId}>
           {binOptions.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </datalist>
+      )}
+
+      {/* ‹155-P3› قوائمُ اقتراحِ أصناف المصدر — واحدةٌ للكود وأخرى للباركود */}
+      {itemOptions?.sku?.length > 0 && (
+        <datalist id={skuListId}>
+          {itemOptions.sku.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </datalist>
+      )}
+      {itemOptions?.barcode?.length > 0 && (
+        <datalist id={barcodeListId}>
+          {itemOptions.barcode.map((o) => (
             <option key={o.value} value={o.value}>
               {o.label}
             </option>

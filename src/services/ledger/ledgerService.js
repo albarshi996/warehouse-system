@@ -20,7 +20,7 @@
 import { collection, doc, getDoc, getDocs, onSnapshot, query, where, orderBy, limit, increment, serverTimestamp, runTransaction, writeBatch, Timestamp, db } from '../_db/index.js';
 import { OPENING_MS } from '../documents/actualWork.js';
 import { auth } from '../../config/firebase.js';
-import { buildMoves, balanceDeltas, canPost, findNegativeBalance, formationViolation } from './movements.js';
+import { buildMoves, balanceDeltas, canPost, findNegativeBalance, formationViolation, zeroBeforeKeys } from './movements.js';
 import { reservationDeltas } from './reservations.js';
 import { getItem } from '../items/itemService.js';
 import { indexLocations } from '../org/orgLocations.js';
@@ -249,6 +249,23 @@ export async function postDocument(docData, profile, { markDone = false, cache =
           (violation.batch ? ` (تشغيلة ${violation.batch})` : '') +
           ` — المتوفّر ${violation.current}، والحركة تطلب ${violation.requested}. القيد لا يُنفَّذ.`
       );
+    }
+
+    // ── ‹155› حارسُ صفرِ المصدر لزيادةِ الجرد المضافة (TRS) ──────────────
+    // الصنفُ «المضاف من نقل» يُفترَض غائبًا عن المصدر، فزيادتُه ثمّ خصمُها يُرجِعانه
+    // صفرًا. لكن لو كان له رصيدٌ فعلًا (وسمٌ خاطئ أو سباقٌ بعد قراءة الواجهة) لنفخت
+    // الزيادةُ رصيدًا موجودًا بلا أثرٍ على حارس السالب (صافي المصدر صفر). فنتحقّق
+    // هنا داخل المعاملة أنّ رصيدَ المصدر صفرٌ قبل القيد — وإلّا يُردّ بسببٍ مكتوب.
+    const zeroKeys = zeroBeforeKeys(moves);
+    for (const z of zeroKeys) {
+      const snapZ = await tx.get(doc(db, BALANCES, z.id));
+      const qty = snapZ.exists() ? Number(snapZ.data().qty) || 0 : 0;
+      if (qty !== 0) {
+        throw new Error(
+          `الصنف «${z.nameAr || z.sku || z.barcode || 'صنف'}» مضافٌ من نقل، لكنّ رصيدَه في ` +
+            `${z.warehouse || 'المصدر'} ${qty} لا صفر — أزِل وسمَ الإضافة وانقله نقلًا عاديًّا. القيد لا يُنفَّذ.`
+        );
+      }
     }
 
     moves.forEach((move) => {

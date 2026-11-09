@@ -527,6 +527,49 @@ export const upsertItems = async (items, { existingBySku = new Map() } = {}) => 
 };
 
 /**
+ * ‹155› ينشئ في الماستر الأصنافَ المضافةَ من أمر نقلٍ **إن غابت** (لا يدهس قائمًا).
+ *
+ * مواصفةُ موقع 155 (جزء ٤): بندٌ يُضاف أثناء تحرير النقل المباشر وليس في المصدر
+ * يُسجَّل صنفُه في الماستر إن لم يكن معرَّفًا. يقرأ الموجودَ بأكواده (قراءةٌ
+ * محدودة) فيُنشئ الناقصَ وحدَه — فلا يُغيَّر اسمُ صنفٍ قائمٍ ولا تُدهس بطاقتُه.
+ * والوسمُ «مضاف من أمر نقل» دائمٌ على **بند المستند** (`addedFromTransfer`) وعلى
+ * **حركة الزيادة** (`reason: 'transfer-add-in'` برقم أمر النقل) — فالبطاقةُ تُكتب
+ * بالمسار القانونيّ (`upsertItems`) حفظًا لشكلها الموحَّد، والأثرُ في الدفتر.
+ *
+ * @param {Array} lines بنودُ المستند (يُنتقى منها `addedFromTransfer` ذاتُ الكود).
+ * @returns {Promise<{created:number, existing:number}>}
+ */
+export async function createMissingTransferItems(lines) {
+  const added = (lines || []).filter((l) => l?.addedFromTransfer === true && normalizeSku(l?.sku));
+  if (!added.length) return { created: 0, existing: 0 };
+
+  const skus = [...new Set(added.map((l) => normalizeSku(l.sku)))];
+  // ★★★ لا نبتلع فشلَ قراءةِ الموجود: خريطةٌ فارغةٌ تجعل `upsertItems` يعاملُ صنفًا
+  //     قائمًا «ناقصًا» فيدهس بطاقتَه بالدمج — يمحو `odooId` ويستبدل مصفوفةَ
+  //     الباركودات بباركودِ البند وحدَه ويُلغي الأرشفةَ بصمت. فعدمُ معرفة الموجود
+  //     ليس إذنًا بالدهس: يُرمى الخطأُ فيلتقطه فرعُ `items-added-failed` في الترحيل،
+  //     والبطاقاتُ تُنشأ لاحقًا (النقلُ تمّ فعلًا). مراجعةٌ عدائيّة 2026-11-09.
+  const existing = new Map((await fetchItemsBySkus(skus)).map((it) => [normalizeSku(it.sku), it]));
+
+  const missing = [];
+  const seen = new Set();
+  for (const line of added) {
+    const id = normalizeSku(line.sku);
+    if (existing.has(id) || seen.has(id)) continue;
+    seen.add(id);
+    missing.push({
+      sku: id,
+      barcodes: line.barcode ? [line.barcode] : [],
+      nameAr: String(line.description ?? '').trim(),
+    });
+  }
+  if (!missing.length) return { created: 0, existing: existing.size };
+
+  const { created } = await upsertItems(missing, { existingBySku: existing });
+  return { created, existing: existing.size };
+}
+
+/**
  * Patch an existing item. SKU cannot be changed — to rename, archive the old
  * one and create a new one.
  *

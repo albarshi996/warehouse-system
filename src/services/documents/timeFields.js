@@ -183,6 +183,8 @@ export const TIME_FIELD_MAP = Object.freeze({
   RCN: { receiptDate: E, expiry: A },
   HND: { handlingDate: E },
   VEH: { logDate: E },
+  // ‹155› نقلٌ مباشرٌ: تاريخُ النقل واقعةٌ وقعت، وصلاحيّةُ البند سمةُ دفعة.
+  TRS: { transferDate: E, expiry: A },
 });
 
 /**

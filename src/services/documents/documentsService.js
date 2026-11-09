@@ -36,8 +36,10 @@ import * as dbDoor from '../_db/index.js';
 import { CASH_RULES } from '../field/repAccount.js';
 import { postToRepCash } from '../field/repAccountService.js';
 import { vsrPostProblem } from '../vanSales/settlement.js';
-import { fetchBalancesOnce } from '../balances/balancesService.js';
+import { fetchBalancesOnce, fetchBalancesForWarehouse } from '../balances/balancesService.js';
+import { addedItemsSourceConflict } from './transferPicker.js';
 import { formWarehouseFromCount } from '../inventory/formationService.js';
+import { createMissingTransferItems } from '../items/itemService.js';
 import { allocateAndReserve, releaseReservation, releaseForPick } from '../ledger/salesService.js';
 import {
   createDocumentRelation,
@@ -351,6 +353,23 @@ export async function transitionDocument(docId, to, { note = '', profile, schema
         }
       }
     }
+
+    // 📦 ‹155› حارسُ الأصناف المضافة في النقل المباشر (TRS): البندُ الموسومُ «مضاف»
+    //    يأخذ دورةَ «زيادةٌ ثمّ خصمٌ لصفر»، وحارسُ المعاملة يفحص مفتاحَ الخصم الواحد
+    //    وحدَه — فصنفٌ له رصيدٌ في المصدر تحت دفعةٍ/خانةٍ أخرى يمرّ فتُخلَق كمّيّةٌ في
+    //    الوجهة بلا خصمٍ حقيقيّ. فنفحص هنا **رصيدَ الصنف الكلّيَّ في المصدر** (قراءةٌ
+    //    مقيّدةٌ بالمخزن) ونردُّ ما له رصيد، أو نردُّ الإضافةَ كلَّها إن بلغت القراءةُ
+    //    الحدَّ (غيابٌ غيرُ مؤكَّد). أفضلَ جهدٍ: تعذُّرُ القراءة لا يمنع (الحارسُ
+    //    داخل المعاملة يبقى آخرَ خطّ). مراجعةٌ عدائيّة 2026-11-09.
+    if (data.type === 'TRS' && (data.lines || []).some((l) => l?.addedFromTransfer === true)) {
+      const from = String(data.header?.fromWarehouse || '').trim().toUpperCase();
+      let srcBalances = null;
+      try { srcBalances = await fetchBalancesForWarehouse(from, { max: 5000 }); } catch { srcBalances = null; }
+      if (srcBalances) {
+        const problems = addedItemsSourceConflict(data.lines, srcBalances, { truncated: srcBalances.length >= 5000 });
+        if (problems.length) throw new Error(`لا يُنجَز النقلُ المباشر: ${problems.join(' · ')}`);
+      }
+    }
   }
 
   const patch = { state: to, updatedAt: serverTimestamp() };
@@ -528,6 +547,30 @@ export async function transitionDocument(docId, to, { note = '', profile, schema
       await appendAudit(docId, {
         action: 'formation-failed',
         note: `تعذّر تكوينُ المخزن ${whCode} من الجرد: ${err?.message || err}`,
+        profile,
+      });
+    }
+  }
+
+  // 📦 ‹155› إنشاءُ أصناف البنود المضافة في الماستر (نقلٌ مباشر TRS): الصنفُ
+  //    المضافُ من خارج رصيد المصدر يُسجَّل في الماستر **إن غاب** — بعد نجاح القيد
+  //    (أرصدتُه كُتبت ذرّيًّا في المعاملة، وهذه بطاقتُه). أفضلَ جهدٍ لا شرطَ
+  //    اعتماد (يحتاج كاتبًا مديرًا كالتكوين)، وإيديمبوتنت (لا يُدهس قائمٌ). فشلُه
+  //    يُثبَّت في التدقيق ولا يُبطل النقل — البضاعةُ تحرّكت فعلًا.
+  if (to === POSTING_STATE && data.type === 'TRS') {
+    try {
+      const r = await createMissingTransferItems(data.lines || []);
+      if (r?.created) {
+        await appendAudit(docId, {
+          action: 'items-added',
+          note: `أُنشئ في الماستر ${r.created} صنفًا مضافًا من النقل`,
+          profile,
+        });
+      }
+    } catch (err) {
+      await appendAudit(docId, {
+        action: 'items-added-failed',
+        note: `تعذّر إنشاءُ أصناف النقل المضافة (النقلُ منجَزٌ والبضاعةُ تحرّكت): ${err?.message || err}`,
         profile,
       });
     }

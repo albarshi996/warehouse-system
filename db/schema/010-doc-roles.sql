@@ -72,6 +72,7 @@ INSERT INTO doc_type_roles (doc_type, approve_roles, complete_roles) VALUES
   ('TR', ARRAY['warehouse_manager']::text[], ARRAY['storekeeper', 'warehouse_manager']::text[]),
   ('TRC', ARRAY['warehouse_manager']::text[], ARRAY['storekeeper', 'warehouse_manager']::text[]),
   ('TRN', ARRAY['warehouse_manager']::text[], ARRAY['storekeeper', 'warehouse_manager']::text[]),
+  ('TRS', ARRAY['warehouse_manager']::text[], ARRAY['storekeeper', 'warehouse_manager']::text[]),
   ('VCD', ARRAY['sales_supervisor', 'warehouse_manager']::text[], ARRAY['sales_rep', 'sales_supervisor']::text[]),
   ('VCR', ARRAY['sales_supervisor', 'warehouse_manager', 'return_manager']::text[], ARRAY['sales_rep', 'sales_supervisor']::text[]),
   ('VCS', ARRAY['sales_rep', 'sales_supervisor']::text[], ARRAY['sales_rep', 'sales_supervisor']::text[]),

@@ -203,7 +203,7 @@ export function buildMoves(docData, { items = null, orgIndex = null } = {}) {
     const fromBin = negative ? ruleToBin : ruleFromBin;
     const toBin = negative ? ruleFromBin : ruleToBin;
 
-    moves.push({
+    const move = {
       id: moveId(docData.id, index),
       docId: docData.id,
       docType: docData.type,
@@ -250,10 +250,65 @@ export function buildMoves(docData, { items = null, orgIndex = null } = {}) {
       // ‹FNB-104› البُعد التنظيميّ مختومًا: القطاع والبراند والفرع من الشجرة
       // وقت القيد — فيُجاب من الدفتر: «كم صُرف لهذا الفرع؟» بلا إعادة اشتقاق.
       ...orgStamp,
-    });
+    };
+    moves.push(move);
+
+    // ═══ ‹155› زيادةُ جردِ البند المضاف (TRS) — حركةٌ ملحَقةٌ ثانية ═══
+    // بندٌ موسومٌ `addedFromTransfer` في نوعٍ يحمل `addSourceAdjust`: يُنشأ له
+    // **بجانب حركة النقل** حركةُ زيادةِ جردٍ (المقابلُ الحسابيُّ ← مخزنُ المصدر)
+    // ترفع رصيدَ المصدر من صفرٍ ليخصمه النقلُ فيرجع صفرًا — دورةُ «وُجد فنُقل».
+    //
+    // ★★★ لا تحويرَ لصفّ: حركةٌ ملحَقةٌ بمعرّفٍ حتميٍّ مستقلّ (`__add__`)، فالدفترُ
+    // ملحق-فقط. و`zeroBefore` ختمٌ يقرؤه حارسُ الترحيل: لا تُقيَّد زيادةٌ إلّا إن
+    // كان رصيدُ المصدر صفرًا فعلًا — فلا يُنفَخ رصيدُ صنفٍ موجود. والطرفُ الحسابيُّ
+    // (`ADJUSTMENT`) مُعفًى من حارس السالب، فالزيادةُ الموجبةُ على المصدر تُقيَّد.
+    if (rule.addSourceAdjust && line?.addedFromTransfer === true && from !== null) {
+      moves.push({
+        ...move,
+        id: `${docData.id}${SEP}add${SEP}${String(index).padStart(3, '0')}`,
+        from: rule.addSourceAdjust, // المقابلُ الحسابيّ (ADJUSTMENT) — يُسمح بسالبه
+        to: from,                   // مخزنُ المصدر — يرتفع رصيدُه مؤقّتًا
+        fromBin: '',                // الطرفُ الحسابيُّ بلا خانة
+        toBin: move.fromBin,        // خانةُ المصدر نفسها — فيندمج المفتاحُ مع خصم النقل
+        reason: 'transfer-add-in',
+        reasonLabel: 'زيادةُ جردٍ (مضاف من نقل)',
+        addedFromTransfer: true,    // وسمٌ على الحركة: «مضاف من أمر نقل»
+        zeroBefore: true,           // شرطُ الترحيل: رصيدُ المصدر صفرٌ قبلها
+      });
+    }
   });
 
   return { moves, problems, skipped };
+}
+
+/**
+ * ‹155› مفاتيحُ الأرصدة التي يلزم أن تكون **صفرًا قبل القيد** — لحركات زيادةِ
+ * الجرد المضافة (`zeroBefore`). يقرؤها حارسُ الترحيل داخل المعاملة فيتحقّق أنّ
+ * رصيدَ المصدر صفرٌ حقًّا: فالصنفُ «المضاف من نقل» يُفترَض غائبًا عن المصدر، فإن
+ * وُجد له رصيدٌ فالوسمُ خطأٌ ينفخ رصيدًا — يُردّ بسببٍ مكتوب.
+ *
+ * نقيّ كـ`findNegativeBalance`: يأخذ الحركاتِ ويُخرج مفاتيحَ طرفِ الوجهة (مخزنُ
+ * المصدر) لكلّ حركةٍ موسومة. المفتاحُ نفسُه الذي تصيبه (توافقُ `balanceDeltas`).
+ *
+ * @param {Array} moves الحركاتُ المبنيّة.
+ * @returns {Array<{id,sku,barcode,nameAr,warehouse}>}
+ */
+export function zeroBeforeKeys(moves) {
+  const out = [];
+  for (const m of moves || []) {
+    if (m?.zeroBefore !== true) continue;
+    const id = balanceId({
+      sku: m.sku,
+      barcode: m.barcode,
+      warehouse: m.to,
+      batch: m.batch,
+      bin: m.toBin ?? m.bin ?? '',
+      expiry: m.expiry,
+      status: m.stockStatus,
+    });
+    if (id) out.push({ id, sku: m.sku, barcode: m.barcode, nameAr: m.nameAr, warehouse: String(m.to).toUpperCase() });
+  }
+  return out;
 }
 
 /**

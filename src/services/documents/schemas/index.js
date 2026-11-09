@@ -77,6 +77,8 @@ import iss from './iss.js';
 import rcn from './rcn.js';
 import hnd from './hnd.js';
 import veh from './veh.js';
+// ‹155› نقلٌ مباشرٌ بخطوةٍ واحدة — موقع 155 (الرصيد يغادر المصدر ويصل الوجهة فورًا).
+import trs from './trs.js';
 
 /** المخطّطات الجاهزة. */
 const SCHEMAS = {
@@ -150,6 +152,8 @@ const SCHEMAS = {
   RCN: rcn,
   HND: hnd,
   VEH: veh,
+  // ‹155› نقلٌ مباشرٌ بخطوةٍ واحدة.
+  TRS: trs,
 };
 
 /**
@@ -229,6 +233,7 @@ export const GOVERNED_FORMS = [
   { type: 'RCN', stage: 7, titleAr: 'إذن استلام مخزنيّ', file: '', phase: '155' },
   { type: 'HND', stage: 7, titleAr: 'مستند مناولة', file: '', phase: '155' },
   { type: 'VEH', stage: 7, titleAr: 'مستند سيارات النقل', file: '', phase: '155' },
+  { type: 'TRS', stage: 7, titleAr: 'نقل مباشر (موقع 155)', file: '', phase: '155' },
 ].map((f) => ({ ...f, ready: Boolean(SCHEMAS[f.type]) }));
 
 /** يُعيد مخطّط النوع، أو null إن لم يُبنَ بعد. */

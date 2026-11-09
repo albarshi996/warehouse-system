@@ -37,6 +37,9 @@ import {
 } from '../../../services/documents/itemResolver.js';
 import { mergeParentLink } from '../../../services/documents/chain.js';
 import { lookupByBarcode, getItem, subscribeItems } from '../../../services/items/itemService.js';
+import { fetchBalancesForWarehouse } from '../../../services/balances/balancesService.js';
+// ‹155-P3/P4› منتقي أصناف المصدر المفلتر ووسمُ الصنف المضاف (منطقٌ خالص).
+import { buildItemSuggestions, senderIdentities, annotateAdditions } from '../../../services/documents/transferPicker.js';
 import { lookupItemByPartnerCode } from '../../../services/partners/itemPartnerCatalogService.js';
 import {
   buildItemIndexes,
@@ -263,6 +266,45 @@ export default function DocumentEngine() {
   // المستفيد لا على القطاع. الفشل ⇒ قائمةٌ فارغة ⇒ الحقل نصٌّ حرّ كما كان.
   const [orgLocationsList, setOrgLocationsList] = useState([]);
   useEffect(() => listenOrgLocations(setOrgLocationsList, () => setOrgLocationsList([])), []);
+
+  // ═══ ‹155-P3/P4› منتقي أصناف مخزن المصدر المفلتر (نقلٌ مباشر TRS) ═══
+  // محصورٌ بالأنواع التي تعلن `warehouseItemPicker` — فلا تتكلّف شاشاتُ المستندات
+  // الأخرى قراءةً. عند اختيار مخزن المصدر تُقرأ أرصدتُه **مرّةً** (مقيَّدةً بـ
+  // `warehouse ==` و`limit` — حارسُ الميزانيّة §11)، فتُبنى قائمةُ الاقتراح، ويُوسَم
+  // ما ليس في المصدر «مضافًا» (جزء ٤). والفشلُ ⇒ قائمةٌ فارغةٌ والإدخالُ حرٌّ كما كان.
+  const pickerOn = schema?.warehouseItemPicker === true;
+  const [showAllItems, setShowAllItems] = useState(false);
+  const [senderBalances, setSenderBalances] = useState([]);
+  const [senderLoaded, setSenderLoaded] = useState(false);
+  const pickerFrom = pickerOn ? String(doc?.header?.fromWarehouse ?? '').trim().toUpperCase() : '';
+  useEffect(() => {
+    if (!pickerOn || !pickerFrom) {
+      setSenderBalances([]);
+      setSenderLoaded(false);
+      return undefined;
+    }
+    let alive = true;
+    setSenderLoaded(false);
+    fetchBalancesForWarehouse(pickerFrom)
+      .then((rows) => { if (alive) { setSenderBalances(rows); setSenderLoaded(true); } })
+      .catch(() => { if (alive) { setSenderBalances([]); setSenderLoaded(false); } });
+    return () => { alive = false; };
+  }, [pickerOn, pickerFrom]);
+  const senderIds = useMemo(() => senderIdentities(senderBalances), [senderBalances]);
+  const itemSuggestions = useMemo(
+    () => (pickerOn ? buildItemSuggestions({ balances: senderBalances, items, showAll: showAllItems }) : null),
+    [pickerOn, senderBalances, items, showAllItems]
+  );
+  // إعادةُ الوسم حين تُقرأ أرصدةُ المصدر أو يتغيّر المخزن — نقيّ: لا setDoc إلّا إن
+  // تغيّر وسمٌ فعلًا (`annotateAdditions` يُعيد المرجعَ نفسَه بلا تغيير) فلا حلقة.
+  useEffect(() => {
+    if (!pickerOn) return;
+    setDoc((d) => {
+      if (!d?.lines) return d;
+      const next = annotateAdditions(d.lines, senderIds, { loaded: senderLoaded });
+      return next === d.lines ? d : { ...d, lines: next };
+    });
+  }, [pickerOn, senderIds, senderLoaded]);
   /**
    * المكرّرُ يُحسب من البنود **الآن** لا من لحظة اللصق — فيذهب التنبيه
    * بالدمج أو بتصحيح الكود بلا أثرٍ عالق. ومحصورٌ بأكواد اللصقة وحدَها:
@@ -445,7 +487,9 @@ export default function DocumentEngine() {
   );
 
   function patchLines(lines) {
-    const enriched = lines.map((line) => refreshLineBase(line, itemForLine(line, itemIndexes)));
+    let enriched = lines.map((line) => refreshLineBase(line, itemForLine(line, itemIndexes)));
+    // ‹155-P4› وسمُ الصنف المضاف من خارج رصيد المصدر — حين قُرئت أرصدتُه فقط.
+    if (pickerOn) enriched = annotateAdditions(enriched, senderIds, { loaded: senderLoaded });
     setDoc((d) => ({ ...d, lines: enriched }));
     setDirty(true);
   }
@@ -960,6 +1004,29 @@ export default function DocumentEngine() {
               </>
             )}
 
+            {/* ‹155-P3› منتقي أصناف المصدر المفلتر: مبدّلُ «عرض الكل» (المفلترُ
+                بالمخزن ↔ الماستر كاملًا) — يظهر حين يحمل النوعُ المنتقيَ وجدولَ البنود. */}
+            {section.kind === 'table' && pickerOn && (
+              <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
+                <span className="text-muted">
+                  {pickerFrom
+                    ? senderLoaded
+                      ? `أصناف مخزن المصدر ${pickerFrom}: ${itemSuggestions?.sku?.length || 0}`
+                      : `جارٍ قراءة أصناف مخزن المصدر ${pickerFrom}…`
+                    : 'اختر مخزن المصدر لترشيح الأصناف'}
+                </span>
+                <label className="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={showAllItems}
+                    onChange={(e) => setShowAllItems(e.target.checked)}
+                    className="accent-accent"
+                  />
+                  <span className="text-ink-2">عرض كل الأصناف (لإضافة صنفٍ ليس في المصدر)</span>
+                </label>
+              </div>
+            )}
+
             {section.kind === 'table' && (
               <LineItemsTable
                 schema={schema}
@@ -972,6 +1039,7 @@ export default function DocumentEngine() {
                 uomOptions={(line) => uomOptionsForLine(line, itemForLine(line, itemIndexes))}
                 binOptions={binChoices}
                 binVerdict={binVerdictOf}
+                itemOptions={pickerOn ? itemSuggestions : null}
                 skuVerdict={(value) =>
                   skuCellVerdict(value, { statuses: pasteMarks?.statuses, duplicates: pasteDuplicates })
                 }

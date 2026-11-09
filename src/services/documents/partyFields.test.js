@@ -41,7 +41,8 @@ test('★ الخيارات من الماسترات — والمؤرشف لا ي�
   };
   assert.deepEqual(partyOptions('supplier', lists), [{ code: 'ACME', name: 'أكمي' }]);
   assert.deepEqual(partyOptions('customer', lists), [{ code: 'C1', name: 'عميل ليبيا' }]);
-  assert.deepEqual(partyOptions('warehouse', lists), [{ code: 'E5', name: 'المستودع الرئيسي' }]);
+  // ‹155 جزء ٢› خيارُ المستودع يحمل «الجهة» (entity) — فارغةٌ هنا لغيابها عن المدخل.
+  assert.deepEqual(partyOptions('warehouse', lists), [{ code: 'E5', name: 'المستودع الرئيسي', entity: '' }]);
   assert.deepEqual(partyOptions('rep', lists), [{ code: 'سالم', name: 'سالم' }], 'المندوب النشط وحده');
   // صفوف ماستر المندوبين (SAP-21): بلا حقل role — النشط غير المؤرشف يظهر.
   const master = { reps: [{ name: 'خالد', active: true }, { name: 'قديم', archived: true }] };
