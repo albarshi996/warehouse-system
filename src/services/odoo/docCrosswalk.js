@@ -124,6 +124,7 @@ export const DOC_ODOO_MAP = {
   VEH: { model: 'x_bhome.vehicle', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
   // ‹155› نقلٌ مباشرٌ: محلّيٌّ لا يُدفَع إلى أودو (الصفُّ للشمول لا للمزامنة).
   TRS: { model: 'x_bhome.transfer', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
+  POS: { model: 'x_bhome.pos_sale', confirmState: 'done', confirmLabel: 'منجَز', verb: 'صدّق' },
 };
 
 /** صفّ العبور لنوعٍ ما، أو null إن كان النوع خارج الدورة المحكومة. */

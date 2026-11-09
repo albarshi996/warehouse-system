@@ -45,6 +45,7 @@ INSERT INTO doc_type_roles (doc_type, approve_roles, complete_roles) VALUES
   ('PICK', ARRAY['warehouse_manager']::text[], ARRAY['storekeeper', 'warehouse_manager']::text[]),
   ('PO', ARRAY['warehouse_manager', 'finance_manager']::text[], ARRAY['purchase_officer', 'warehouse_manager']::text[]),
   ('POD', ARRAY['warehouse_manager', 'fleet']::text[], ARRAY['fleet', 'warehouse_manager']::text[]),
+  ('POS', ARRAY['warehouse_manager', 'sales_rep', 'sales_supervisor']::text[], ARRAY['warehouse_manager', 'sales_rep', 'sales_supervisor']::text[]),
   ('PR', ARRAY['warehouse_manager', 'purchase_officer']::text[], ARRAY['purchase_officer', 'warehouse_manager']::text[]),
   ('PRC', ARRAY['executive_chef', 'warehouse_manager']::text[], ARRAY['storekeeper', 'warehouse_manager']::text[]),
   ('PRO', ARRAY['executive_chef', 'warehouse_manager']::text[], ARRAY['executive_chef', 'warehouse_manager']::text[]),

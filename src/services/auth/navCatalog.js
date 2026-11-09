@@ -173,6 +173,7 @@ export const NAV_GROUPS = [
       { path: '/dashboard/price-lists', label: 'قوائم الأسعار', icon: 'clipboardList', roles: ['admin', 'warehouse_manager', 'sales_supervisor'] },
       { path: '/dashboard/field-operations', label: 'يوم المندوب', icon: 'mapPin', roles: ['admin', 'warehouse_manager', 'sales_rep', 'sales_supervisor'] },
       { path: '/dashboard/van-operations', label: 'المستودع المتنقّل', icon: 'truck', roles: ['admin', 'warehouse_manager', 'sales_rep', 'sales_supervisor'] },
+      { path: '/dashboard/cashier', label: 'الكاشير (نقطة بيع)', icon: 'shoppingCart', roles: ['admin', 'warehouse_manager', 'sales_rep', 'sales_supervisor'] },
       { path: '/dashboard/customer-stock', label: 'بضاعة العملاء', icon: 'package', roles: ['admin', 'warehouse_manager', 'sales_rep', 'sales_supervisor'] },
       // المندوب يرى مستهدفاته وحدها (تصفيةٌ داخل الجزيرة)؛ والمشرف يرى الكلّ ويُعرّف.
       { path: '/dashboard/targets', label: 'المستهدفات', icon: 'barChart3', roles: ['admin', 'warehouse_manager', 'sales_rep', 'sales_supervisor'] },

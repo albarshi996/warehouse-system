@@ -288,7 +288,11 @@ export async function postDocument(docData, profile, { markDone = false, cache =
           warehouse: d.warehouse,
           batch: d.batch,
           expiry: d.expiry,
-          unitCost: d.unitCost,
+          // ★★★ التكلفةُ تُكتب على **الزيادة** وحدَها (توريد/إدخال): الخروجُ لا
+          //     يغيّر تكلفةَ الرصيد المتبقّي. فبندٌ صادرٌ بلا تكلفةٍ (كبيع الكاشير
+          //     POS، سطرُه بسعرٍ لا بتكلفة) كان يدهس `unitCost` للباقي إلى صفرٍ عبر
+          //     merge فينهار تقييمُ المخزون — مراجعةٌ عدائيّة 2026-11-10.
+          ...(d.delta > 0 ? { unitCost: d.unitCost } : {}),
           // الموقع التخزينيّ (SAP-7 · ف‑١٨): يُكتب حين يحمله التخزين — آخرُ
           // موضعٍ معلوم للرصيد، عرضًا؛ الفارغ لا يمحو موقعًا معلومًا سابقًا.
           ...(d.bin ? { bin: d.bin } : {}),

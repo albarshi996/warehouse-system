@@ -228,6 +228,19 @@ export const POSTING_RULES = {
     labelAr: 'صرف من المستودع',
     binSide: 'from',
   },
+  // ═══ ‹POS م٧› بيعٌ نقديٌّ من كاشير التجزئة ═══
+  // يُخرج البضاعةَ من المخزن (المستودع→خارج) عند الإنجاز — نظيرُ ISS. والقيدُ
+  // المزدوج (مدينٌ النقد/البنك، دائنٌ المبيعات) مسارُه `deriveSaleEntry` لا هنا.
+  POS: {
+    from: WAREHOUSE,
+    to: EXTERNAL,
+    qtyField: 'qty',
+    expiryField: 'expiry',
+    costField: 'unitCost',
+    reason: 'sale-out',
+    labelAr: 'بيع نقديّ (كاشير)',
+    binSide: 'from',
+  },
   // ‹155› استلامٌ مخزنيٌّ عامّ — نظيرُ ISS نحو الداخل (مواصفة موقع 155: «الاستلام
   // يزيد الرصيد»): يُدخل البضاعة من خارج الدفتر إلى المستودع فيزيد رصيدُه عند
   // الإنجاز. اتّجاهُ SRI (EXTERNAL → WAREHOUSE) لكنّ الموقع يخصّ **الوجهة** —

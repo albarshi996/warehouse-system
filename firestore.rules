@@ -263,6 +263,7 @@ service cloud.firestore {
            // فلا يعتمد أحدٌ فرق نفسه. والرقابة لاحقةٌ مركّبة لا سابقة.
            : docType == 'VLD'     ? ['warehouse_manager', 'sales_supervisor']
            : docType == 'VSI'     ? ['sales_rep', 'sales_supervisor']
+           : docType == 'POS'     ? ['warehouse_manager', 'sales_rep', 'sales_supervisor']
            : docType == 'CRN'     ? ['sales_supervisor', 'warehouse_manager', 'return_manager']
            : docType == 'VRT'     ? ['warehouse_manager', 'sales_supervisor']
            : docType == 'VSR'     ? ['sales_supervisor', 'warehouse_manager']
@@ -347,6 +348,7 @@ service cloud.firestore {
            // في التسوية بدل أن يُبتلع في توقيعٍ واحد.
            : docType == 'VLD'     ? ['storekeeper', 'warehouse_manager']
            : docType == 'VSI'     ? ['sales_rep', 'sales_supervisor']
+           : docType == 'POS'     ? ['warehouse_manager', 'sales_rep', 'sales_supervisor']
            : docType == 'CRN'     ? ['sales_rep', 'sales_supervisor']
            : docType == 'VRT'     ? ['storekeeper', 'warehouse_manager']
            : docType == 'VSR'     ? ['sales_supervisor', 'warehouse_manager']

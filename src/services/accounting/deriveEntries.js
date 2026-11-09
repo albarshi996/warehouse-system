@@ -264,7 +264,61 @@ export function deriveExpenseEntry(doc) {
   return entry;
 }
 
-/** هل لهذا النوع قيدٌ مزدوجٌ محلّيّ (ذمّةٌ أو مصروف)؟ بوّابةُ تفعيل الكتابة. */
+/* ═══════════════════════════════════════════════════════════════════════════
+ * المبيعاتُ النقديّة (‹POS م٧› · كاشير التجزئة) — بيعٌ نقديٌّ من نقطة بيعٍ ثابتة:
+ * مدينٌ النقدُ (أو البنك بالبطاقة/التحويل)، دائنٌ المبيعات. لا طرفَ في دفتر الذمم
+ * (بيعٌ نقديٌّ لا دَين، بخلاف INV/VSI الآجلَين) — فمسارُه مستقلٌّ كالمصروف النقديّ،
+ * ويُقيَّد في الدفتر المزدوج نفسِه. والخصمُ المخزنيُّ يقع بمسار `POSTING_RULES`
+ * (مخزن→خارج) لا هنا — فالمخزونُ لا يُقيَّد في الدفتر المزدوج (كبقيّة المبيعات).
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/** وقائعُ البيع النقديّ. */
+export const SALE_EVENTS = Object.freeze({
+  POS: { labelAr: 'بيع نقديّ' },
+});
+
+/** أنواعُ البيع النقديّ (لاستماع الشاشة والتوجيه). */
+export const SALE_DOC_TYPES = Object.freeze(Object.keys(SALE_EVENTS));
+
+/** حسابُ النقد لمستند البيع: نقدًا=الصندوق، وبطاقة/تحويل=البنك. */
+function saleCashAccount(doc) {
+  return String(doc?.header?.paymentMethod || '').trim() === 'نقدًا' ? 'CASH' : 'BANK';
+}
+
+/** مبلغُ البيع — إجماليُّ السلّة المحسوبُ المختومُ في الرأس وقت الإنجاز. */
+export function saleAmount(doc) {
+  const h = doc?.header || {};
+  return Number(h.grandTotal ?? h.total ?? h.amount) || 0;
+}
+
+/**
+ * قيدٌ مزدوجٌ من مستند بيعٍ نقديّ (POS)، أو null. مدينٌ النقدُ/البنكُ (بطريقة الدفع)،
+ * دائنٌ المبيعات. المعرّفُ حتميٌّ فالإعادةُ تُتخطّى، والمحلُّ يُوسَم. قد يرمي
+ * `postEntry` قبل T0 — والمُجمِّعُ يلتقطه.
+ */
+export function deriveSaleEntry(doc) {
+  if (!SALE_EVENTS[doc?.type]) return null;
+  const units = toMinor(saleAmount(doc));
+  if (units <= 0) return null;
+
+  const h = doc?.header || {};
+  const date = String(h.saleDate || h.date || '').slice(0, 10);
+  const entry = postEntry({
+    key: `${doc.type}__${String(doc.id ?? '')}`,
+    date,
+    memo: `بيع نقديّ ${String(doc?.number || '')}`.trim(),
+    lines: [
+      { account: saleCashAccount(doc), debit: units, credit: 0 },
+      { account: 'SALES', debit: 0, credit: units },
+    ],
+  });
+  entry.docType = doc.type;
+  entry.docId = String(doc.id ?? '');
+  entry.shop = shopOfDoc(doc);
+  return entry;
+}
+
+/** هل لهذا النوع قيدٌ مزدوجٌ محلّيّ (ذمّةٌ · مصروفٌ · بيعٌ نقديّ)؟ بوّابةُ تفعيل الكتابة. */
 export function isPostableType(type) {
-  return Boolean(COUNTERPART[type] || EXPENSE_EVENTS[type]);
+  return Boolean(COUNTERPART[type] || EXPENSE_EVENTS[type] || SALE_EVENTS[type]);
 }

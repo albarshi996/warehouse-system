@@ -179,6 +179,8 @@ export const TIME_FIELD_MAP = Object.freeze({
 
   /* ═══ صرفٌ مخزنيٌّ عامّ (طلب المالك) ═══ */
   ISS: { issueDate: E, expiry: A },
+  // ‹POS م٧› بيعٌ نقديّ: تاريخُ البيع واقعةٌ وقعت. (بنودُ POS بلا دفعةٍ ولا صلاحيّة.)
+  POS: { saleDate: E },
   // ‹155 RCN› استلامٌ مخزنيّ: تاريخُ الاستلام واقعةٌ وقعت، وصلاحيّةُ البند سمةُ دفعة.
   RCN: { receiptDate: E, expiry: A },
   HND: { handlingDate: E },

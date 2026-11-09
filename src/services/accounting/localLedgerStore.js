@@ -35,7 +35,7 @@
  * منطق خالصٌ فوق بابٍ محقون: بلا Firestore وبلا شبكةٍ هنا.
  */
 import { postEntry, reverseEntry, createLedger } from './journal.js';
-import { deriveLedgerEntry, deriveExpenseEntry, COUNTERPART, EXPENSE_EVENTS, isPostableType } from './deriveEntries.js';
+import { deriveLedgerEntry, deriveExpenseEntry, deriveSaleEntry, COUNTERPART, EXPENSE_EVENTS, SALE_EVENTS, isPostableType } from './deriveEntries.js';
 import { POSTABLE_STATES } from './ledgerSync.js';
 
 /** مجموعةُ القيود على المخزن المحلّيّ — ملحقةٌ-فقط، المعرّفُ هو مفتاحُ القيد. */
@@ -154,8 +154,15 @@ export function createLocalLedger(db) {
       .map((d) => {
         try {
           // الذمّةُ عبر `deriveLedgerEntry`، والمصروفُ النقديُّ (SAL/EXP) عبر
-          // `deriveExpenseEntry` — مساران يصبّان في الدفتر المزدوج نفسِه (ذ).
-          const e = COUNTERPART[d?.type] ? deriveLedgerEntry(d) : EXPENSE_EVENTS[d?.type] ? deriveExpenseEntry(d) : null;
+          // `deriveExpenseEntry`، والبيعُ النقديُّ (POS) عبر `deriveSaleEntry` —
+          // مساراتٌ تصبّ في الدفتر المزدوج نفسِه (ذ/ع).
+          const e = COUNTERPART[d?.type]
+            ? deriveLedgerEntry(d)
+            : EXPENSE_EVENTS[d?.type]
+              ? deriveExpenseEntry(d)
+              : SALE_EVENTS[d?.type]
+                ? deriveSaleEntry(d)
+                : null;
           if (!e) return null;
           e.docId = d.id || d.__id || ''; // أثرٌ يُتبَّع إلى المستند المصدر
           if (e.shop == null) e.shop = shopOf(d); // وسمُ المحلّ (إن لم يضعه المحرّك)

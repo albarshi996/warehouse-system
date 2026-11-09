@@ -1,0 +1,14 @@
+---
+import DashboardLayout from '../../layouts/DashboardLayout.astro';
+import CashierBoard from '../../components/brandzo-erp/pos/CashierBoard.jsx';
+---
+
+<DashboardLayout title="الكاشير (نقطة بيع)" light>
+  <div class="text-right" dir="rtl">
+    <h1 class="text-2xl font-bold text-ink mb-1 no-print">الكاشير — نقطة بيع</h1>
+    <p class="text-sm text-ink-2 mb-5 no-print">
+      بيعُ تجزئةٍ لحظيٌّ من مخزنٍ ثابت: امسح الباركود أو ابحث، ثمّ ادفع نقدًا أو ببطاقة — يُخصم المخزونُ ويُقيَّد البيعُ ويُطبع إيصال.
+    </p>
+    <CashierBoard client:load />
+  </div>
+</DashboardLayout>
