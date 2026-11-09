@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, updateDoc, deleteDoc, doc, writeBatch, db } from '../../../services/_db/index.js';
+import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, updateDoc, doc, writeBatch, db } from '../../../services/_db/index.js';
 import Icon from '../../ui/Icon.jsx';
 import ListView from '../../odoo/ListView.jsx';
 import LocationTree from './LocationTree.jsx';
@@ -26,6 +26,9 @@ import {
   templateById,
 } from '../../../services/locations/binTemplate.js';
 import { saveWarehouseNumbering, canEditWarehouses } from '../../../services/locations/warehouseService.js';
+import { createShops } from '../../../services/shops/shopsService.js';
+import * as door from '../../../services/_db/index.js';
+import { WH_STATUS, isArchived } from '../../../services/locations/warehouseModel.js';
 import BIN_SCHEMES from '../../../data/warehouse-schemes.json';
 import SITE_155 from '../../../data/site-155-warehouses.json';
 
@@ -46,6 +49,8 @@ const STORAGE_KEY = 'brandzo_warehouses_local';
 // = مستودعٌ بلا بُعد موقع (سلوكُ اليوم حرفيًّا)، فالترحيلُ بلا أثر.
 const BLANK_FORM = {
   code: '', name: '', manager: '', facilityType: DEFAULT_FACILITY_TYPE,
+  // ‹SECT-WH م١› القطاع = المحلّ: المخزنُ يتبع قطاعَه بحقل shop (رمزُ المحلّ).
+  shop: '',
   site: '', area: '', occupancyPct: '', entity: '', content: '',
 };
 
@@ -57,6 +62,7 @@ const SITE_155_WAREHOUSES = SITE_155?.warehouses || [];
 const LIST_COLS = [
   { key: 'code', label: 'الكود' },
   { key: 'name', label: 'الاسم' },
+  { key: 'sector', label: 'القطاع' },
   { key: 'site', label: 'الموقع' },
   { key: 'manager', label: 'المدير' },
   { key: 'facilityType', label: 'النوع' },
@@ -88,6 +94,9 @@ const WarehouseManager = () => {
   const [offlineMode, setOfflineMode] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [seedBusy, setSeedBusy] = useState(false);
+  // ‹SECT-WH م١› القطاعاتُ (المحلّات) الفعّالةُ لمنتقي قطاع المخزن — نفسُ مصدر المبدّل.
+  const [sectors, setSectors] = useState([]);
+  const [sectorsReady, setSectorsReady] = useState(false);
 
   // الدور يحكم تحرير المواقع (المديران) — والقراءة لأيّ مصادَق.
   useEffect(
@@ -143,6 +152,25 @@ const WarehouseManager = () => {
     }
   }, [warehouses, offlineMode]);
 
+  // ‹SECT-WH م١› تحميلُ القطاعات (المحلّات) الفعّالة لمنتقي القطاع — غلافٌ رقيقٌ
+  // فوق نفس خدمة المبدّل (createShops.listActive)، مرّةً عند التركيب. القطاعاتُ
+  // تُنشأ في شاشةٍ أخرى (../shops/) فالعودةُ إلى هذه الشاشة تُعيد التركيبَ فتنتعش
+  // القائمة. الفشلُ يُبقيها فارغةً فيظهر تلميحُ «أنشئ قطاعًا».
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const list = await createShops(door).listActive();
+        if (alive) setSectors(list);
+      } catch {
+        /* يبقى فارغًا — يظهر التلميح */
+      } finally {
+        if (alive) setSectorsReady(true);
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
+
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       if (hasUnsavedChanges) {
@@ -181,6 +209,9 @@ const WarehouseManager = () => {
           code: formData.code,
           name: formData.name,
           manager: formData.manager,
+          // ‹SECT-WH م١› القطاع (المحلّ) الذي يتبعه المخزن — رمزُ المحلّ، أو '' إن لم
+          // يُسنَد بعد. إضافيٌّ: المخازنُ القديمةُ تبقى بلا قطاعٍ حتّى يُسنَدها المدير.
+          shop: (formData.shop || '').trim(),
           // ‹FNB-106› نوع المنشأة: مستودعٌ أم وحدة إنتاج مركزيّة (المطبخ).
           // الغياب ⇒ مستودع — سلوك اليوم حرفيًّا، فالترحيل بلا أثر.
           facilityType: formData.facilityType || DEFAULT_FACILITY_TYPE,
@@ -193,14 +224,16 @@ const WarehouseManager = () => {
           // يُعرض في المستندات؛ كان مدفونًا داخل «المحتوى» نصًّا.
           entity: (formData.entity || '').trim(),
           content: (formData.content || '').trim(),
-          status: 'نشط',
-          createdAt: serverTimestamp(),
         };
 
+        // ★ الإنشاءُ وحدَه يكتب status وcreatedAt؛ التعديلُ يمسّ المحتوى فقط —
+        //   فلا يدهس حالةَ الأرشفة (status/archived) ولا وقتَ الإنشاء. فمخزنٌ مؤرشفٌ
+        //   يُعدَّل اسمُه يبقى مؤرشفًا، ولا يُنقَض الأرشفةُ إلّا بزرّ الاستعادة.
+        //   (مراجعةٌ عدائيّة 2026-11-09: الثابتُ status:'نشط' في whData كان يحيي المؤرشف.)
         if (editingId) {
           await updateDoc(doc(db, 'warehouses', editingId), whData);
         } else {
-          await addDoc(collection(db, 'warehouses'), whData);
+          await addDoc(collection(db, 'warehouses'), { ...whData, status: WH_STATUS.ACTIVE, createdAt: serverTimestamp() });
         }
       }
 
@@ -214,19 +247,29 @@ const WarehouseManager = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('هل أنت متأكد من حذف هذا المستودع؟')) return;
-
+  // ‹SECT-WH م١› أرشفةٌ لا حذفٌ صلب: المخزنُ قد تشير إليه أرصدةٌ وحركاتٌ في مجموعاتٍ
+  // ملحق-فقط مقدّسة، فحذفُه (`deleteDoc`) ييتّمها بلا مستندٍ يبرّرها. الأرشفةُ تُخفيه
+  // من العمل الحيّ وتُبقي سجلَّه وأرصدتَه، وتُعكَس بالاستعادة.
+  const setWarehouseArchived = async (id, archived) => {
+    const verb = archived ? 'أرشفة' : 'استعادة';
+    if (archived && !window.confirm('أرشفةُ هذا المستودع؟ لا يُحذف — يبقى سجلُّه وأرصدتُه، ويُخفى من العمل الحيّ. ويمكن استعادتُه.')) return;
     try {
+      const nextStatus = archived ? WH_STATUS.ARCHIVED : WH_STATUS.ACTIVE;
       if (offlineMode) {
-        setWarehouses(warehouses.filter(wh => wh.id !== id));
+        setWarehouses(warehouses.map((wh) => (wh.id === id ? { ...wh, status: nextStatus, archived } : wh)));
       } else {
-        await deleteDoc(doc(db, 'warehouses', id));
+        // ★ علَمُ `archived` إلى جانب الحالة: منتقي المخازن في المستندات
+        //   (`partyOptions`) يُخفي ما حمل `archived` — فبدونه يبقى المؤرشفُ مختارًا.
+        await updateDoc(doc(db, 'warehouses', id), {
+          status: nextStatus,
+          archived,
+          archivedAt: archived ? serverTimestamp() : null,
+        });
       }
-      setStatusMsg({ type: 'success', text: 'تم حذف المستودع بنجاح' });
+      setStatusMsg({ type: 'success', text: `تمّت ${verb} المستودع.` });
       setTimeout(() => setStatusMsg({ type: '', text: '' }), 3000);
     } catch (error) {
-      setStatusMsg({ type: 'error', text: 'فشل الحذف: ' + error.message });
+      setStatusMsg({ type: 'error', text: `فشلت ${verb}: ` + error.message });
     }
   };
 
@@ -234,6 +277,7 @@ const WarehouseManager = () => {
     setEditingId(wh.id);
     setFormData({
       code: wh.code, name: wh.name, manager: wh.manager || '', facilityType: facilityTypeOf(wh),
+      shop: wh.shop || '',
       site: wh.site || '', area: wh.area ?? '', occupancyPct: wh.occupancyPct ?? '', entity: wh.entity || '', content: wh.content || '',
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -274,7 +318,14 @@ const WarehouseManager = () => {
                 name: wh.name || '',
                 manager: wh.manager || '',
                 status: wh.status || 'نشط',
-                // ‹155› الحقولُ الاختياريّة تُحمَل بالاستيراد — كانت تُسقَط صامتةً.
+                shop: wh.shop || '',
+                // ‹155/SECT-WH› الحقولُ الاختياريّة والأرشفةُ تُحمَل كاملةً — فدورةُ
+                // تصدير→استيراد لا تفقد «الجهة» ولا تُنشّط مخزنًا مؤرشفًا. والأرشفةُ
+                // تُشتقّ من الحالة أيضًا فلا يتسرّب المؤرشفُ إلى منتقي المستندات.
+                entity: wh.entity || '',
+                facilityType: wh.facilityType || DEFAULT_FACILITY_TYPE,
+                archived: wh.archived === true || wh.status === WH_STATUS.ARCHIVED,
+                archivedAt: wh.archivedAt ?? null,
                 site: wh.site || '',
                 area: wh.area ?? null,
                 occupancyPct: wh.occupancyPct ?? null,
@@ -317,7 +368,7 @@ const WarehouseManager = () => {
           ...warehouses,
           ...todo.map((w) => ({
             id: crypto.randomUUID(), status: 'نشط', createdAt: new Date().toISOString(),
-            code: w.code, name: w.name || w.code, manager: '',
+            code: w.code, name: w.name || w.code, manager: '', shop: w.shop || '',
             site: w.site || '155', area: w.area ?? null, occupancyPct: w.occupancyPct ?? null, entity: w.entity || '', content: w.content || '',
           })),
         ]);
@@ -326,7 +377,7 @@ const WarehouseManager = () => {
         todo.forEach((w) => {
           const ref = doc(collection(db, 'warehouses'));
           batch.set(ref, {
-            code: w.code, name: w.name || w.code, manager: '', status: 'نشط',
+            code: w.code, name: w.name || w.code, manager: '', status: 'نشط', shop: w.shop || '',
             site: w.site || '155', area: w.area ?? null, occupancyPct: w.occupancyPct ?? null, entity: w.entity || '', content: w.content || '',
             createdAt: serverTimestamp(),
           });
@@ -515,11 +566,21 @@ const WarehouseManager = () => {
   // ‹FNB-106› «مطبخٌ مركزيّ واحد يخدم الشبكة» — تنبيهٌ يُعلن التعدّد ولا يمنعه.
   const facilityNotes = facilityWarnings(warehouses);
 
+  // ‹SECT-WH م١› اسمُ القطاع من رمزه (للعرض) — من قائمة القطاعات المحمَّلة، أو الرمزُ
+  // نفسُه إن لم يُعرَف (قطاعٌ معطَّلٌ أو غيرُ محمَّل بعد).
+  const sectorName = (code) => {
+    const s = sectors.find((x) => x.code === code);
+    return s ? s.nameAr : code;
+  };
+
   const listRows = warehouses.map((wh) => ({
     id: wh.id,
     cells: {
       code: <span className="decoration-bf" style={{ fontFamily: 'monospace' }}>{wh.code}</span>,
       name: wh.name,
+      sector: wh.shop
+        ? <Badge variant="info">{sectorName(wh.shop)}</Badge>
+        : <span style={{ color: 'var(--o-main-color-muted)' }}>غير مُسنَد</span>,
       site: wh.site ? <Badge variant="info">{wh.site}</Badge> : '—',
       manager: wh.manager || '—',
       facilityType: (
@@ -576,7 +637,9 @@ const WarehouseManager = () => {
       actions: (
         <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
           <button type="button" className="btn btn-secondary btn-sm" onClick={() => startEdit(wh)}>تعديل</button>
-          <button type="button" className="btn btn-secondary btn-sm" onClick={() => handleDelete(wh.id)}>حذف</button>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={() => setWarehouseArchived(wh.id, !isArchived(wh))}>
+            {isArchived(wh) ? 'استعادة' : 'أرشفة'}
+          </button>
         </div>
       ),
     },
@@ -693,6 +756,18 @@ const WarehouseManager = () => {
           </div>
         )}
 
+        {/* ‹SECT-WH م١› البناءُ من فارغ: إن لم يكن ثمّة قطاعٌ (محلّ) بعد، يُوجَّه المديرُ
+            لإنشاء قطاعٍ أوّلًا ثمّ إسناد المخازن إليه. */}
+        {canEditWarehouses(role) && sectorsReady && sectors.length === 0 && (
+          <div className="o_ds_card o_ds_pad" style={{ marginBottom: '14px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px' }}>
+            <Icon name="layers" size={16} />
+            <span style={{ flex: 1, fontSize: 'var(--o-font-size-sm)', lineHeight: 1.6 }}>
+              لا قطاعاتٍ (محلّات) بعد. ابدأ بإنشاء قطاعٍ من شاشة المحلّات، ثمّ أسنِد المخازنَ إليه — فالهيكلُ يُبنى من فارغٍ بيدك.
+            </span>
+            <a className="btn btn-primary btn-sm" href="../shops/">إدارة المحلّات (القطاعات)</a>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="o_ds_card o_ds_pad" dir="rtl" style={{ marginBottom: '18px' }}>
           <h3 className="o_form_title" style={{ fontSize: '18px', marginTop: 0 }}>
             {editingId ? 'تعديل بيانات المستودع' : 'إضافة مستودع جديد'}
@@ -718,6 +793,20 @@ const WarehouseManager = () => {
                 onChange={handleInputChange('name')}
                 required
               />
+            </FieldWrap>
+            {/* ‹SECT-WH م١› القطاع (المحلّ) الذي يتبعه المخزن — من سجلّ المحلّات. */}
+            <FieldWrap label="القطاع (المحلّ)">
+              <select className="o_input" value={formData.shop} onChange={handleInputChange('shop')}>
+                <option value="">— غير مُسنَد —</option>
+                {/* المحلُّ الحاليُّ إن عُطِّل (غائبٌ عن القائمة الفعّالة): يُعرض على
+                    حقيقته لا «غير مُسنَد»، فلا يُضلَّل المديرُ ولا تُفقَد قيمتُه. */}
+                {formData.shop && !sectors.some((s) => s.code === formData.shop) && (
+                  <option value={formData.shop}>{sectorName(formData.shop)} (معطَّل)</option>
+                )}
+                {sectors.map((s) => (
+                  <option key={s.code} value={s.code}>{s.nameAr} ({s.code})</option>
+                ))}
+              </select>
             </FieldWrap>
             <FieldWrap label="نوع المنشأة">
               <select
