@@ -241,6 +241,20 @@ export const POSTING_RULES = {
     labelAr: 'بيع نقديّ (كاشير)',
     binSide: 'from',
   },
+  // ═══ ‹KSH ع› بيع كشيت (جملة آجل) ═══
+  // يُخرج البضاعةَ من المخزن (المخزن→خارج) عند الإنجاز — نظيرُ POS/ISS. والذمّةُ
+  // على العميل مسارُها `LEDGER_RULES.KSH`/`COUNTERPART.KSH` (مدينٌ ذمّةُ العميل
+  // دائنٌ المبيعات)، لا هنا.
+  KSH: {
+    from: WAREHOUSE,
+    to: EXTERNAL,
+    qtyField: 'qty',
+    expiryField: 'expiry',
+    costField: 'unitCost',
+    reason: 'wholesale-out',
+    labelAr: 'بيع كشيت (جملة)',
+    binSide: 'from',
+  },
   // ‹155› استلامٌ مخزنيٌّ عامّ — نظيرُ ISS نحو الداخل (مواصفة موقع 155: «الاستلام
   // يزيد الرصيد»): يُدخل البضاعة من خارج الدفتر إلى المستودع فيزيد رصيدُه عند
   // الإنجاز. اتّجاهُ SRI (EXTERNAL → WAREHOUSE) لكنّ الموقع يخصّ **الوجهة** —

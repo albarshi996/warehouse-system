@@ -105,7 +105,8 @@ test('الأنواع التي تحتاج حقل مستودع (بما فيها ا
   // ‹155 RCN› +1: الاستلامُ المخزنيُّ العامّ يدخل مستودعًا بعينه من الخارج (نظيرُ ISS).
   // ‹155 TRS› +1: النقلُ المباشرُ بمستودعَيه (المصدر → الوجهة) بخطوةٍ واحدة.
   // ‹POS م٧› +1: البيعُ النقديُّ يخرج من مستودعٍ بعينه إلى الخارج (نظيرُ ISS).
-  assert.deepEqual(need, ['ADJ', 'DMG', 'ISS', 'MIS', 'PICK', 'POS', 'PRC', 'PUTAWAY', 'RCN', 'SRA', 'SRI', 'SRO', 'SXI', 'SXO', 'TRC', 'TRN', 'TRS', 'VLD', 'VRT']);
+  // ‹KSH ع› +1: بيعُ الكشيت يخرج من مستودعٍ بعينه إلى الخارج (نظيرُ ISS/POS).
+  assert.deepEqual(need, ['ADJ', 'DMG', 'ISS', 'KSH', 'MIS', 'PICK', 'POS', 'PRC', 'PUTAWAY', 'RCN', 'SRA', 'SRI', 'SRO', 'SXI', 'SXO', 'TRC', 'TRN', 'TRS', 'VLD', 'VRT']);
   assert.equal(needsWarehouse('RCN'), true, 'الاستلامُ المخزنيّ يدخل مستودعَ الوجهة');
   assert.equal(needsWarehouse('TRS'), true, 'النقلُ المباشرُ يحتاج مستودعَي المصدر والوجهة');
   assert.equal(needsWarehouse('SRA'), true, 'تسويةُ المصدر تُطبَّق على مستودعٍ بعينه');

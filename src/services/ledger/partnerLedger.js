@@ -60,6 +60,13 @@ export const LEDGER_RULES = Object.freeze({
     labelAr: 'بيع من المركبة',
     amount: (d) => sumSales(d),
   },
+  // ‹KSH ع› بيعُ كشيت (جملةٌ آجل): يَدين العميلُ بإجماليّ الكشف، فيظهر في كشف حسابه.
+  KSH: {
+    party: 'customer',
+    direction: 'debit',
+    labelAr: 'بيع كشيت (جملة)',
+    amount: (d) => sumSales(d),
+  },
   VCS: { party: 'customer', direction: 'debit', labelAr: 'تحقّق بيع أمانة', amount: (d) => sumSales(d) },
   RCP: { party: 'customer', direction: 'credit', labelAr: 'سند قبض', amount: (d) => sumLines(d, ['amount']) },
   // التحصيل الميدانيّ (م٥-أ): ينقص ذمّة العميل كالقبض — والفرق أنّ المال يبقى

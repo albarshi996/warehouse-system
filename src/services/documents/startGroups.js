@@ -42,7 +42,7 @@ export const START_GROUPS = [
   // ‹FNB-502› المطبخ المركزيّ: أمرٌ ← صرفُ موادّ ← استلامُ منتَج.
   { title: 'الإنتاج', icon: 'factory', types: PRODUCTION_CHAIN },
   { title: 'المبيعات والصرف', icon: 'shoppingCart', types: [...OUTBOUND_CHAIN, 'POD', 'ISS', 'POS'] },
-  { title: 'الفوترة', icon: 'fileText', types: ['INV'] },
+  { title: 'الفوترة', icon: 'fileText', types: ['INV', 'KSH'] },
   // سندا الخزينة: قبضٌ من عميلٍ وسدادٌ لمورّد. خارج السلاسل عمدًا لأنّ
   // السندَ يقاصّ **فاتورةً أو أكثر** فلا يحتمل أبًا واحدًا (م٤-أ).
   { title: 'التحصيل والسداد', icon: 'dollarSign', types: ['RCP', 'SPV'] },

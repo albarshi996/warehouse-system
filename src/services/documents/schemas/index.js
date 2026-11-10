@@ -75,6 +75,8 @@ import clean from './clean.js';
 import iss from './iss.js';
 // ‹POS م٧› بيعٌ نقديٌّ من كاشير التجزئة — يُخرج البضاعةَ ويُقيَّد نقدًا/مبيعاتٍ.
 import pos from './pos.js';
+// ‹KSH ع› بيعُ كشيت (جملة آجل) — يُخرج البضاعةَ ويُقيَّد ذمّةَ العميل.
+import ksh from './ksh.js';
 // ‹155› إذن استلامٍ مخزنيّ — نظيرُ ISS نحو الداخل (بضاعةٌ تدخل مخزنًا فيزيد رصيدُه).
 import rcn from './rcn.js';
 import hnd from './hnd.js';
@@ -152,6 +154,8 @@ const SCHEMAS = {
   ISS: iss,
   // بيعٌ نقديٌّ من كاشير التجزئة (طلب المالك).
   POS: pos,
+  // بيعُ كشيت — جملةٌ آجل (طلب المالك).
+  KSH: ksh,
   // ‹155› إذن استلامٍ مخزنيّ — نظيرُ ISS نحو الداخل.
   RCN: rcn,
   HND: hnd,
@@ -235,6 +239,7 @@ export const GOVERNED_FORMS = [
   // صرفٌ مخزنيٌّ عامّ — طلب المالك.
   { type: 'ISS', stage: 7, titleAr: 'إذن صرف مخزنيّ', file: '', phase: 'F3' },
   { type: 'POS', stage: 7, titleAr: 'بيع نقديّ (كاشير)', file: '', phase: 'POS' },
+  { type: 'KSH', stage: 7, titleAr: 'بيع كشيت (جملة آجل)', file: '', phase: 'KSH' },
   { type: 'RCN', stage: 7, titleAr: 'إذن استلام مخزنيّ', file: '', phase: '155' },
   { type: 'HND', stage: 7, titleAr: 'مستند مناولة', file: '', phase: '155' },
   { type: 'VEH', stage: 7, titleAr: 'مستند سيارات النقل', file: '', phase: '155' },

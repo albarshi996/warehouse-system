@@ -91,7 +91,7 @@ export function deriveEntries(documents = [], { states = ['done', 'approved'], c
 
 /** الطرفُ المقابل لكلّ نوعٍ في دفتر الذمم (يغطّي أنواع `LEDGER_RULES` كلَّها). */
 export const COUNTERPART = Object.freeze({
-  INV: 'SALES', VSI: 'SALES', VCS: 'SALES',
+  INV: 'SALES', VSI: 'SALES', VCS: 'SALES', KSH: 'SALES',
   RCP: 'CASH', RCV: 'CASH_IN_TRANSIT',
   CN: 'SALES_RETURNS', RET: 'SALES_RETURNS', CRN: 'SALES_RETURNS',
   GRN: 'INVENTORY', SPV: 'CASH', SRN: 'INVENTORY',
