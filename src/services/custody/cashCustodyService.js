@@ -70,9 +70,18 @@ function shapeAmount(amount) {
   return minor;
 }
 
+/** سقفٌ اختياريٌّ (دينار) ⟵ وحدةٌ صغرى موجبة، أو غيابُ الحقل إن لم يُضبط. */
+function shapeCap(cap) {
+  if (cap === undefined || cap === null || String(cap).trim() === '') return undefined;
+  const minor = toMinor(cap);
+  return minor > 0 ? minor : undefined; // صفرٌ أو سالبٌ = بلا سقف
+}
+
 /**
- * يسجّل **استلامَ عهدة**: نقدٌ يُسلَّم لحامل عهدة (يزيد رصيده).
- * @param {{custodian:string, amount:number, date?:string, site?:string, note?:string}} input
+ * يسجّل **استلامَ عهدة**: نقدٌ يُسلَّم لحامل عهدة (يزيد رصيده). ويقبل سقفًا
+ * اختياريًّا (‹توسيع العهدة›): حدُّ المصروف الواحد الذي يحتاج فوقه اعتمادًا —
+ * يُخزَّن بالوحدة الصغرى، ويُغفَل الحقلُ تمامًا إن لم يُضبط (فلا سقف).
+ * @param {{custodian:string, amount:number, date?:string, site?:string, note?:string, cap?:number}} input
  * @param {object} profile ملفُّ المستخدم (role · name)
  */
 export async function addReceipt(input, profile) {
@@ -80,6 +89,7 @@ export async function addReceipt(input, profile) {
   const custodian = String(input?.custodian || '').trim();
   if (!custodian) throw new Error('اسم حامل العهدة إلزاميّ.');
   const amount = shapeAmount(input?.amount);
+  const cap = shapeCap(input?.cap);
 
   const ref = await addDoc(collection(db, COL), {
     kind: CUSTODY_KINDS.RECEIPT,
@@ -88,6 +98,7 @@ export async function addReceipt(input, profile) {
     date: String(input?.date || '').slice(0, 10) || todayIso(),
     site: String(input?.site || DEFAULT_SITE).trim(),
     note: String(input?.note || '').trim(),
+    ...(cap !== undefined ? { cap } : {}),
     ...who,
     createdAt: serverTimestamp(),
     createdAtMs: Date.now(),
@@ -118,6 +129,31 @@ export async function addExpense(input, profile) {
     invoiceNo,
     date: String(input?.date || '').slice(0, 10) || todayIso(),
     site: String(input?.site || DEFAULT_SITE).trim(),
+    note: String(input?.note || '').trim(),
+    ...who,
+    createdAt: serverTimestamp(),
+    createdAtMs: Date.now(),
+  });
+  return ref.id;
+}
+
+/**
+ * يسجّل **اعتمادَ مصروف** تجاوز السقف (‹توسيع العهدة›): قيدٌ حوكميٌّ **ملحقٌ بلا
+ * مبلغ** يُشير إلى المصروف بـ`refId` فيصادقه — لا يمسّ رصيدًا (المالُ صُرف فعلًا).
+ * يحمل حاملَ العهدة ليبقى الكشفُ مترابطًا. المعتمِدُ من أصحاب صلاحيّة الإدارة.
+ * @param {{expenseId:string, custodian?:string, note?:string}} input
+ * @param {object} profile
+ */
+export async function addApproval(input, profile) {
+  const who = authorize(profile);
+  const refId = String(input?.expenseId || '').trim();
+  if (!refId) throw new Error('معرّفُ المصروف إلزاميٌّ للاعتماد.');
+
+  const ref = await addDoc(collection(db, COL), {
+    kind: CUSTODY_KINDS.APPROVAL,
+    refId,
+    custodian: String(input?.custodian || '').trim(),
+    date: todayIso(),
     note: String(input?.note || '').trim(),
     ...who,
     createdAt: serverTimestamp(),

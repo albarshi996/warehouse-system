@@ -20,6 +20,7 @@ import {
   subscribeCashCustody,
   addReceipt,
   addExpense,
+  addApproval,
   DEFAULT_SITE,
   CUSTODY_SITES,
 } from '../../../services/custody/cashCustodyService.js';
@@ -30,8 +31,16 @@ import {
   listCustodians,
   custodyBalance,
   custodyStatement,
+  custodyCap,
+  expenseStatus,
+  pendingApprovals,
+  custodySiteGroups,
+  custodySiteNames,
 } from '../../../services/custody/cashCustody.js';
-import { fromMinor } from '../../../services/accounting/money.js';
+import { fromMinor, toMinor } from '../../../services/accounting/money.js';
+import { subscribeWarehouses } from '../../../services/locations/warehouseService.js';
+import { createShops } from '../../../services/shops/shopsService.js';
+import { db } from '../../../services/_db/index.js';
 import Icon from '../../ui/Icon.jsx';
 import ListView from '../../odoo/ListView.jsx';
 import Badge from '../../odoo/Badge.jsx';
@@ -66,6 +75,10 @@ export default function CashCustodyBoard() {
   const [err, setErr] = useState('');
   const [msg, setMsg] = useState('');
 
+  // ‹توسيع العهدة› ماستر القطاع/المخزن للمواقع الديناميّة.
+  const [warehouses, setWarehouses] = useState([]);
+  const [shops, setShops] = useState([]);
+
   // تصفيةُ الفهرس.
   const [fCustodian, setFCustodian] = useState('');
   const [fSite, setFSite] = useState('');
@@ -96,6 +109,32 @@ export default function CashCustodyBoard() {
     );
   }, [me]);
 
+  // ‹توسيع العهدة› المخازنُ الحيّة (اشتراك) والقطاعاتُ (مرّةً) — المواقعُ منها.
+  // أيُّ فشلٍ هنا لا يُعطّل الشاشة: تُستعمل المواقعُ السابقةُ احتياطًا.
+  useEffect(() => {
+    if (!me) return undefined;
+    return subscribeWarehouses(
+      (list) => setWarehouses(Array.isArray(list) ? list : []),
+      () => setWarehouses([])
+    );
+  }, [me]);
+
+  useEffect(() => {
+    if (!me) return undefined;
+    let alive = true;
+    (async () => {
+      try {
+        const list = await createShops(db).listActive();
+        if (alive) setShops(Array.isArray(list) ? list : []);
+      } catch {
+        if (alive) setShops([]);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [me]);
+
   // الطباعةُ بعد رسمِ العرض المخفيّ، وتُمسح عند الانتهاء.
   useEffect(() => {
     if (!printTarget) return undefined;
@@ -123,6 +162,28 @@ export default function CashCustodyBoard() {
   const canManage = canManageCustody(role);
   const custodians = useMemo(() => listCustodians(rows), [rows]);
 
+  // ‹توسيع العهدة› مواقعُ العهدة من المخازن مجمَّعةً بقطاعها، وتُضمُّ مواقعُ القيود
+  // القديمة. فارغًا تمامًا نرجع للقائمة الثابتة القديمة (لا شاشةٌ بلا مواقع).
+  const legacySites = useMemo(() => [...new Set(rows.map((r) => String(r.site || '').trim()).filter(Boolean))], [rows]);
+  const siteGroups = useMemo(() => {
+    const groups = custodySiteGroups(warehouses, shops, legacySites);
+    if (custodySiteNames(groups).length) return groups;
+    return [{ sector: '', sites: CUSTODY_SITES }]; // احتياطُ الإقلاع قبل تحميل المخازن
+  }, [warehouses, shops, legacySites]);
+  const siteNames = useMemo(() => custodySiteNames(siteGroups), [siteGroups]);
+  const defaultSite = useMemo(() => siteNames[0] || DEFAULT_SITE, [siteNames]);
+
+  // ‹توسيع العهدة› مصروفاتٌ تجاوزت سقفَ حاملها ولم تُعتمد بعد.
+  const approvalQueue = useMemo(() => pendingApprovals(rows), [rows]);
+  // ‹مراجعة› عددُ القيود النقديّة (بلا قيود الاعتماد) — مقامُ عدّاد الفهرس، وإلّا
+  // بدا فلترٌ مفعَّلٌ وهو غيرُ مفعَّل حين يوجد اعتمادٌ (visibleRows يستثني الاعتماد).
+  const cashCount = useMemo(() => rows.filter((r) => r.kind !== CUSTODY_KINDS.APPROVAL).length, [rows]);
+  const capByCustodian = useMemo(() => {
+    const m = {};
+    for (const c of custodians) m[c] = custodyCap(rows, c);
+    return m;
+  }, [custodians, rows]);
+
   /** ملخّصُ كلّ حامل عهدة (رصيدٌ ومستواه). */
   const summary = useMemo(
     () =>
@@ -139,6 +200,8 @@ export default function CashCustodyBoard() {
     () =>
       rows.filter(
         (r) =>
+          // ‹توسيع العهدة› الاعتمادُ قيدٌ حوكميٌّ لا نقديّ — لا يظهر في فهرس القيود.
+          r.kind !== CUSTODY_KINDS.APPROVAL &&
           (!fCustodian || r.custodian === fCustodian) &&
           (!fSite || r.site === fSite) &&
           (!fKind || r.kind === fKind) &&
@@ -160,6 +223,17 @@ export default function CashCustodyBoard() {
   function printStatement(custodian) {
     setErr('');
     setPrintTarget({ custodian, from, to });
+  }
+
+  // ‹توسيع العهدة› اعتمادُ مصروفٍ تجاوز السقف — قيدٌ حوكميٌّ ملحقٌ لا يمسّ الرصيد.
+  async function approveExpense(exp) {
+    setErr('');
+    try {
+      await addApproval({ expenseId: exp.id, custodian: exp.custodian, note: '' }, me);
+      flash(`اعتُمد مصروفُ «${exp.custodian}» (${exp.invoiceNo || exp.id}) وحُفظ في السحابة.`);
+    } catch (ex) {
+      setErr(ex?.message || 'تعذّر اعتمادُ المصروف.');
+    }
   }
 
   if (!ready) {
@@ -197,12 +271,21 @@ export default function CashCustodyBoard() {
     { key: 'invoiceNo', label: 'رقم الفاتورة' },
     { key: 'received', label: 'وارد (استلام)', numeric: true },
     { key: 'spent', label: 'منصرف (مصروف)', numeric: true },
+    { key: 'status', label: 'الاعتماد' },
     { key: 'site', label: 'الموقع' },
     { key: 'by', label: 'المُسجِّل' },
   ];
 
   const listRows = visibleRows.map((r) => {
     const isExpense = r.kind === CUSTODY_KINDS.EXPENSE;
+    let status = '—';
+    if (isExpense) {
+      const st = expenseStatus(rows, r, capByCustodian[r.custodian]);
+      if (st === 'approved') status = <Badge variant="done">معتمَد</Badge>;
+      else if (st === 'pending') status = <Badge variant="danger">بانتظار الاعتماد</Badge>;
+    } else if (Number(r.cap) > 0) {
+      status = <span style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-gray-500)' }}>سقف: {dinar(r.cap)}</span>;
+    }
     return {
       id: r.id,
       cells: {
@@ -215,6 +298,7 @@ export default function CashCustodyBoard() {
         invoiceNo: isExpense ? r.invoiceNo || '—' : '—',
         received: !isExpense ? dinar(r.amount) : '—',
         spent: isExpense ? dinar(r.amount) : '—',
+        status,
         site: r.site || '—',
         by: r.createdByName || '—',
       },
@@ -267,6 +351,62 @@ export default function CashCustodyBoard() {
                   {a.level === 'negative' ? '(رصيدٌ سالب — مصروفٌ فوق العهدة)' : '(قارب النفاد — يحتاج تزويدًا)'}
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* ‹توسيع العهدة› مصروفاتٌ فوق السقف بانتظار الاعتماد — تدخّلٌ إداريّ */}
+          {canManage && approvalQueue.length > 0 && (
+            <div
+              className="o_ds_card o_ds_pad"
+              style={{ marginBottom: '18px', border: '1px solid var(--o-amber-200, #ffe08a)' }}
+            >
+              <h3
+                className="o_form_title"
+                style={{ fontSize: '15px', marginTop: 0, display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                <Icon name="alertTriangle" size={16} /> مصروفاتٌ بانتظار الاعتماد ({int(approvalQueue.length)})
+              </h3>
+              <div style={{ fontSize: 'var(--o-font-size-sm)', color: 'var(--o-gray-600)', marginBottom: '10px' }}>
+                مصروفاتٌ تجاوزت سقفَ حاملها — صُرفت فعلًا وتُنتظر مصادقتُك. الاعتمادُ توثيقٌ لا إلغاء؛ وتصحيحُ
+                الخطأ بقيدٍ مضادّ.
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {approvalQueue.map((e) => (
+                  <div
+                    key={e.id}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: '10px',
+                      flexWrap: 'wrap',
+                      border: '1px solid var(--o-border-color)',
+                      borderRadius: '8px',
+                      padding: '8px 12px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: 'var(--o-font-size-sm)' }}>
+                      <span>
+                        <strong className="decoration-bf">{e.custodian}</strong> — {dinar(e.amount)}{' '}
+                        <span style={{ color: 'var(--o-gray-500)' }}>
+                          ({e.category || 'أخرى'} · فاتورة {e.invoiceNo || '—'} · {e.date})
+                        </span>
+                      </span>
+                      <span style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-text-danger)' }}>
+                        فوق السقف ({dinar(capByCustodian[e.custodian] || 0)})
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      onClick={() => approveExpense(e)}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <Icon name="checkCircle" size={14} /> اعتمِد
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
@@ -344,6 +484,12 @@ export default function CashCustodyBoard() {
                           {dinar(s.remaining)}
                         </strong>
                       </span>
+                      {capByCustodian[s.custodian] != null && (
+                        <span style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-gray-500)' }}>
+                          سقفُ المصروف الواحد: <strong>{dinar(capByCustodian[s.custodian])}</strong>{' '}
+                          <span>(ما فوقه يحتاج اعتمادًا)</span>
+                        </span>
+                      )}
                     </div>
                     <button
                       type="button"
@@ -372,12 +518,17 @@ export default function CashCustodyBoard() {
               <ReceiptForm
                 profile={me}
                 custodians={custodians}
+                siteGroups={siteGroups}
+                defaultSite={defaultSite}
                 onSaved={() => flash('سُجّل استلامُ العهدة وحُفظ في السحابة.')}
                 onError={(t) => setErr(t)}
               />
               <ExpenseForm
                 profile={me}
                 custodians={custodians}
+                siteGroups={siteGroups}
+                defaultSite={defaultSite}
+                capByCustodian={capByCustodian}
                 onSaved={() => flash('سُجّل المصروفُ وحُفظ في السحابة.')}
                 onError={(t) => setErr(t)}
               />
@@ -407,7 +558,7 @@ export default function CashCustodyBoard() {
               >
                 <Icon name="clipboardList" size={16} /> فهرس القيود
                 <span style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-gray-500)', fontWeight: 400 }}>
-                  ({int(visibleRows.length)} من {int(rows.length)})
+                  ({int(visibleRows.length)} من {int(cashCount)})
                 </span>
               </h3>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -426,7 +577,7 @@ export default function CashCustodyBoard() {
                 </select>
                 <select className="o_input" value={fSite} onChange={(e) => setFSite(e.target.value)} aria-label="تصفية بالموقع">
                   <option value="">كلُّ المواقع</option>
-                  {CUSTODY_SITES.map((s) => (
+                  {siteNames.map((s) => (
                     <option key={s} value={s}>
                       {s}
                     </option>
@@ -483,23 +634,37 @@ export default function CashCustodyBoard() {
 
 /* ═══════════════════ النماذج ═══════════════════ */
 
-function ReceiptForm({ profile, custodians, onSaved, onError }) {
+function ReceiptForm({ profile, custodians, siteGroups, defaultSite, onSaved, onError }) {
   const [custodian, setCustodian] = useState('');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(todayIso());
-  const [site, setSite] = useState(DEFAULT_SITE);
+  const [site, setSite] = useState(defaultSite || DEFAULT_SITE);
+  const [cap, setCap] = useState('');
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
+  // ‹مراجعة› يتبع الموقعُ الافتراضيَّ **ما لم يختر المستخدمُ بعد** — فلا يُدهَس
+  // اختيارُه حين يصل ماسترُ المخزن أو يغيّره مستخدمٌ آخر (حارسُ «لا إفساد»).
+  const sitePicked = useRef(false);
+  const pickSite = (v) => {
+    sitePicked.current = true;
+    setSite(v);
+  };
+
+  useEffect(() => {
+    if (!sitePicked.current) setSite(defaultSite || DEFAULT_SITE);
+  }, [defaultSite]);
 
   async function submit(e) {
     e.preventDefault();
     setSaving(true);
     try {
-      await addReceipt({ custodian, amount, date, site, note }, profile);
+      await addReceipt({ custodian, amount, date, site, note, cap }, profile);
       setCustodian('');
       setAmount('');
       setDate(todayIso());
-      setSite(DEFAULT_SITE);
+      sitePicked.current = false;
+      setSite(defaultSite || DEFAULT_SITE);
+      setCap('');
       setNote('');
       onSaved();
     } catch (ex) {
@@ -522,7 +687,18 @@ function ReceiptForm({ profile, custodians, onSaved, onError }) {
         <L label="التاريخ" required>
           <input className="o_input" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
         </L>
-        <SiteField value={site} onChange={setSite} />
+        <SiteField value={site} onChange={pickSite} groups={siteGroups} />
+        <L label="سقف المصروف الواحد (اختياريّ)">
+          <input
+            className="o_input"
+            type="number"
+            min="0"
+            step="0.001"
+            value={cap}
+            onChange={(e) => setCap(e.target.value)}
+            placeholder="فوقه يحتاج المصروفُ اعتمادًا"
+          />
+        </L>
       </div>
       <L label="ملاحظة">
         <input className="o_input" value={note} onChange={(e) => setNote(e.target.value)} placeholder="سببُ التسليم أو مرجعُه…" />
@@ -536,15 +712,29 @@ function ReceiptForm({ profile, custodians, onSaved, onError }) {
   );
 }
 
-function ExpenseForm({ profile, custodians, onSaved, onError }) {
+function ExpenseForm({ profile, custodians, siteGroups, defaultSite, capByCustodian, onSaved, onError }) {
   const [custodian, setCustodian] = useState('');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState(CUSTODY_CATEGORIES[0]);
   const [invoiceNo, setInvoiceNo] = useState('');
   const [date, setDate] = useState(todayIso());
-  const [site, setSite] = useState(DEFAULT_SITE);
+  const [site, setSite] = useState(defaultSite || DEFAULT_SITE);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
+  // ‹مراجعة› يتبع الموقعُ الافتراضيَّ ما لم يختر المستخدمُ بعد (حارسُ «لا إفساد»).
+  const sitePicked = useRef(false);
+  const pickSite = (v) => {
+    sitePicked.current = true;
+    setSite(v);
+  };
+
+  useEffect(() => {
+    if (!sitePicked.current) setSite(defaultSite || DEFAULT_SITE);
+  }, [defaultSite]);
+
+  // ‹توسيع العهدة› تنبيهُ تجاوز السقف — لا يمنع التسجيل، بل يُعلم أنّه سيحتاج اعتمادًا.
+  const custCap = capByCustodian ? capByCustodian[String(custodian || '').trim()] ?? null : null;
+  const overCap = custCap != null && String(amount).trim() !== '' && toMinor(amount) > custCap;
 
   async function submit(e) {
     e.preventDefault();
@@ -556,7 +746,8 @@ function ExpenseForm({ profile, custodians, onSaved, onError }) {
       setCategory(CUSTODY_CATEGORIES[0]);
       setInvoiceNo('');
       setDate(todayIso());
-      setSite(DEFAULT_SITE);
+      sitePicked.current = false;
+      setSite(defaultSite || DEFAULT_SITE);
       setNote('');
       onSaved();
     } catch (ex) {
@@ -591,8 +782,22 @@ function ExpenseForm({ profile, custodians, onSaved, onError }) {
         <L label="التاريخ" required>
           <input className="o_input" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
         </L>
-        <SiteField value={site} onChange={setSite} />
+        <SiteField value={site} onChange={pickSite} groups={siteGroups} />
       </div>
+      {overCap && (
+        <div
+          className="o_alert"
+          style={{
+            background: 'var(--o-amber-50, #fff8e1)',
+            border: '1px solid var(--o-amber-200, #ffe08a)',
+            color: 'var(--o-gray-800, #333)',
+            fontSize: 'var(--o-font-size-sm)',
+          }}
+        >
+          <Icon name="alertTriangle" size={14} /> هذا المصروفُ فوق سقفِ «{custodian}» ({dinar(custCap)}) — يُسجَّل
+          ويُنقص الرصيد، ثمّ يظهر في «بانتظار الاعتماد» حتّى يصادقه مديرٌ. (تنبيهٌ لا منع.)
+        </div>
+      )}
       <L label="ملاحظة">
         <input className="o_input" value={note} onChange={(e) => setNote(e.target.value)} placeholder="بيانُ المصروف…" />
       </L>
@@ -625,15 +830,32 @@ function CustodianField({ value, onChange, custodians }) {
   );
 }
 
-function SiteField({ value, onChange }) {
+function SiteField({ value, onChange, groups }) {
+  // المجموعاتُ من ماستر القطاع/المخزن؛ واحتياطًا القائمةُ الثابتةُ القديمة.
+  const list = Array.isArray(groups) && groups.length ? groups : [{ sector: '', sites: CUSTODY_SITES }];
+  const known = new Set(list.flatMap((g) => g.sites || []));
   return (
     <L label="الموقع" required>
       <select className="o_input" value={value} onChange={(e) => onChange(e.target.value)}>
-        {CUSTODY_SITES.map((s) => (
-          <option key={s} value={s}>
-            {s}
-          </option>
-        ))}
+        {/* قيمةٌ خارجَ القائمة (موروثةٌ أو افتراضٌ قبل التحميل) تبقى ظاهرةً مختارة. */}
+        {value && !known.has(value) && <option value={value}>{value}</option>}
+        {list.map((g, i) =>
+          g.sector ? (
+            <optgroup key={g.sector} label={g.sector}>
+              {g.sites.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </optgroup>
+          ) : (
+            g.sites.map((s) => (
+              <option key={`${i}-${s}`} value={s}>
+                {s}
+              </option>
+            ))
+          )
+        )}
       </select>
     </L>
   );
