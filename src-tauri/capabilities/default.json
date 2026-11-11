@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "صلاحياتُ نافذة BHOME الرئيسيّة: القلبُ الأساسيّ + التحديثُ التلقائيّ من GitHub Releases. أوامرُ قاعدة الجهاز المخصّصة (bhome_db_*) غيرُ محكومةٍ بالأذونات.",
+  "description": "صلاحياتُ BHOME الأساسيّة (القلب) — على كلّ المنصّات (سطح المكتب والموبايل). أوامرُ قاعدة الجهاز المخصّصة (bhome_db_*) غيرُ محكومةٍ بالأذونات.",
   "windows": ["main"],
-  "permissions": ["core:default", "updater:default"]
+  "permissions": ["core:default"]
 }

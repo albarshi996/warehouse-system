@@ -1,0 +1,8 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "desktop",
+  "description": "التحديثُ التلقائيّ من GitHub Releases — سطح المكتب وحده (مُلحق Tauri updater لا يدعم الموبايل، فلا يُصرَّف لأندرويد).",
+  "platforms": ["windows", "macOS", "linux"],
+  "windows": ["main"],
+  "permissions": ["updater:default"]
+}

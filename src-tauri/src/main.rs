@@ -1,28 +1,7 @@
-// BHOME — قشرة سطح مكتب: نافذة أصلية تفتح النظام المحزوم محليًّا (dist-desktop).
-// «العامل الخفي» (Service Worker) مُطفأٌ في بناء سطح المكتب بقرار الخطّة، والعملُ
-// دون اتصالٍ يأتي من القاعدة المحلّيّة (SQLite) لا من مخبوء المتصفّح.
-//
-// ★ طبقةُ البيانات المحلّيّة (م١ · خاملة): جسرُ SQL في `db.rs` يفتح قاعدةً
-//   مدمجةً ويُسجّل ثلاثة أوامر. ويبقى **خاملًا** حتّى يختار المحوَّلُ `local-sqlite`
-//   (`PUBLIC_DB_BACKEND`)، فلا يتغيّر سلوكُ البرنامج قبل القطع.
+// BHOME — ثنائيُّ سطح المكتب: ينادي نقطةَ التشغيل المشتركة في المكتبة.
+// (موبايل Tauri يُقلِع من `lib.rs::run` مباشرةً عبر `mobile_entry_point`.)
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-mod db;
-
 fn main() {
-    tauri::Builder::default()
-        // ★ التحديثُ التلقائيّ: الواجهةُ تفحص وتثبّت الإصدارَ الأحدث من GitHub Releases
-        //   (لا خدمةَ قوقل). الإذنُ updater:default في capabilities.
-        .plugin(tauri_plugin_updater::Builder::new().build())
-        .setup(|app| {
-            db::init(app.handle())?;
-            Ok(())
-        })
-        .invoke_handler(tauri::generate_handler![
-            db::bhome_db_query,
-            db::bhome_db_exec,
-            db::bhome_db_batch,
-        ])
-        .run(tauri::generate_context!())
-        .expect("error while running BHOME");
+    brandzo_hub_lib::run()
 }

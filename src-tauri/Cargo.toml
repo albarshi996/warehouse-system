@@ -1,9 +1,16 @@
 [package]
 name = "brandzo-hub"
 version = "1.0.3"
-description = "BHOME — نظام إدارة مستودعات BHOME (قشرة سطح مكتب حول النظام السحابي)"
+description = "BHOME — نظام إدارة مستودعات BHOME (قشرة سطح مكتب وموبايل حول النظام)"
 authors = ["Mohammed AlBarshi"]
 edition = "2021"
+
+# ★ مكتبةٌ مشتركة: سطح المكتب يناديها من `main.rs`، وموبايل Tauri يُقلِع منها
+#   مباشرةً. `cdylib` لازمٌ لأندرويد (القشرة الأصليّة تُحمّل `.so`)، و`staticlib`
+#   لـiOS، و`rlib` كي يراها ثنائيُّ سطح المكتب.
+[lib]
+name = "brandzo_hub_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
@@ -12,10 +19,12 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = [] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-# ★ التحديثُ التلقائيّ (GitHub Releases، لا خدمةَ قوقل) — يفحص ويثبّت الإصدارَ
-#   الأحدث الموقَّع. الواجهةُ تناديه عبر الإذن updater:default.
-tauri-plugin-updater = "2"
 # ★ قاعدة SQLite مدمجةٌ في البرنامج (ميزة bundled تُجمّع SQLite من المصدر، فلا
-#   يحتاج جهازُ المستخدم تنصيبَ أيّ شيء). هذا هو «المخزنُ على الجهاز» الذي تُكتب
-#   فيه البيانات — بابُه الوحيد أوامرُ db.rs، والمنطقُ كلُّه في JavaScript المُختبَر.
+#   يحتاج جهازُ المستخدم تنصيبَ أيّ شيء). هذا هو «المخزنُ على الجهاز» — على
+#   ويندوز وأندرويد سواء؛ بابُه الوحيد أوامرُ db.rs، والمنطقُ كلُّه في JavaScript.
 rusqlite = { version = "0.32", features = ["bundled"] }
+
+# ★ التحديثُ التلقائيّ عبر مُلحق Tauri **لسطح المكتب وحده** — المُلحق لا يدعم
+#   الموبايل، فلا يُصرَّف لأندرويد/iOS. تحديثُ أندرويد من مُحدِّث الواجهة المخصّص.
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-updater = "2"
