@@ -15,7 +15,9 @@ mod db;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let builder = tauri::Builder::default();
+    let builder = tauri::Builder::default()
+        // فتحُ الروابط خارجيًّا (سطح المكتب وأندرويد) — لمحدّث أندرويد.
+        .plugin(tauri_plugin_opener::init());
 
     // مُلحقُ التحديث لسطح المكتب فقط — غيرُ مدعومٍ على الموبايل ولا يُصرَّف له.
     #[cfg(desktop)]

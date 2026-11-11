@@ -12,6 +12,7 @@
     "start": "astro dev",
     "build": "astro build",
     "build:desktop": "astro build --config astro.config.desktop.mjs",
+    "build:mobile": "astro build --config astro.config.mobile.mjs",
     "preview": "astro preview",
     "astro": "astro",
     "tauri": "tauri",

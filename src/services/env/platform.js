@@ -18,3 +18,17 @@ const ENV = (typeof import.meta !== 'undefined' && import.meta.env) || {};
 export function isDesktop() {
   return isDesktopFrom(ENV);
 }
+
+/** هل تدلّ هذه البيئةُ على بناءِ أندرويد؟ — الرايةُ `'true'` من astro.config.mobile. */
+export function isAndroidFrom(env) {
+  return !!env && env.PUBLIC_IS_ANDROID === 'true';
+}
+
+/**
+ * هل هذا بناءُ أندرويد (Tauri موبايل)؟ يفصل محدّثَ أندرويد (تنزيل APK) عن محدّث
+ * سطح المكتب (مُلحق Tauri). بناءُ أندرويد يضبط `PUBLIC_IS_DESKTOP` **و**
+ * `PUBLIC_IS_ANDROID`، فـ`isAndroid()` أخصّ من `isDesktop()`.
+ */
+export function isAndroid() {
+  return isAndroidFrom(ENV);
+}

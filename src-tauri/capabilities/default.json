@@ -3,5 +3,5 @@
   "identifier": "default",
   "description": "صلاحياتُ BHOME الأساسيّة (القلب) — على كلّ المنصّات (سطح المكتب والموبايل). أوامرُ قاعدة الجهاز المخصّصة (bhome_db_*) غيرُ محكومةٍ بالأذونات.",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": ["core:default", "opener:allow-open-url"]
 }
