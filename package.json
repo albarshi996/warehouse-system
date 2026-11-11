@@ -14,6 +14,7 @@
     "build:desktop": "astro build --config astro.config.desktop.mjs",
     "preview": "astro preview",
     "astro": "astro",
+    "tauri": "tauri",
     "where": "node scripts/where.mjs",
     "guard": "node scripts/guard-worktrees.mjs --all",
     "rescue": "node scripts/rescue-worktrees.mjs",
