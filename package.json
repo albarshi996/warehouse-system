@@ -1,6 +1,6 @@
 {
   "name": "warehouse-system",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "description": "Warehouse Management System for Brandzo (Astro + React + Tailwind + Firebase).",
   "type": "module",
   "private": true,

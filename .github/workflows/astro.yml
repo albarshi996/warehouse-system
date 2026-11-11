@@ -132,6 +132,9 @@ jobs:
           PUBLIC_AUTH_BACKEND: ${{ secrets.PUBLIC_AUTH_BACKEND }}
           # PUBLIC_IS_DESKTOP: رايةُ البناء المكتبيّ وحدَه (تُضبط في astro.config.desktop.mjs)
           #   ولا تُمرَّر هنا عمدًا — فالويبُ ليس مكتبيًّا، وغيابُها يجعل isDesktop()=false.
+          # PUBLIC_IS_ANDROID · PUBLIC_APP_VERSION: رايتا بناء الموبايل وحدَه (تُضبطان في
+          #   astro.config.mobile.mjs لنسخة أندرويد) — ولا تُمرَّران هنا عمدًا: الويبُ ليس
+          #   أندرويد، وغيابُهما يجعل isAndroid()=false فيُخفى مُحدّثُ الأندرويد عن الويب.
           PUBLIC_PG_API_URL: ${{ secrets.PUBLIC_PG_API_URL }}
           PUBLIC_PG_AUTH_URL: ${{ secrets.PUBLIC_PG_AUTH_URL }}
           PUBLIC_DB_HYBRID: ${{ secrets.PUBLIC_DB_HYBRID }}

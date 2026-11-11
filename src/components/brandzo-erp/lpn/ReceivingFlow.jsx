@@ -1411,6 +1411,13 @@ export default function ReceivingFlow() {
             ★ والبطاقةُ تظهر عند التعريف وحدَه؛ وقبله تُعرض الحقولُ كما كانت
             تمامًا — فلا يُكسر مسارُ من يكتب الرمزَ بيده ثمّ يُدخل الكمّيّة.
           */}
+          {/*
+            ‹باركود-أوّلًا · طلب المالك 2026-11-11› «يقرأ الباركود، يظهر الصنف،
+            ثمّ تُكتب الكمّيّةُ وباقي البيانات» — عكسُ ما كان. فقبل المسح لا حقولَ
+            بل بطاقةُ دعوةٍ «امسح الباركود» (طورُ idle)، وبعده تظهر الحقولُ كلُّها
+            (الكمّيّة · الدفعة · الصلاحية · وتتبّعُ المورّد المطويّ) **داخل** بطاقة
+            الصنف — فما يكتبه الموظّفُ يخصّ ما يراه، ولا يملأ شيئًا قبل أن يرى صنفَه.
+          */}
           {identity ? (
             <ScannedIdentity
               identity={identity}
@@ -1425,6 +1432,24 @@ export default function ReceivingFlow() {
                 <input value={expiry} onChange={(e) => setExpiry(e.target.value)} placeholder="الصلاحية" type="date"
                   className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
               </div>
+              {/* ‹تتبّع› دفعةُ المورّد وتاريخُ الإنتاج — تحت الصنف المعروض، مطويّان.
+                  يُطابَق بهما عند السحب من السوق، ويُكتبان مرّةً للدفعة كلِّها لا لكلّ قراءة. */}
+              <button type="button" onClick={() => setTrace((v) => !v)}
+                className="btn btn-secondary text-xs mt-2 w-full"
+                style={{ minHeight: '44px' }}>
+                {trace ? '▾ إخفاء حقول التتبّع' : '▸ دفعةُ المورّد وتاريخُ الإنتاج (اختياريّ)'}
+                {!trace && (supplierBatch || mfgDate) ? ' — مكتوبة' : ''}
+              </button>
+              {trace && (
+                <div className="grid grid-cols-2 gap-2 mt-2">
+                  <input value={supplierBatch} onChange={(e) => setSupplierBatch(e.target.value)}
+                    placeholder="دفعة المورّد (رقم المصنع)"
+                    className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
+                  <input value={mfgDate} onChange={(e) => setMfgDate(e.target.value)}
+                    placeholder="تاريخ الإنتاج" type="date"
+                    className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
+                </div>
+              )}
               <button
                 type="button"
                 onClick={() => commitScan(identity.code)}
@@ -1436,41 +1461,8 @@ export default function ReceivingFlow() {
               </button>
             </ScannedIdentity>
           ) : (
-            <div className="grid grid-cols-3 gap-2 mb-2">
-              <input value={qty} onChange={(e) => setQty(e.target.value)} placeholder="الكمّيّة (١)" type="number" min="0" step="any"
-                className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
-              <input value={batch} onChange={(e) => setBatch(e.target.value)} placeholder="الدفعة"
-                className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
-              <input value={expiry} onChange={(e) => setExpiry(e.target.value)} placeholder="الصلاحية" type="date"
-                className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
-            </div>
-          )}
-
-          {/*
-            ‹تتبّع› **دفعةُ المورّد وتاريخُ الإنتاج — مطويّان لا محذوفان.**
-
-            ★★ دفعةُ المورّد هي ما يُطابَق به عند **السحب من السوق**: نداءُ
-            السحب يأتي برقم المصنع لا برقمنا الداخليّ، فبلا هذا الحقل تُفتَّش
-            الطبالي واحدةً واحدة.
-
-            ★ وطُويا عمدًا: المسحُ كرتونةً تلو كرتونة لا يحتمل خمسَ خاناتٍ
-            على شاشة هاتف، وهما يُكتبان **مرّةً للدفعة كلِّها** لا لكلّ قراءة.
-          */}
-          <button type="button" onClick={() => setTrace((v) => !v)}
-            className="btn btn-secondary text-xs mb-2"
-            style={{ minHeight: '44px' }}>
-            {trace ? '▾ إخفاء حقول التتبّع' : '▸ دفعةُ المورّد وتاريخُ الإنتاج (اختياريّ)'}
-            {!trace && (supplierBatch || mfgDate) ? ' — مكتوبة' : ''}
-          </button>
-          {trace && (
-            <div className="grid grid-cols-2 gap-2 mb-2">
-              <input value={supplierBatch} onChange={(e) => setSupplierBatch(e.target.value)}
-                placeholder="دفعة المورّد (رقم المصنع)"
-                className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
-              <input value={mfgDate} onChange={(e) => setMfgDate(e.target.value)}
-                placeholder="تاريخ الإنتاج" type="date"
-                className="rounded-lg border px-3 py-3 text-sm" style={{ borderColor: 'var(--o-border)' }} />
-            </div>
+            /* لا مسحَ بعد: بطاقةُ دعوةٍ «امسح الباركود» وحدَها — لا حقولَ قبل ظهور الصنف. */
+            <ScannedIdentity identity={null} />
           )}
           <div className="flex gap-2">
             <button type="submit" className="btn btn-primary flex-1 py-3" disabled={busy || !code.trim()}>تسجيل القراءة</button>
