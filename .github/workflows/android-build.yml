@@ -1,9 +1,11 @@
 # بناء تطبيق أندرويد (BHOME.apk) — نسخة الموبايل الأوفلاين (local-sqlite)، تُبنى
-# في CI لأنّ Rust/Android لا يُصرَّفان محلّيًّا. تُنشَر كـ«ما قبل الإصدار» (prerelease)
-# بوسمٍ مستقلّ (android-v*) فلا تمسّ latest.json لسطح المكتب.
+# في CI لأنّ Rust/Android لا يُصرَّفان محلّيًّا. تُنشَر كـ«ما قبل الإصدار» بوسمٍ
+# رولّينغ (android-latest) فلا تمسّ latest.json لسطح المكتب، ويبقى رابطُ التنزيل ثابتًا.
 #
-# أوّلُ هدف: APK تجريبيّ (debug) قابلٌ للتحميل والتثبيت — يُثبت تصريفَ rusqlite
-# لأندرويد وسقالةَ Tauri. التوقيعُ الثابت للتحديث يأتي في طورٍ تالٍ.
+# • بناءُ release لمعماريّة arm64 وحدها (تستوعب كلّ هواتف أندرويد الحديثة) — حجمٌ
+#   معقولٌ بدل بناء debug بأربع معماريّات.
+# • التوقيع: سرُّ المستودع ANDROID_KEYSTORE_BASE64 إن وُجد (تحديثٌ متّسق)، وإلّا
+#   مفتاحٌ لحظيٌّ (APK قابلٌ للتثبيت، لكنّ التحديثَ فوق بناءٍ سابقٍ يحتاج مفتاحًا ثابتًا).
 name: Build Android APK
 
 on:
@@ -12,9 +14,11 @@ on:
     branches: ['claude/**']
     paths:
       - 'src-tauri/**'
+      - 'src/**'
       - 'package.json'
       - 'package-lock.json'
       - 'astro.config.desktop.mjs'
+      - 'astro.config.mobile.mjs'
       - '.github/workflows/android-build.yml'
 
 permissions:
@@ -22,6 +26,7 @@ permissions:
 
 env:
   NDK_VERSION: '26.1.10909125'
+  APP_VERSION: '1.0.17'
 
 jobs:
   android-apk:
@@ -56,10 +61,10 @@ jobs:
           echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/${NDK_VERSION}" >> "$GITHUB_ENV"
           echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/${NDK_VERSION}" >> "$GITHUB_ENV"
 
-      - name: Setup Rust (Android targets)
+      - name: Setup Rust (Android target arm64)
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+          targets: aarch64-linux-android
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
@@ -69,38 +74,62 @@ jobs:
       - name: Install Tauri CLI
         run: npm install --no-save @tauri-apps/cli@^2
 
-      - name: Versions
-        run: |
-          node --version
-          rustc --version
-          echo "NDK_HOME=$NDK_HOME"
-          npx tauri --version
-
       - name: Tauri Android init
         run: npx tauri android init --ci
 
-      - name: Build Android APK (debug)
-        run: npx tauri android build --apk --debug
+      - name: Build Android APK (release, arm64)
+        run: npx tauri android build --apk --target aarch64
 
-      - name: Collect APK
-        id: apk
+      - name: Sign APK
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
           set -e
-          APK=$(find src-tauri/gen/android -path '*apk*' -name '*.apk' | sort | tail -1)
-          echo "Found APK: $APK"
-          test -n "$APK"
-          cp "$APK" "BHOME-android-debug.apk"
-          ls -la BHOME-android-debug.apk
+          UNSIGNED=$(find src-tauri/gen/android -name '*release-unsigned.apk' | head -1)
+          [ -z "$UNSIGNED" ] && UNSIGNED=$(find src-tauri/gen/android -name '*release*.apk' | grep -v signed | head -1)
+          echo "Unsigned APK: $UNSIGNED"
+          test -n "$UNSIGNED"
+          BT="$ANDROID_SDK_ROOT/build-tools/34.0.0"
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > ks.jks
+            KPASS="$ANDROID_KEYSTORE_PASSWORD"; KALIAS="${ANDROID_KEY_ALIAS:-bhome}"
+            echo "Signing with repository keystore secret (stable → self-update works)."
+          else
+            KPASS="bhome-ci-ephemeral"; KALIAS="bhome"
+            keytool -genkeypair -keystore ks.jks -storetype PKCS12 -alias "$KALIAS" -storepass "$KPASS" -keypass "$KPASS" -dname "CN=BHOME Internal, O=Brandzo, L=Benghazi, C=LY" -keyalg RSA -keysize 2048 -validity 10000
+            echo "::warning::لا سرّ ANDROID_KEYSTORE_BASE64 — وُقِّع بمفتاحٍ لحظيّ: قابلٌ للتثبيت، لكنّ التحديثَ فوق بناءٍ سابقٍ يحتاج إضافةَ سرِّ keystore ثابت."
+          fi
+          "$BT/zipalign" -f 4 "$UNSIGNED" aligned.apk
+          "$BT/apksigner" sign --ks ks.jks --ks-pass "pass:$KPASS" --ks-key-alias "$KALIAS" --out "BHOME-android-arm64.apk" aligned.apk
+          "$BT/apksigner" verify --print-certs "BHOME-android-arm64.apk" | head -5
+          rm -f ks.jks aligned.apk
+          ls -la BHOME-android-arm64.apk
 
-      - name: Publish pre-release
+      - name: Write update manifest
+        run: |
+          cat > android-latest.json <<EOF
+          {
+            "name": "BHOME",
+            "version": "${APP_VERSION}",
+            "notes": "نسخة أندرويد من BHOME — أوفلاين محليّ.",
+            "url": "https://github.com/albarshi996/warehouse-system/releases/download/android-latest/BHOME-android-arm64.apk"
+          }
+          EOF
+          cat android-latest.json
+
+      - name: Publish rolling pre-release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: android-v1.0.17
-          name: BHOME Android v1.0.17 (debug)
+          tag_name: android-latest
+          name: BHOME Android (latest)
           prerelease: true
           fail_on_unmatched_files: true
           body: |
-            📱 نسخة أندرويد من BHOME (تجريبيّة · أوفلاين محليّ).
-            حمّل `BHOME-android-debug.apk` وثبّته (اسمح بـ«تثبيت من مصدر غير معروف»).
-            هذه نسخةُ إثباتٍ للبناء؛ التوقيعُ الثابت والتحديثُ الذاتيّ في الطور التالي.
-          files: BHOME-android-debug.apk
+            📱 نسخة أندرويد من BHOME (أوفلاين محليّ · معماريّة arm64).
+            حمّل `BHOME-android-arm64.apk` وثبّته (اسمح بـ«تثبيت من مصدر غير معروف»).
+            يحدّث التطبيقُ نفسَه بمقارنة `android-latest.json`.
+          files: |
+            BHOME-android-arm64.apk
+            android-latest.json
