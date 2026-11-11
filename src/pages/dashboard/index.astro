@@ -2,6 +2,7 @@
 import DashboardLayout from '../../layouts/DashboardLayout.astro';
 import Icon from '../../components/ui/Icon.astro';
 import OperationsCommand from '../../components/brandzo-erp/ledger/OperationsCommand.jsx';
+import QuickLaunch from '../../components/brandzo-erp/nav/QuickLaunch.jsx';
 import { placementsFor } from '../../services/auth/navCatalog.js';
 import { canOpenPath } from '../../services/auth/pageAccess.js';
 import { ROLE_NAV } from '../../services/auth/navAccess.js';
@@ -196,6 +197,11 @@ const soon = [
       </p>
     </div>
 
+    {/* ‹ترتيب سهل 2026-11-12› بحثٌ سريعٌ يقفز لأيّ شاشة — اكتب اسمَها فتُفتح. عرضٌ فقط. */}
+    <div class="mb-8">
+      <QuickLaunch client:load />
+    </div>
+
     {/* ─── الطبقة صفر: النبض الحيّ — لوحة القيادة التشغيلية مدمجة ─────────────
          إعادة استخدام لمكوّن OperationsCommand نفسه (لا نسخ): أي تطوير له
          ينعكس هنا وفي /dashboard/command-center معًا. القاعدة الذهبية: صفر حذف —
@@ -243,6 +249,15 @@ const soon = [
       </section>
     ))}
 
+    {/* ‹ترتيب سهل 2026-11-12› طيُّ التفاصيل: الرئيسيّة تُظهر البحثَ و«ابدأ من هنا»
+        و«النبض»، وكلُّ الأنظمة والشاشات خلف هذا الطيّ — صفر حذف، كلُّ المقاصد بضغطة. */}
+    <details class="bz-allsys mb-10">
+      <summary class="bz-allsys-sum flex items-center gap-3 cursor-pointer select-none rounded-card border border-line bg-chip hover:bg-surface-2 hover:border-accent/40 px-5 py-4 transition-all">
+        <span class="inline-grid place-items-center w-9 h-9 rounded-lg bg-accent/10 border border-accent/25 text-accent"><Icon name="grid" size={18} /></span>
+        <span class="flex-1 font-bold text-ink">عرض كل الأنظمة والشاشات</span>
+        <span class="text-xs text-muted">اضغط للعرض ▾</span>
+      </summary>
+      <div class="pt-6">
     {/* ─── الأنظمة الرئيسية (الحاويات) ────────────────────────────────────── */}
     <section data-section data-group="hubs" class="mb-10">
       <div class="flex items-center gap-3 mb-4">
@@ -352,6 +367,8 @@ const soon = [
         ))}
       </div>
     </section>
+      </div>
+    </details>
 
     {/* ─── التذييل ───────────────────────────────────────────────────────── */}
     <div class="text-center text-sm text-muted mt-8">
