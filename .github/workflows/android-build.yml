@@ -77,6 +77,9 @@ jobs:
       - name: Tauri Android init
         run: npx tauri android init --ci
 
+      - name: Generate app icons (BHOME)
+        run: npx tauri icon src-tauri/icons/icon.png
+
       - name: Build Android APK (release, arm64)
         run: npx tauri android build --apk --target aarch64
 
