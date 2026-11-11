@@ -13,7 +13,7 @@
 import { collection, addDoc, onSnapshot, query, serverTimestamp, db } from '../_db/index.js';
 import { auth } from '../../config/firebase.js';
 import { toMinor } from '../accounting/money.js';
-import { CUSTODY_CATEGORIES, CUSTODY_KINDS, canManageCustody } from './cashCustody.js';
+import { CUSTODY_CATEGORIES, CUSTODY_COMPANIES, CUSTODY_KINDS, canManageCustody } from './cashCustody.js';
 
 const COL = 'cash_custody';
 
@@ -120,6 +120,9 @@ export async function addExpense(input, profile) {
   const invoiceNo = String(input?.invoiceNo || '').trim();
   if (!invoiceNo) throw new Error('رقم الفاتورة إلزاميٌّ للمصروف.');
   const category = CUSTODY_CATEGORIES.includes(input?.category) ? input.category : 'أخرى';
+  // ‹توزيع الشركات› الشركةُ المستفيدةُ اختياريّةٌ: تُكتب إن كانت من القائمة المعروفة،
+  // وتُغفَل إن لم تُحدَّد — فالقيدُ القديمُ بلا شركةٍ يبقى ويُجمَّع تحت «غير محدّد».
+  const company = CUSTODY_COMPANIES.includes(input?.company) ? input.company : '';
 
   const ref = await addDoc(collection(db, COL), {
     kind: CUSTODY_KINDS.EXPENSE,
@@ -127,6 +130,7 @@ export async function addExpense(input, profile) {
     amount,
     category,
     invoiceNo,
+    ...(company ? { company } : {}),
     date: String(input?.date || '').slice(0, 10) || todayIso(),
     site: String(input?.site || DEFAULT_SITE).trim(),
     note: String(input?.note || '').trim(),

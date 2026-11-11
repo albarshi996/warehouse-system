@@ -287,3 +287,91 @@ export function custodySiteGroups(warehouses, shops = [], legacySites = []) {
 export function custodySiteNames(groups) {
   return (Array.isArray(groups) ? groups : []).flatMap((g) => g.sites || []);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * ‹توزيع الشركات والإقفال بمسارين› — فجوتا آلية العهد (طلب المالك 2026-11-11).
+ *
+ * المصروفُ يُوسَم بـ«الشركة المستفيدة» فيُوزَّع المصروفُ عليها؛ والإقفالُ مساران:
+ * شركةُ بنغازي تُقفَل مع الإدارة الماليّة، والباقي (زولفة · أركاديا · مصرف
+ * المتوسط · ميناء جليانة) مع أ. زياد وفق تعليمات المدير العام (آلية العهد §5).
+ *
+ * ★★★ **لا إفساد:** الحقلُ اختياريٌّ بالكامل — مصروفٌ بلا شركةٍ (وكلُّ القيود
+ *     القديمة) يبقى ويُجمَّع تحت «غير محدّد» فيُرى ويُسوَّى، لا يُنسى ولا يُحمَّل
+ *     على مسارٍ بالخطأ. والحسابُ كلُّه بالوحدة الصغرى الصحيحة كبقيّة السجلّ.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/** الشركاتُ المستفيدةُ من خدمات الموقع (آلية العهد — موقع 155). */
+export const CUSTODY_COMPANIES = ['زولفة', 'أركاديا', 'مصرف المتوسط', 'ميناء جليانة', 'شركة بنغازي'];
+
+/** مساراتُ الإقفال: بنغازي ← الإدارة الماليّة؛ الباقي ← أ. زياد. */
+export const CLOSING_TRACKS = { FINANCE: 'الإدارة الماليّة', GROUP: 'أ. زياد' };
+
+/** عنوانُ المصروف الذي لم تُحدَّد شركتُه — يُرى ويُسوَّى، لا يُنسى. */
+export const CUSTODY_UNASSIGNED_COMPANY = '— غير محدّد —';
+
+/**
+ * مسارُ إقفال شركةٍ: شركةُ بنغازي مع الإدارة الماليّة، وكلُّ ما سواها مع أ. زياد
+ * وفق تعليمات المدير العام (آلية العهد §5).
+ */
+export function closingTrackOf(company) {
+  return String(company || '').trim() === 'شركة بنغازي' ? CLOSING_TRACKS.FINANCE : CLOSING_TRACKS.GROUP;
+}
+
+/** مصروفاتُ حاملٍ ضمن مدًى [from,to] شاملًا الحدّين (الحدُّ الناقصُ مفتوح). */
+function expensesInRange(entries, custodian, range = {}) {
+  const from = range?.from ? String(range.from).slice(0, 10) : '';
+  const to = range?.to ? String(range.to).slice(0, 10) : '';
+  return entriesForCustodian(entries, custodian)
+    .filter((e) => e?.kind === CUSTODY_KINDS.EXPENSE)
+    .filter((e) => {
+      const d = dayOf(e);
+      return (!from || d >= from) && (!to || d <= to);
+    });
+}
+
+/**
+ * توزيعُ مصروفِ حاملٍ على الشركات المستفيدة ضمن مدًى — مجموعُ كلّ شركةٍ بالوحدة
+ * الصغرى، مرتّبةً بترتيب `CUSTODY_COMPANIES` ثمّ «غير محدّد» آخرًا. الصفرُ لا يظهر،
+ * وغيرُ المحدّد بلا مسارٍ (`track:''`) حتّى تُحدَّد شركتُه.
+ *
+ * @returns {Array<{company:string, track:string, amount:number}>}
+ */
+export function custodyDistribution(entries, custodian, range = {}) {
+  const byCompany = new Map();
+  for (const e of expensesInRange(entries, custodian, range)) {
+    const c = String(e?.company || '').trim() || CUSTODY_UNASSIGNED_COMPANY;
+    byCompany.set(c, (byCompany.get(c) || 0) + amountOf(e));
+  }
+  const rank = (c) => {
+    if (c === CUSTODY_UNASSIGNED_COMPANY) return CUSTODY_COMPANIES.length + 1;
+    const i = CUSTODY_COMPANIES.indexOf(c);
+    return i === -1 ? CUSTODY_COMPANIES.length : i;
+  };
+  return [...byCompany.entries()]
+    .map(([company, amount]) => ({
+      company,
+      track: company === CUSTODY_UNASSIGNED_COMPANY ? '' : closingTrackOf(company),
+      amount,
+    }))
+    .sort((a, b) => rank(a.company) - rank(b.company) || a.company.localeCompare(b.company, 'ar'));
+}
+
+/**
+ * إقفالُ حاملٍ بمسارين ضمن مدًى: مجموعُ كلّ مسارٍ وشركاتُه. المصروفُ غيرُ المحدّد
+ * شركتُه يُفرَد في مجموعةٍ «غير محدّد» (لا يُحمَّل على مسارٍ بالخطأ) — فيُسوَّى أوّلًا.
+ * الترتيب: الإدارة الماليّة ثمّ أ. زياد ثمّ غير محدّد.
+ *
+ * @returns {Array<{track:string, total:number, companies:Array<{company:string,amount:number}>}>}
+ */
+export function custodyClosing(entries, custodian, range = {}) {
+  const byTrack = new Map();
+  for (const d of custodyDistribution(entries, custodian, range)) {
+    const track = d.company === CUSTODY_UNASSIGNED_COMPANY ? CUSTODY_UNASSIGNED_COMPANY : d.track;
+    if (!byTrack.has(track)) byTrack.set(track, { track, total: 0, companies: [] });
+    const g = byTrack.get(track);
+    g.total += d.amount;
+    g.companies.push({ company: d.company, amount: d.amount });
+  }
+  const order = (t) => (t === CLOSING_TRACKS.FINANCE ? 0 : t === CLOSING_TRACKS.GROUP ? 1 : 2);
+  return [...byTrack.values()].sort((a, b) => order(a.track) - order(b.track));
+}

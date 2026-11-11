@@ -26,11 +26,14 @@ import {
 } from '../../../services/custody/cashCustodyService.js';
 import {
   CUSTODY_CATEGORIES,
+  CUSTODY_COMPANIES,
   CUSTODY_KINDS,
   canManageCustody,
   listCustodians,
   custodyBalance,
   custodyStatement,
+  custodyDistribution,
+  custodyClosing,
   custodyCap,
   expenseStatus,
   pendingApprovals,
@@ -720,6 +723,8 @@ function ExpenseForm({ profile, custodians, siteGroups, defaultSite, capByCustod
   const [date, setDate] = useState(todayIso());
   const [site, setSite] = useState(defaultSite || DEFAULT_SITE);
   const [note, setNote] = useState('');
+  // ‹توزيع الشركات› الشركةُ المستفيدةُ اختياريّةٌ — فراغٌ = «غير محدّد» يُسوَّى لاحقًا.
+  const [company, setCompany] = useState('');
   const [saving, setSaving] = useState(false);
   // ‹مراجعة› يتبع الموقعُ الافتراضيَّ ما لم يختر المستخدمُ بعد (حارسُ «لا إفساد»).
   const sitePicked = useRef(false);
@@ -740,11 +745,12 @@ function ExpenseForm({ profile, custodians, siteGroups, defaultSite, capByCustod
     e.preventDefault();
     setSaving(true);
     try {
-      await addExpense({ custodian, amount, category, invoiceNo, date, site, note }, profile);
+      await addExpense({ custodian, amount, category, invoiceNo, company, date, site, note }, profile);
       setCustodian('');
       setAmount('');
       setCategory(CUSTODY_CATEGORIES[0]);
       setInvoiceNo('');
+      setCompany('');
       setDate(todayIso());
       sitePicked.current = false;
       setSite(defaultSite || DEFAULT_SITE);
@@ -778,6 +784,16 @@ function ExpenseForm({ profile, custodians, siteGroups, defaultSite, capByCustod
         </L>
         <L label="رقم الفاتورة" required>
           <input className="o_input" value={invoiceNo} onChange={(e) => setInvoiceNo(e.target.value)} required placeholder="رقمُ الفاتورة أو السند" />
+        </L>
+        <L label="الشركة المستفيدة">
+          <select className="o_input" value={company} onChange={(e) => setCompany(e.target.value)}>
+            <option value="">— غير محدّد —</option>
+            {CUSTODY_COMPANIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
         </L>
         <L label="التاريخ" required>
           <input className="o_input" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
@@ -886,6 +902,10 @@ function L({ label, required, children }) {
 function CashCustodyStatementPrint({ rows, custodian, from, to }) {
   const ref = useRef(null);
   const { opening, lines, closing } = custodyStatement(rows, custodian, { from, to });
+  // ‹توزيع الشركات والإقفال بمسارين› — فجوتا آلية العهد (المصروفُ المسوَّم بشركةٍ
+  // يُوزَّع ويُقفَل؛ وغيرُ المسوَّم يُفرَد تحت «غير محدّد» فيُسوَّى أوّلًا).
+  const distribution = custodyDistribution(rows, custodian, { from, to });
+  const tracks = custodyClosing(rows, custodian, { from, to });
   const site = useMemo(() => {
     const sites = [...new Set(rows.filter((r) => r.custodian === custodian && r.site).map((r) => r.site))];
     return sites.join(' · ') || '—';
@@ -916,6 +936,7 @@ function CashCustodyStatementPrint({ rows, custodian, from, to }) {
             <th>التاريخ</th>
             <th>النوع</th>
             <th>الفئة</th>
+            <th>الشركة</th>
             <th>رقم الفاتورة</th>
             <th>وارد</th>
             <th>منصرف</th>
@@ -924,7 +945,7 @@ function CashCustodyStatementPrint({ rows, custodian, from, to }) {
         </thead>
         <tbody>
           <tr className="ccp-opening">
-            <td colSpan={7}>الرصيد الافتتاحيّ</td>
+            <td colSpan={8}>الرصيد الافتتاحيّ</td>
             <td className="ccp-num">{dinar(opening)}</td>
           </tr>
           {lines.map((l, i) => {
@@ -935,6 +956,7 @@ function CashCustodyStatementPrint({ rows, custodian, from, to }) {
                 <td>{l.date || '—'}</td>
                 <td>{isExpense ? 'مصروف' : 'استلام'}</td>
                 <td>{isExpense ? l.category || 'أخرى' : '—'}</td>
+                <td>{isExpense ? l.company || '—' : '—'}</td>
                 <td>{isExpense ? l.invoiceNo || '—' : '—'}</td>
                 <td className="ccp-num">{!isExpense ? dinar(l.amount) : '—'}</td>
                 <td className="ccp-num">{isExpense ? dinar(l.amount) : '—'}</td>
@@ -944,17 +966,68 @@ function CashCustodyStatementPrint({ rows, custodian, from, to }) {
           })}
           {lines.length === 0 && (
             <tr>
-              <td colSpan={8} className="ccp-empty">
+              <td colSpan={9} className="ccp-empty">
                 لا حركاتٍ في هذه المدّة.
               </td>
             </tr>
           )}
           <tr className="ccp-closing">
-            <td colSpan={7}>الرصيد الختاميّ</td>
+            <td colSpan={8}>الرصيد الختاميّ</td>
             <td className="ccp-num">{dinar(closing)}</td>
           </tr>
         </tbody>
       </table>
+
+      {distribution.length > 0 && (
+        <>
+          <h2 className="ccp-subhead">توزيع المصروف على الشركات المستفيدة</h2>
+          <table className="ccp-table">
+            <thead>
+              <tr>
+                <th>الشركة</th>
+                <th>قيمة التحميل</th>
+                <th>جهة الإقفال</th>
+              </tr>
+            </thead>
+            <tbody>
+              {distribution.map((d) => (
+                <tr key={d.company}>
+                  <td>{d.company}</td>
+                  <td className="ccp-num">{dinar(d.amount)}</td>
+                  <td>{d.track || '— يُحدَّد —'}</td>
+                </tr>
+              ))}
+              <tr className="ccp-closing">
+                <td>إجمالي المصروف</td>
+                <td className="ccp-num">{dinar(distribution.reduce((s, d) => s + d.amount, 0))}</td>
+                <td />
+              </tr>
+            </tbody>
+          </table>
+
+          <h2 className="ccp-subhead">الإقفال بمسارين</h2>
+          <table className="ccp-table">
+            <thead>
+              <tr>
+                <th>جهة الإقفال</th>
+                <th>الشركات</th>
+                <th>الإجمالي</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tracks.map((t) => (
+                <tr key={t.track}>
+                  <td>
+                    <strong>{t.track}</strong>
+                  </td>
+                  <td>{t.companies.map((x) => x.company).join(' · ')}</td>
+                  <td className="ccp-num">{dinar(t.total)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
 
       <div className="ccp-signs">
         <div className="ccp-sign">
@@ -990,6 +1063,7 @@ const PRINT_CSS = `
   .ccp-head { border-bottom: 2px solid #333; padding-bottom: 3mm; margin-bottom: 4mm; }
   .ccp-head h1 { font-size: 15pt; font-weight: 800; margin: 0 0 2mm; text-align: center; }
   .ccp-meta { display: flex; flex-wrap: wrap; gap: 2mm 8mm; font-size: 9pt; justify-content: center; }
+  .ccp-subhead { font-size: 11pt; font-weight: 800; margin: 6mm 0 2mm; border-bottom: 1px solid #333; padding-bottom: 1mm; }
 
   .ccp-table { width: 100%; border-collapse: collapse; }
   .ccp-table th, .ccp-table td { border: 1px solid #333; padding: 1.6mm 2mm; font-size: 8.5pt; text-align: right; }

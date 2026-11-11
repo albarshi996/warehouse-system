@@ -25,6 +25,12 @@ import {
   pendingApprovals,
   custodySiteGroups,
   custodySiteNames,
+  CUSTODY_COMPANIES,
+  CLOSING_TRACKS,
+  CUSTODY_UNASSIGNED_COMPANY,
+  closingTrackOf,
+  custodyDistribution,
+  custodyClosing,
   CUSTODY_UNASSIGNED_SECTOR,
   CUSTODY_LEGACY_SECTOR,
 } from './cashCustody.js';
@@ -252,4 +258,94 @@ test('custodySiteGroups: فارغٌ آمنٌ (بلا مخازن) ولا يرمي
   assert.deepEqual(custodySiteGroups([], []), []);
   assert.deepEqual(custodySiteGroups(null, null, null), []);
   assert.deepEqual(custodySiteGroups([], [], ['155']), [{ sector: CUSTODY_LEGACY_SECTOR, sites: ['155'] }]);
+});
+
+/* ═══════════ ‹توزيع الشركات والإقفال بمسارين› ═══════════ */
+
+/** مصروفٌ بشركةٍ مستفيدة — المبالغُ بالدينار كبقيّة البيّنة. */
+const exp2 = (custodian, dinars, date, company, extra = {}) =>
+  expense(custodian, dinars, date, { category: 'مناولة', invoiceNo: 'INV', company, ...extra });
+
+test('ثوابتُ الشركات والمسارين', () => {
+  assert.deepEqual(CUSTODY_COMPANIES, ['زولفة', 'أركاديا', 'مصرف المتوسط', 'ميناء جليانة', 'شركة بنغازي']);
+  assert.equal(closingTrackOf('شركة بنغازي'), CLOSING_TRACKS.FINANCE);
+  assert.equal(closingTrackOf('زولفة'), CLOSING_TRACKS.GROUP);
+  assert.equal(closingTrackOf('أركاديا'), CLOSING_TRACKS.GROUP);
+  assert.equal(closingTrackOf(''), CLOSING_TRACKS.GROUP); // غيرُ بنغازي ⇒ أ. زياد
+});
+
+test('★ التوزيع: مجموعُ كلّ شركةٍ بالوحدة الصغرى، ومسارُها معها', () => {
+  const entries = [
+    receipt('أحمد', 2000, '2026-11-01'),
+    exp2('أحمد', 100, '2026-11-02', 'زولفة'),
+    exp2('أحمد', 50, '2026-11-03', 'زولفة'),
+    exp2('أحمد', 80, '2026-11-04', 'شركة بنغازي'),
+  ];
+  const dist = custodyDistribution(entries, 'أحمد');
+  assert.equal(dist.length, 2);
+  const z = dist.find((d) => d.company === 'زولفة');
+  assert.equal(z.amount, toMinor(150));
+  assert.equal(z.track, CLOSING_TRACKS.GROUP);
+  const b = dist.find((d) => d.company === 'شركة بنغازي');
+  assert.equal(b.amount, toMinor(80));
+  assert.equal(b.track, CLOSING_TRACKS.FINANCE);
+  // عددٌ صحيحٌ لا عائم.
+  assert.ok(dist.every((d) => Number.isInteger(d.amount)));
+});
+
+test('★★★ لا إفساد: مصروفٌ بلا شركةٍ يُجمَّع تحت «غير محدّد» ويُرى بلا مسار', () => {
+  const entries = [
+    receipt('سالم', 1000, '2026-11-01'),
+    exp2('سالم', 70, '2026-11-02', ''), // بلا شركة (كالقيود القديمة)
+    exp2('سالم', 30, '2026-11-03', 'أركاديا'),
+  ];
+  const dist = custodyDistribution(entries, 'سالم');
+  const u = dist.find((d) => d.company === CUSTODY_UNASSIGNED_COMPANY);
+  assert.ok(u, 'المصروفُ بلا شركةٍ يُرى لا يُنسى');
+  assert.equal(u.amount, toMinor(70));
+  assert.equal(u.track, ''); // لا مسارَ حتّى تُحدَّد شركتُه
+  // وغيرُ المحدّد آخرًا في الترتيب.
+  assert.equal(dist[dist.length - 1].company, CUSTODY_UNASSIGNED_COMPANY);
+});
+
+test('★★★ الإقفالُ بمسارين: بنغازي←المالية، الباقي←أ.زياد، وغيرُ المحدّد مفرَد', () => {
+  const entries = [
+    receipt('أحمد', 3000, '2026-11-01'),
+    exp2('أحمد', 100, '2026-11-02', 'زولفة'),
+    exp2('أحمد', 50, '2026-11-03', 'ميناء جليانة'),
+    exp2('أحمد', 200, '2026-11-04', 'شركة بنغازي'),
+    exp2('أحمد', 40, '2026-11-05', ''), // غير محدّد
+  ];
+  const closing = custodyClosing(entries, 'أحمد');
+  const fin = closing.find((c) => c.track === CLOSING_TRACKS.FINANCE);
+  const grp = closing.find((c) => c.track === CLOSING_TRACKS.GROUP);
+  const un = closing.find((c) => c.track === CUSTODY_UNASSIGNED_COMPANY);
+  assert.equal(fin.total, toMinor(200)); // بنغازي
+  assert.equal(grp.total, toMinor(150)); // زولفة + جليانة
+  assert.equal(un.total, toMinor(40));
+  assert.equal(grp.companies.length, 2);
+  // المالية أوّلًا، ثمّ أ. زياد، ثمّ غير محدّد.
+  assert.equal(closing[0].track, CLOSING_TRACKS.FINANCE);
+  assert.equal(closing[closing.length - 1].track, CUSTODY_UNASSIGNED_COMPANY);
+});
+
+test('التوزيعُ يحترم المدى (كالكشف): ما قبل from وما بعد to مستثنًى', () => {
+  const entries = [
+    exp2('أحمد', 100, '2026-10-20', 'زولفة'), // قبل from
+    exp2('أحمد', 60, '2026-11-10', 'زولفة'),
+    exp2('أحمد', 999, '2026-12-01', 'زولفة'), // بعد to
+  ];
+  const dist = custodyDistribution(entries, 'أحمد', { from: '2026-11-01', to: '2026-11-30' });
+  assert.equal(dist.length, 1);
+  assert.equal(dist[0].amount, toMinor(60));
+});
+
+test('حاملٌ آخرُ منفصلٌ في التوزيع', () => {
+  const entries = [
+    exp2('أحمد', 100, '2026-11-02', 'زولفة'),
+    exp2('سالم', 70, '2026-11-02', 'أركاديا'),
+  ];
+  assert.equal(custodyDistribution(entries, 'أحمد').length, 1);
+  assert.equal(custodyDistribution(entries, 'أحمد')[0].company, 'زولفة');
+  assert.equal(custodyDistribution(entries, 'سالم')[0].company, 'أركاديا');
 });
