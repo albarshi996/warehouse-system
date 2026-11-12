@@ -34,6 +34,7 @@ import {
   custodyStatement,
   custodyDistribution,
   custodyClosing,
+  expenseProofText,
   custodyCap,
   expenseStatus,
   pendingApprovals,
@@ -271,7 +272,9 @@ export default function CashCustodyBoard() {
     { key: 'kind', label: 'النوع' },
     { key: 'custodian', label: 'حامل العهدة' },
     { key: 'category', label: 'الفئة' },
+    { key: 'company', label: 'الشركة المستفيدة' },
     { key: 'invoiceNo', label: 'رقم الفاتورة' },
+    { key: 'proof', label: 'الإثبات' },
     { key: 'received', label: 'وارد (استلام)', numeric: true },
     { key: 'spent', label: 'منصرف (مصروف)', numeric: true },
     { key: 'status', label: 'الاعتماد' },
@@ -298,7 +301,9 @@ export default function CashCustodyBoard() {
         ),
         custodian: <span className="decoration-bf">{r.custodian || '—'}</span>,
         category: isExpense ? r.category || 'أخرى' : '—',
+        company: isExpense ? r.company || '—' : '—',
         invoiceNo: isExpense ? r.invoiceNo || '—' : '—',
+        proof: isExpense ? expenseProofText(r) || '—' : '—',
         received: !isExpense ? dinar(r.amount) : '—',
         spent: isExpense ? dinar(r.amount) : '—',
         status,
@@ -505,6 +510,12 @@ export default function CashCustodyBoard() {
                   </div>
                 ))}
               </div>
+            )}
+
+            {/* ‹تقرير العهدة› التوزيعُ والإقفالُ **على الشاشة** لا في الطباعة وحدها —
+                كان مدفونًا في الكشف المطبوع فلم يجده المالك (2026-11-12). */}
+            {summary.length > 0 && (
+              <CustodyReportPanel rows={rows} custodians={custodians} from={from} to={to} />
             )}
           </div>
 
@@ -725,6 +736,10 @@ function ExpenseForm({ profile, custodians, siteGroups, defaultSite, capByCustod
   const [note, setNote] = useState('');
   // ‹توزيع الشركات› الشركةُ المستفيدةُ اختياريّةٌ — فراغٌ = «غير محدّد» يُسوَّى لاحقًا.
   const [company, setCompany] = useState('');
+  // ‹الإثبات› المستلمُ ورقمُه والمستندُ المرفق — اختياريّةٌ (آلية العهد §3).
+  const [recipient, setRecipient] = useState('');
+  const [recipientId, setRecipientId] = useState('');
+  const [proofRef, setProofRef] = useState('');
   const [saving, setSaving] = useState(false);
   // ‹مراجعة› يتبع الموقعُ الافتراضيَّ ما لم يختر المستخدمُ بعد (حارسُ «لا إفساد»).
   const sitePicked = useRef(false);
@@ -745,12 +760,18 @@ function ExpenseForm({ profile, custodians, siteGroups, defaultSite, capByCustod
     e.preventDefault();
     setSaving(true);
     try {
-      await addExpense({ custodian, amount, category, invoiceNo, company, date, site, note }, profile);
+      await addExpense(
+        { custodian, amount, category, invoiceNo, company, recipient, recipientId, proofRef, date, site, note },
+        profile
+      );
       setCustodian('');
       setAmount('');
       setCategory(CUSTODY_CATEGORIES[0]);
       setInvoiceNo('');
       setCompany('');
+      setRecipient('');
+      setRecipientId('');
+      setProofRef('');
       setDate(todayIso());
       sitePicked.current = false;
       setSite(defaultSite || DEFAULT_SITE);
@@ -795,6 +816,15 @@ function ExpenseForm({ profile, custodians, siteGroups, defaultSite, capByCustod
             ))}
           </select>
         </L>
+        <L label="اسم المستلم (إثبات)">
+          <input className="o_input" value={recipient} onChange={(e) => setRecipient(e.target.value)} placeholder="العامل · السائق · المؤجّر" />
+        </L>
+        <L label="رقم البطاقة / لوحة الشاحنة">
+          <input className="o_input" value={recipientId} onChange={(e) => setRecipientId(e.target.value)} placeholder="رقمُ الهويّة أو اللوحة" />
+        </L>
+        <L label="المستند المرفق / إذن الخروج">
+          <input className="o_input" value={proofRef} onChange={(e) => setProofRef(e.target.value)} placeholder="مثل GP-2026-0001 أو كشف حضور" />
+        </L>
         <L label="التاريخ" required>
           <input className="o_input" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
         </L>
@@ -823,6 +853,122 @@ function ExpenseForm({ profile, custodians, siteGroups, defaultSite, capByCustod
         </button>
       </div>
     </form>
+  );
+}
+
+/* ═══════════════════ تقريرُ العهدة — التوزيعُ والإقفالُ على الشاشة ═══════════════════ */
+
+const rptTh = {
+  textAlign: 'right',
+  padding: '8px 10px',
+  fontSize: 'var(--o-font-size-xs)',
+  color: 'var(--o-gray-600)',
+  borderBottom: '2px solid var(--o-border-color)',
+  whiteSpace: 'nowrap',
+};
+const rptTd = { padding: '8px 10px', borderBottom: '1px solid var(--o-border-color)', fontSize: 'var(--o-font-size-sm)' };
+const rptNum = { ...rptTd, fontFamily: 'monospace', direction: 'ltr', unicodeBidi: 'isolate', textAlign: 'left' };
+
+/**
+ * ‹تقرير العهدة› (طلب المالك 2026-11-12): توزيعُ المصروف على الشركات المستفيدة
+ * والإقفالُ بمسارين — **ظاهرًا على الشاشة**. كان في الكشف المطبوع وحدَه فلم يُعثَر
+ * عليه. يتبع المدى المختار أعلاه، ويُختار له حاملٌ بعينه أو كلُّ الحمَلة.
+ * عرضٌ خالص: الحسابُ كلُّه في `custodyDistribution`/`custodyClosing` المختبَرتَين.
+ */
+function CustodyReportPanel({ rows, custodians, from, to }) {
+  const [who, setWho] = useState('');
+  const distribution = useMemo(() => custodyDistribution(rows, who, { from, to }), [rows, who, from, to]);
+  const tracks = useMemo(() => custodyClosing(rows, who, { from, to }), [rows, who, from, to]);
+  const total = distribution.reduce((s, d) => s + d.amount, 0);
+  const rangeText = from || to ? `${from || '…'} ← ${to || '…'}` : 'كامل المدّة';
+
+  return (
+    <div
+      data-custody-report
+      className="no-print"
+      style={{ marginTop: '18px', paddingTop: '14px', borderTop: '1px dashed var(--o-border-color)' }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
+        <Icon name="fileText" size={16} />
+        <strong style={{ fontSize: '15px' }}>تقرير العهدة — التوزيع والإقفال</strong>
+        <span style={{ fontSize: 'var(--o-font-size-xs)', color: 'var(--o-gray-500)' }}>المدّة: {rangeText}</span>
+        <select
+          className="o_input"
+          value={who}
+          onChange={(e) => setWho(e.target.value)}
+          aria-label="حامل العهدة للتقرير"
+          style={{ marginInlineStart: 'auto', maxWidth: '240px' }}
+        >
+          <option value="">كلُّ حمَلة العهد</option>
+          {custodians.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {distribution.length === 0 ? (
+        <div className="o_dashboard_empty">لا مصروفاتٍ في هذه المدّة — سجّل مصروفًا ليظهر توزيعُه هنا.</div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <div style={{ fontWeight: 700, marginBottom: '6px', fontSize: 'var(--o-font-size-sm)' }}>
+              توزيع المصروف على الشركات المستفيدة
+            </div>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  <th style={rptTh}>الشركة</th>
+                  <th style={rptTh}>قيمة التحميل</th>
+                  <th style={rptTh}>جهة الإقفال</th>
+                </tr>
+              </thead>
+              <tbody>
+                {distribution.map((d) => (
+                  <tr key={d.company}>
+                    <td style={rptTd}>{d.company}</td>
+                    <td style={rptNum}>{dinar(d.amount)}</td>
+                    <td style={rptTd}>{d.track || '— تُحدَّد شركتُه أوّلًا —'}</td>
+                  </tr>
+                ))}
+                <tr>
+                  <td style={{ ...rptTd, fontWeight: 700 }}>إجمالي المصروف</td>
+                  <td style={{ ...rptNum, fontWeight: 700 }}>{dinar(total)}</td>
+                  <td style={rptTd} />
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ overflowX: 'auto' }}>
+            <div style={{ fontWeight: 700, marginBottom: '6px', fontSize: 'var(--o-font-size-sm)' }}>الإقفال بمسارين</div>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  <th style={rptTh}>جهة الإقفال</th>
+                  <th style={rptTh}>الشركات</th>
+                  <th style={rptTh}>الإجمالي</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tracks.map((t) => (
+                  <tr key={t.track}>
+                    <td style={{ ...rptTd, fontWeight: 700 }}>{t.track}</td>
+                    <td style={rptTd}>{t.companies.map((x) => x.company).join(' · ')}</td>
+                    <td style={rptNum}>{dinar(t.total)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p style={{ margin: '8px 0 0', fontSize: 'var(--o-font-size-xs)', color: 'var(--o-gray-500)', lineHeight: 1.7 }}>
+              شركةُ بنغازي تُقفَل مع الإدارة الماليّة، والباقي مع أ. زياد — ولا يُخلط المساران. والكشفُ المطبوعُ
+              لكلّ حاملٍ يحمل الجدولين نفسَيهما مع خانات التوقيع.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -917,7 +1063,10 @@ function CashCustodyStatementPrint({ rows, custodian, from, to }) {
     <div className="cc-print" dir="rtl" ref={ref}>
       <style>{PRINT_CSS}</style>
 
-      <header className="ccp-head">
+      {/* ★★★ `div` لا `header`: قاعدةُ الطباعة العامّة (`global.css`) تُخفي كلَّ وسم
+          header عند الطباعة — فكان الكشفُ يخرج **بلا عنوانٍ ولا اسمِ حاملٍ ولا مدّة**
+          (عيبٌ قديمٌ كشفته المراجعةُ العدائيّة بطباعةٍ فعليّة 2026-11-12). */}
+      <div className="ccp-head">
         <h1>كشف عهدة نقديّة</h1>
         <div className="ccp-meta">
           <span>
@@ -927,7 +1076,7 @@ function CashCustodyStatementPrint({ rows, custodian, from, to }) {
           <span>المدّة: {rangeText}</span>
           <span>تاريخ الطباعة: {todayIso()}</span>
         </div>
-      </header>
+      </div>
 
       <table className="ccp-table">
         <thead>
@@ -937,7 +1086,7 @@ function CashCustodyStatementPrint({ rows, custodian, from, to }) {
             <th>النوع</th>
             <th>الفئة</th>
             <th>الشركة</th>
-            <th>رقم الفاتورة</th>
+            <th>رقم الفاتورة · الإثبات</th>
             <th>وارد</th>
             <th>منصرف</th>
             <th>الرصيد</th>
@@ -953,11 +1102,16 @@ function CashCustodyStatementPrint({ rows, custodian, from, to }) {
             return (
               <tr key={l.id || i}>
                 <td>{i + 1}</td>
-                <td>{l.date || '—'}</td>
+                <td className="ccp-nowrap">{l.date || '—'}</td>
                 <td>{isExpense ? 'مصروف' : 'استلام'}</td>
                 <td>{isExpense ? l.category || 'أخرى' : '—'}</td>
                 <td>{isExpense ? l.company || '—' : '—'}</td>
-                <td>{isExpense ? l.invoiceNo || '—' : '—'}</td>
+                {/* الإثباتُ سطرٌ ثانٍ تحت رقم الفاتورة لا عمودٌ عاشر — عشرةُ أعمدةٍ لا
+                    تتّسع في A4 طوليّ فتنكسر التواريخُ والمبالغ (قيسَ بطباعةٍ فعليّة). */}
+                <td>
+                  {isExpense ? l.invoiceNo || '—' : '—'}
+                  {isExpense && expenseProofText(l) ? <div className="ccp-proof">{expenseProofText(l)}</div> : null}
+                </td>
                 <td className="ccp-num">{!isExpense ? dinar(l.amount) : '—'}</td>
                 <td className="ccp-num">{isExpense ? dinar(l.amount) : '—'}</td>
                 <td className="ccp-num">{dinar(l.running)}</td>
@@ -1068,7 +1222,9 @@ const PRINT_CSS = `
   .ccp-table { width: 100%; border-collapse: collapse; }
   .ccp-table th, .ccp-table td { border: 1px solid #333; padding: 1.6mm 2mm; font-size: 8.5pt; text-align: right; }
   .ccp-table th { background: #eee; font-weight: 800; }
-  .ccp-num { font-family: monospace; direction: ltr; unicode-bidi: isolate; text-align: left; }
+  .ccp-num { font-family: monospace; direction: ltr; unicode-bidi: isolate; text-align: left; white-space: nowrap; }
+  .ccp-nowrap { white-space: nowrap; }
+  .ccp-proof { font-size: 7.5pt; color: #333; margin-top: 0.6mm; }
   .ccp-opening td, .ccp-closing td { background: #f3f3f3; font-weight: 800; }
   .ccp-empty { text-align: center; color: #666; }
 

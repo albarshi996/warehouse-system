@@ -41,7 +41,9 @@ const quickClusters = [
   { title: 'العمل اليوميّ', icon: 'calendar', paths: ['/dashboard/portal-operations', '/dashboard/documents', '/dashboard/forms', '/dashboard/tasks'] },
   { title: 'المخزون والجرد', icon: 'package', paths: ['/dashboard/command-center', '/dashboard/warehouses', '/dashboard/operations', '/dashboard/stock-reconcile'] },
   { title: 'المحلّات والمال', icon: 'building2', paths: ['/dashboard/shops', '/dashboard/cash-book', '/dashboard/partner-ledger', '/dashboard/expenses'] },
-  { title: 'موقع 155 والميدان', icon: 'mapPin', paths: ['/dashboard/site-needs', '/dashboard/cash-custody', '/dashboard/field-operations'] },
+  // ‹2026-11-12› أُضيف «مركز البوابة» و«سجلّ البوابة» — إثباتُ الدخول والخروج كان
+  // قائمًا ولم يُعثَر عليه من الرئيسيّة (طلب المالك). الصلاحيّةُ من `canOpenPath` كغيرها.
+  { title: 'موقع 155 والميدان', icon: 'mapPin', paths: ['/dashboard/site-needs', '/dashboard/cash-custody', '/dashboard/gate-post', '/dashboard/gate-log', '/dashboard/field-operations'] },
   { title: 'التقارير', icon: 'barChart3', paths: ['/dashboard/reports', '/dashboard/data-reports', '/dashboard/odoo-reports', '/dashboard/warehouse-movement'] },
 ].map((c) => ({ ...c, cards: c.paths.map(quickCard).filter(Boolean) }));
 

@@ -31,6 +31,8 @@ import {
   closingTrackOf,
   custodyDistribution,
   custodyClosing,
+  expenseProofParts,
+  expenseProofText,
   CUSTODY_UNASSIGNED_SECTOR,
   CUSTODY_LEGACY_SECTOR,
 } from './cashCustody.js';
@@ -44,8 +46,12 @@ function expense(custodian, dinars, date, extra = {}) {
   return { kind: CUSTODY_KINDS.EXPENSE, custodian, amount: toMinor(dinars), date, ...extra };
 }
 
-test('الثوابت: أربعُ فئاتٍ بالترتيب المطلوب ونوعا القيد', () => {
-  assert.deepEqual(CUSTODY_CATEGORIES, ['إعاشة', 'نظافة', 'مناولة', 'أخرى']);
+test('الثوابت: الفئاتُ بالترتيب المطلوب (ومعها بندا آليّة العهد) ونوعا القيد', () => {
+  // ‹2026-11-12› أُضيف «عمالة عرضة» و«نقل» — إضافةٌ لا تبديل: الأربعُ الأصليّةُ باقيةٌ
+  // بأسمائها، و«أخرى» آخرًا كما كانت (هي المرجعُ عند فئةٍ غير معروفة).
+  assert.deepEqual(CUSTODY_CATEGORIES, ['إعاشة', 'نظافة', 'مناولة', 'عمالة عرضة', 'نقل', 'أخرى']);
+  for (const old of ['إعاشة', 'نظافة', 'مناولة', 'أخرى']) assert.ok(CUSTODY_CATEGORIES.includes(old));
+  assert.equal(CUSTODY_CATEGORIES[CUSTODY_CATEGORIES.length - 1], 'أخرى');
   assert.equal(CUSTODY_KINDS.RECEIPT, 'receipt');
   assert.equal(CUSTODY_KINDS.EXPENSE, 'expense');
 });
@@ -338,6 +344,19 @@ test('التوزيعُ يحترم المدى (كالكشف): ما قبل from و
   const dist = custodyDistribution(entries, 'أحمد', { from: '2026-11-01', to: '2026-11-30' });
   assert.equal(dist.length, 1);
   assert.equal(dist[0].amount, toMinor(60));
+});
+
+test('‹الإثبات› نصُّ الإثبات: المستلمُ · رقمُه · المستند — والغائبُ يُسقط', () => {
+  const full = { recipient: 'سالم علي', recipientId: '5-12345', proofRef: 'GP-2026-0001' };
+  assert.deepEqual(expenseProofParts(full), ['سالم علي', '5-12345', 'GP-2026-0001']);
+  const visible = (s) => s.replace(/[⁨⁩]/g, '');
+  assert.equal(visible(expenseProofText(full)), 'سالم علي · 5-12345 · GP-2026-0001');
+  // ★★ كلُّ جزءٍ معزولُ الاتّجاه — وإلّا عُرض «5-12345» مقلوبًا «12345-5» بعد الاسم العربيّ.
+  assert.equal(expenseProofText(full), '⁨سالم علي⁩ · ⁨5-12345⁩ · ⁨GP-2026-0001⁩');
+  assert.equal(visible(expenseProofText({ recipient: ' سالم ', proofRef: '' })), 'سالم');
+  // لا إفساد: قيدٌ قديمٌ بلا حقول إثباتٍ يُعيد نصًّا فارغًا ولا يرمي.
+  assert.equal(expenseProofText(expense('أحمد', 10, '2026-11-01', { category: 'نقل', invoiceNo: 'X' })), '');
+  assert.equal(expenseProofText(null), '');
 });
 
 test('حاملٌ آخرُ منفصلٌ في التوزيع', () => {

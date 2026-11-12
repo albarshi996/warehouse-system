@@ -12,7 +12,7 @@ process.env.PUBLIC_IS_DESKTOP = 'true';
 process.env.PUBLIC_IS_ANDROID = 'true';
 // إصدارُ التطبيق — يقارنه محدّثُ أندرويد بـ android-latest.json. يطابق
 // tauri.conf.json و APP_VERSION في ورك-فلو البناء (يُبمَّن معًا عند الترقية).
-process.env.PUBLIC_APP_VERSION = '1.0.20';
+process.env.PUBLIC_APP_VERSION = '1.0.21';
 
 export default defineConfig({
   base: '/',

@@ -12,6 +12,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { flatItems } from '../../../services/auth/navCatalog.js';
 import { canOpenPath } from '../../../services/auth/pageAccess.js';
+import { screenMatchScore } from '../../../services/auth/navSearchAliases.js';
 import { subscribeAuth, fetchUserProfile } from '../../../services/auth/authService.js';
 import Icon from '../../ui/Icon.jsx';
 
@@ -50,10 +51,17 @@ export default function QuickLaunch() {
     return out;
   }, [role]);
 
+  // ‹إصلاح البحث› المطابقةُ بالتسمية **والمرادفات** بعد تطبيعٍ عربيّ، كلمةً كلمة —
+  // فـ«دخول» تجد «مركز البوابة» و«تقرير العهدة» تجد «العهد النقديّة». ومطابقُ التسمية أوّلًا.
   const results = useMemo(() => {
     const term = q.trim();
     if (!term) return [];
-    return screens.filter((s) => s.label.includes(term)).slice(0, 8);
+    return screens
+      .map((s) => ({ s, score: screenMatchScore(s, term) }))
+      .filter((x) => x.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8)
+      .map((x) => x.s);
   }, [q, screens]);
 
   useEffect(() => setActive(0), [q]);

@@ -108,7 +108,11 @@ export async function addReceipt(input, profile) {
 
 /**
  * يسجّل **مصروفًا** من عهدة حاملٍ (ينقص رصيده)، بفئةٍ ورقمِ فاتورةٍ وموقع.
+ * ويقبل اختياريًّا الشركةَ المستفيدة (`company`) وإثباتَ المصروف (`recipient` ·
+ * `recipientId` · `proofRef`) — تُكتب حقولُها إن وُجدت وتُغفَل إن فرغت، فالنداءُ القديمُ
+ * يكتب المستندَ نفسَه حرفًا.
  * @param {{custodian:string, amount:number, category?:string, invoiceNo:string,
+ *          company?:string, recipient?:string, recipientId?:string, proofRef?:string,
  *          date?:string, site?:string, note?:string}} input
  * @param {object} profile
  */
@@ -123,6 +127,11 @@ export async function addExpense(input, profile) {
   // ‹توزيع الشركات› الشركةُ المستفيدةُ اختياريّةٌ: تُكتب إن كانت من القائمة المعروفة،
   // وتُغفَل إن لم تُحدَّد — فالقيدُ القديمُ بلا شركةٍ يبقى ويُجمَّع تحت «غير محدّد».
   const company = CUSTODY_COMPANIES.includes(input?.company) ? input.company : '';
+  // ‹الإثبات› (آلية العهد §3) المستلمُ ورقمُه (بطاقة/لوحة شاحنة) والمستندُ المرفق
+  // (إذن خروج · فاتورة ناقل · كشف حضور) — اختياريّةٌ، وتُغفَل حقولُها إن فرغت.
+  const recipient = String(input?.recipient || '').trim();
+  const recipientId = String(input?.recipientId || '').trim();
+  const proofRef = String(input?.proofRef || '').trim();
 
   const ref = await addDoc(collection(db, COL), {
     kind: CUSTODY_KINDS.EXPENSE,
@@ -131,6 +140,9 @@ export async function addExpense(input, profile) {
     category,
     invoiceNo,
     ...(company ? { company } : {}),
+    ...(recipient ? { recipient } : {}),
+    ...(recipientId ? { recipientId } : {}),
+    ...(proofRef ? { proofRef } : {}),
     date: String(input?.date || '').slice(0, 10) || todayIso(),
     site: String(input?.site || DEFAULT_SITE).trim(),
     note: String(input?.note || '').trim(),
