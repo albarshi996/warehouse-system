@@ -649,6 +649,20 @@ const currentPath = Astro.url.pathname;
     -->
     <main id="bz-main" class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 pt-16 md:pt-8 relative z-10">
       <div class="max-w-7xl mx-auto">
+        {/* ‹زرّ الرجوع› (طلب المالك 2026-11-12): تطبيقا المكتب والهاتف بلا شريط متصفّح،
+            فلا سهمَ رجوعٍ فيهما. يظهر في كلّ شاشةٍ عدا الرئيسيّة (يُظهره السكربت أدناه)،
+            ولا يُطبع (قاعدةُ الطباعة تُخفي كلَّ زرّ). الحكمُ في `services/ui/backNav.js`. */}
+        <button
+          id="bz-back"
+          type="button"
+          data-home={`${base}/dashboard`}
+          aria-label="رجوع إلى الشاشة السابقة"
+          style="display: none;"
+          class="no-print mb-4 items-center gap-2 rounded-xl border border-line bg-chip hover:bg-surface-2 hover:border-accent/40 px-4 py-2 text-sm font-bold text-ink-2 transition-colors"
+        >
+          <Icon name="chevronRight" size={16} />
+          <span>رجوع</span>
+        </button>
         <slot />
       </div>
     </main>
@@ -1010,6 +1024,7 @@ const currentPath = Astro.url.pathname;
     -->
     <script>
       import { trackOverlay } from '../services/ui/overlayHistory.js';
+      import { backAction } from '../services/ui/backNav.js';
 
       trackOverlay('#brandzo-backdrop', {
         name: 'sidebar',
@@ -1022,6 +1037,28 @@ const currentPath = Astro.url.pathname;
         isOpen: (el) => el.open,
         close: (el) => el.close(),
       });
+
+      // ‹زرّ الرجوع› يظهر في كلّ شاشةٍ عدا الرئيسيّة؛ يرجع خطوةً إن كان السابقُ من
+      // البوّابة، وإلّا فإلى الرئيسيّة (لا إلى خارج التطبيق ولا إلى صفحة الدخول).
+      const backBtn = document.getElementById('bz-back');
+      if (backBtn) {
+        const home = backBtn.dataset.home || '/dashboard';
+        const decide = () =>
+          backAction({
+            pathname: window.location.pathname,
+            home,
+            referrer: document.referrer,
+            origin: window.location.origin,
+            historyLength: window.history.length,
+          });
+        if (decide() !== 'none') {
+          backBtn.style.display = 'inline-flex';
+          backBtn.addEventListener('click', () => {
+            if (decide() === 'back') window.history.back();
+            else window.location.href = home;
+          });
+        }
+      }
     </script>
     {/* إخفاءُ ترويسة القسم الكبير إن خُفيت كلُّ مجموعاته لهذا الدور (بعد RoleNav).
         عرضٌ فقط — RoleNav وحده يقرّر رؤيةَ المجموعات؛ وهذا يرتّب ما بقي. */}

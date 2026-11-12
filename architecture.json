@@ -11,7 +11,7 @@
   "counts": {
     "modules": 133,
     "serviceDomains": 59,
-    "serviceFiles": 848,
+    "serviceFiles": 850,
     "collections": 107,
     "roles": 20,
     "odooModels": 12,
@@ -6328,6 +6328,8 @@
       "domain": "ui",
       "dir": "src/services/ui",
       "files": [
+        "backNav.js",
+        "backNav.test.js",
         "escape.js",
         "escape.test.js",
         "leaveGuard.js",
@@ -6341,11 +6343,12 @@
         "useLeaveGuard.js",
         "useOverlayBack.js"
       ],
-      "fileCount": 12,
-      "testCount": 5,
+      "fileCount": 14,
+      "testCount": 6,
       "exports": [
         "LEAVE_MESSAGE",
         "OVERLAY_KEY",
+        "backAction",
         "clampPage",
         "clipCell",
         "closeOverlay",
@@ -6372,6 +6375,7 @@
         "toggleId",
         "trackOverlay",
         "trackOverlays",
+        "trimPath",
         "useLeaveGuard",
         "useOverlayBack",
         "writeClipboard",
