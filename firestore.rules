@@ -1402,6 +1402,20 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ── ‹EXP-CLS› كشوفُ إقفال المصروفات مع الماليّة (2026-11-24) ──────────
+    // كشفٌ مرقَّمٌ يحمل قائمةَ المصاريف التي سُوّيت ولقطةً منها. **يُضاف ولا يُعدَّل
+    // ولا يُحذف**: التسويةُ أثرٌ لا يُعاد كتابتُه، ومستنداتُ المصاريف نفسُها لا تُمسّ.
+    // الإقفالُ للمديرَين (isManager) والمدير الماليّ — تطابق `CLOSING_ROLES` في
+    // `expenseClosing.js` (عدّلهما معًا). والقراءةُ لكلّ مصادَق (الشاشةُ محصورةٌ بدورها).
+    match /expense_closings/{closingId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+                    && request.resource.data.createdByUid == request.auth.uid
+                    && (isManager()
+                        || (hasProfile() && isActive() && myRole() == 'finance_manager'));
+      allow update, delete: if false;
+    }
+
     // ── الهيكل التنظيمي (المصدر الواحد للحقيقة) ──────────────────
     // وثيقة تنظيمية تُعرض على سبع إدارات وتُعتمد من الإدارة العامة ⇒
     // يقرؤها كل مصادَق (الموظّف يرى موقعه)، ويكتبها المديران وحدهما.

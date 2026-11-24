@@ -123,6 +123,10 @@
     "count": 0,
     "fields": {}
   },
+  "expense_closings": {
+    "count": 0,
+    "fields": {}
+  },
   "gm_review": {
     "count": 0,
     "fields": {}

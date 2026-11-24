@@ -11,8 +11,8 @@
   "counts": {
     "modules": 133,
     "serviceDomains": 59,
-    "serviceFiles": 850,
-    "collections": 107,
+    "serviceFiles": 853,
+    "collections": 108,
     "roles": 20,
     "odooModels": 12,
     "odooGuards": 51,
@@ -1270,6 +1270,9 @@
         "deriveEntries.js",
         "expenseCategories.js",
         "expenseCategories.test.js",
+        "expenseClosing.js",
+        "expenseClosing.test.js",
+        "expenseClosingService.js",
         "expenseEntry.js",
         "expenseEntry.test.js",
         "expenseEntryService.js",
@@ -1300,14 +1303,16 @@
         "treasuryRpc.js",
         "treasuryRpc.test.js"
       ],
-      "fileCount": 38,
-      "testCount": 18,
+      "fileCount": 41,
+      "testCount": 19,
       "exports": [
         "ACCOUNTS",
         "CASH_EVENTS",
         "CASH_MOVEMENTS",
         "CASH_MOVEMENTS_COLLECTION",
         "CASH_SESSIONS_COLLECTION",
+        "CLOSING_MAX_ITEMS",
+        "CLOSING_ROLES",
         "COUNTERPART",
         "DEFAULT_CATEGORY",
         "EXPENSE_CATEGORIES",
@@ -1325,11 +1330,16 @@
         "POSTABLE_STATES",
         "SALE_DOC_TYPES",
         "SALE_EVENTS",
+        "SETTLE_ALL",
+        "SETTLE_OPEN",
         "accountDef",
         "addCashMovement",
+        "addExpenseClosing",
         "balanceTone",
         "baseOf",
+        "buildClosing",
         "buildPostJournalBody",
+        "canCloseExpenses",
         "canRecordExpense",
         "categoryAccount",
         "categoryLabel",
@@ -1337,6 +1347,10 @@
         "closeBody",
         "closeCashSession",
         "closeSession",
+        "closedIndex",
+        "closingDrift",
+        "closingReport",
+        "closingsForShop",
         "createCashbook",
         "createLedger",
         "createLedgerPost",
@@ -1354,6 +1368,7 @@
         "expenseReport",
         "expenseReportAoa",
         "expenseSummary",
+        "formatStamp",
         "fromMinor",
         "isCategory",
         "isPostableType",
@@ -1365,6 +1380,7 @@
         "markClosed",
         "movementBody",
         "movementsInWindow",
+        "nextClosingNumber",
         "normalizeCategory",
         "openCashSession",
         "openSession",
@@ -1377,17 +1393,24 @@
         "reverseEntry",
         "roundHalfAwayFromZero",
         "saleAmount",
+        "settlementFilter",
         "shapeExpenseHeader",
         "shopOfDoc",
         "shouldPostLocalJournal",
+        "stampDay",
         "subAccount",
+        "subscribeExpenseClosings",
         "summarize",
+        "summarizeLines",
         "toMinor",
+        "toMs",
         "trialBalance",
         "trialBalanceFromEntries",
         "validateMovement"
       ],
-      "collections": []
+      "collections": [
+        "expense_closings"
+      ]
     },
     {
       "domain": "activity",
@@ -7705,6 +7728,42 @@
             "roles": [
               "isStockActor",
               "isManager"
+            ]
+          },
+          {
+            "actions": [
+              "update",
+              "delete"
+            ],
+            "condition": "false",
+            "roles": []
+          }
+        ]
+      },
+      {
+        "name": "expense_closings",
+        "path": "expense_closings",
+        "rules": [
+          {
+            "actions": [
+              "read"
+            ],
+            "condition": "signedIn()",
+            "roles": [
+              "signedIn"
+            ]
+          },
+          {
+            "actions": [
+              "create"
+            ],
+            "condition": "signedIn() && request.resource.data.createdByUid == request.auth.uid && (isManager() || (hasProfile() && isActive() && myRole() == 'finance_manager'))",
+            "roles": [
+              "signedIn",
+              "isManager",
+              "hasProfile",
+              "isActive",
+              "myRole"
             ]
           },
           {
