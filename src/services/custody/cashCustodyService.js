@@ -25,7 +25,7 @@ export const CUSTODY_SITES = ['155', 'الرحبة'];
 
 function whoami(profile) {
   return {
-    createdByUid: auth?.currentUser?.uid || null,
+    createdByUid: profile?.uid || auth?.currentUser?.uid || null,
     createdByName: profile?.name || auth?.currentUser?.email || 'غير معروف',
     createdByRole: profile?.role || '',
   };

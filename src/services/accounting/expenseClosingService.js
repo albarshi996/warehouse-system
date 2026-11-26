@@ -53,7 +53,10 @@ export function subscribeExpenseClosings(callback, onError) {
  *    يكشف للماليّة أيَّ تداخلٍ قبل الصرف. (المحلّيُّ كاتبٌ واحد فمحصَّن.)
  */
 export async function addExpenseClosing(closing, profile) {
-  const uid = auth?.currentUser?.uid || null;
+  // ★ الهويّة من الملفّ أوّلًا ثمّ Firebase: في بناء الجهاز `PUBLIC_AUTH_BACKEND=local`
+  //   فـ`auth.currentUser` فارغٌ دومًا، والهويّةُ في ملفّ المستخدم. وعلى الويب
+  //   `profile.uid === auth.currentUser.uid` فقاعدةُ `createdByUid==request.auth.uid` تبقى سليمة.
+  const uid = profile?.uid || auth?.currentUser?.uid || null;
   if (!uid) throw new Error('يجب تسجيل الدخول.');
   if (!canCloseExpenses(profile?.role)) throw new Error('ليست لك صلاحيّة إقفال المصروفات مع الماليّة.');
   if (!closing?.number || !Array.isArray(closing?.expenseIds) || closing.expenseIds.length === 0) {

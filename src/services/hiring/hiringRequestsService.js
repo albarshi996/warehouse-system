@@ -54,7 +54,7 @@ export async function addHiringRequest(input) {
   if (!fields.name) throw new Error('اسم المرشّح إلزامي.');
   if (!fields.jobTitle) throw new Error('المسمى الوظيفي إلزامي.');
 
-  const uid = auth?.currentUser?.uid;
+  const uid = input.profile?.uid || auth?.currentUser?.uid;
   if (!uid) throw new Error('يجب تسجيل الدخول.');
 
   let cvMeta = null;

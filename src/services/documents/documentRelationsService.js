@@ -32,7 +32,7 @@ function text(value) {
 }
 
 function actorFrom(profile = {}) {
-  const uid = text(auth?.currentUser?.uid);
+  const uid = text(profile?.uid || auth?.currentUser?.uid);
   if (!uid) throw new Error('يجب تسجيل الدخول قبل كتابة علاقة مستند.');
   return {
     uid,

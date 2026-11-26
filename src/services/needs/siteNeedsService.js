@@ -23,7 +23,7 @@ export const DEFAULT_SITE = '155';
 
 function whoami(profile) {
   return {
-    byUid: auth?.currentUser?.uid || null,
+    byUid: profile?.uid || auth?.currentUser?.uid || null,
     byName: profile?.name || auth?.currentUser?.email || 'غير معروف',
     byRole: profile?.role || '',
   };

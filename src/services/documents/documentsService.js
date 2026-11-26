@@ -63,11 +63,12 @@ const AUDIT = 'audit';
 const FLOW_ALLOCATIONS = 'document_flow_allocations';
 
 /**
- * هوية الكاتب من Firebase Auth مباشرة (لا من الملف الشخصي) — لأن قواعد
- * الأمان تشترط `byUid == request.auth.uid`، وقد يسبق القيدُ تحميلَ الملف.
+ * هوية الكاتب: الملفُّ أوّلًا ثمّ Firebase. في بناء الجهاز `PUBLIC_AUTH_BACKEND=local`
+ * فـ`auth.currentUser` فارغٌ دومًا والهويّةُ في الملفّ؛ وعلى الويب
+ * `profile.uid === auth.currentUser.uid` فتبقى قاعدةُ `byUid == request.auth.uid` سليمة.
  */
-function currentUid() {
-  return auth?.currentUser?.uid || null;
+function currentUid(profile) {
+  return profile?.uid || auth?.currentUser?.uid || null;
 }
 
 function currentName(profile) {
@@ -97,7 +98,7 @@ export async function appendAudit(docId, { action, note = '', from = '', to = ''
       note: String(note || ''),
       from,
       to,
-      byUid: currentUid(),
+      byUid: currentUid(profile),
       byName: currentName(profile),
       byRole: profile?.role || '',
       at: serverTimestamp(),
@@ -134,7 +135,7 @@ export async function createDraft({ type, stage = null, profile, header = {}, li
     //   فالسلوكُ الافتراضيُّ كما كان. يُقبل من الخادم (لا حصرَ حقولٍ على الإنشاء).
     shop: stamped.shop ?? getActiveShop() ?? null,
     links: {},
-    createdByUid: currentUid(),
+    createdByUid: currentUid(profile),
     createdByName: currentName(profile),
     createdByRole: profile?.role || '', // دور المُنشئ — يغذّي «سجلّ حركة الأدوار» الحيّ
     createdAt: serverTimestamp(),
@@ -214,7 +215,7 @@ export async function saveDocument(docId, { header, lines, links, settings, reas
     if (verdict.tag) {
       patch.dating = {
         ...verdict.tag,
-        byUid: currentUid(),
+        byUid: currentUid(profile),
         byName: currentName(profile),
         byRole: profile?.role || '',
         at: serverTimestamp(),
@@ -253,7 +254,7 @@ export async function transitionDocument(docId, to, { note = '', profile, schema
   }
 
   const transition = (TRANSITIONS[from] || []).find((t) => t.to === to);
-  const user = { role: profile?.role, uid: currentUid() };
+  const user = { role: profile?.role, uid: currentUid(profile) };
   if (!canDo(transition, user, schema, data)) {
     throw new Error('لا تملك صلاحية هذا الإجراء.');
   }
@@ -380,7 +381,7 @@ export async function transitionDocument(docId, to, { note = '', profile, schema
     patch.numberedAt = serverTimestamp();
   }
   if (to === 'approved') {
-    patch.approvedByUid = currentUid();
+    patch.approvedByUid = currentUid(profile);
     patch.approvedByName = currentName(profile);
     patch.approvedByRole = profile?.role || ''; // دور المُعتمِد — يغذّي «سجلّ حركة الأدوار» الحيّ
     patch.approvedAt = serverTimestamp();
@@ -748,7 +749,7 @@ export async function createCombinedInChain(
 ) {
   const sources = (Array.isArray(sourceDocs) ? sourceDocs : [sourceDocs]).filter((item) => item?.id);
   if (!sources.length) throw new Error('معرّف المستند المصدر مطلوب.');
-  const uid = currentUid();
+  const uid = currentUid(profile);
   if (!uid) throw new Error('يجب تسجيل الدخول قبل اشتقاق مستند.');
   if (new Set(sources.map((item) => item.id)).size !== sources.length) {
     throw new Error('لا يُدمج المصدر نفسه مرّتين.');

@@ -42,7 +42,7 @@ export async function assignableUsers() {
 }
 
 function currentActor(profile) {
-  const uid = auth?.currentUser?.uid;
+  const uid = profile?.uid || auth?.currentUser?.uid;
   if (!uid) throw new Error('يجب تسجيل الدخول.');
   return {
     uid,
